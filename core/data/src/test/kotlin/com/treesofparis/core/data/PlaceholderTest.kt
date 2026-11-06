@@ -1,7 +1,7 @@
 package com.treesofparis.core.data
 
-import androidx.test.core.app.ApplicationProvider
 import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test

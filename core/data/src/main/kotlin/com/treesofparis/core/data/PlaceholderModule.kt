@@ -9,5 +9,7 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 object PlaceholderModule {
     @Provides
-    fun provideName(): String = "data"
+    fun provideName(): String = NAME
+
+    const val NAME = "data"
 }

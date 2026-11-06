@@ -8,19 +8,20 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 class AndroidLibraryConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
-        pluginManager.apply("com.android.library")
-        extensions.configure<LibraryExtension> {
-            compileSdk = COMPILE_SDK
-            defaultConfig.minSdk = MIN_SDK
-            compileOptions.sourceCompatibility = JavaVersion.VERSION_17
-            compileOptions.targetCompatibility = JavaVersion.VERSION_17
-            testOptions.unitTests.isIncludeAndroidResources = true
-        }
-        configureKotlin(JvmTarget.JVM_17)
-        configureTestDependencies()
-        configureRobolectricJvmArgs()
-        dependencies.add("testImplementation", lib("robolectric"))
-        dependencies.add("testImplementation", lib("androidx-test-core"))
+            pluginManager.apply("com.android.library")
+            extensions.configure<LibraryExtension> {
+                compileSdk = COMPILE_SDK
+                defaultConfig.minSdk = MIN_SDK
+                compileOptions.sourceCompatibility = JavaVersion.VERSION_17
+                compileOptions.targetCompatibility = JavaVersion.VERSION_17
+                testOptions.unitTests.isIncludeAndroidResources = true
+            }
+            configureKotlin(JvmTarget.JVM_17)
+            configureTestDependencies()
+            configureRobolectricJvmArgs()
+            configureRobolectricSdk()
+            dependencies.add("testImplementation", lib("robolectric"))
+            dependencies.add("testImplementation", lib("androidx-test-core"))
         }
     }
 }

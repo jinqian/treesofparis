@@ -1,0 +1,28 @@
+# Layered on top of Detekt's default config (buildUponDefaultConfig = true).
+style:
+  MagicNumber:
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreAnnotation: true
+  MaxLineLength:
+    maxLineLength: 120
+  ForbiddenImport:
+    active: true
+    excludes: ['**/core/map-osmdroid/**']
+    forbiddenImports:
+      - value: 'org.osmdroid.*'
+        reason: 'Map provider APIs are only allowed in :core:map-osmdroid (see CLAUDE.md).'
+complexity:
+  LongParameterList:
+    allowedFunctionParameters: 8
+    ignoreDefaultParameters: true
+    ignoreAnnotatedParameter:
+      - 'Composable'
+naming:
+  FunctionNaming:
+    ignoreAnnotated:
+      - 'Composable'
+    functionPattern: '[a-z][a-zA-Z0-9]*|[a-z][a-zA-Z0-9_]*'
+Compose:
+  ComposableAnnotationNaming:
+    active: true

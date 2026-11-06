@@ -61,6 +61,7 @@ osmdroid = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroid" 
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
 
 # test
+composeRules = { module = "io.nlopez.compose.rules:detekt", version = "0.6.8" }
 junit = { module = "junit:junit", version.ref = "junit" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }

@@ -30,6 +30,14 @@ gradlePlugin {
             id = "trees.android.compose"
             implementationClass = "AndroidComposeConventionPlugin"
         }
+        register("androidFeature") {
+            id = "trees.android.feature"
+            implementationClass = "AndroidFeatureConventionPlugin"
+        }
+        register("moduleBoundaries") {
+            id = "trees.module.boundaries"
+            implementationClass = "ModuleBoundariesPlugin"
+        }
         register("androidHilt") {
             id = "trees.android.hilt"
             implementationClass = "AndroidHiltConventionPlugin"

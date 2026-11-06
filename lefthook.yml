@@ -1,0 +1,18 @@
+# Git hooks. Install once with: lefthook install
+pre-commit:
+  parallel: true
+  commands:
+    spotless:
+      glob: "*.{kt,kts}"
+      run: ./gradlew spotlessCheck --quiet
+    detekt:
+      glob: "*.{kt,kts}"
+      run: ./gradlew detekt checkModuleBoundaries --quiet
+    commit-msg-tests:
+      glob: "scripts/commit-msg-check*.sh"
+      run: scripts/commit-msg-check_test.sh
+
+commit-msg:
+  commands:
+    conventional-commits:
+      run: scripts/commit-msg-check.sh {1}
