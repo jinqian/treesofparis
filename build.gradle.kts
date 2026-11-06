@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.room) apply false
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.spotless)
+    alias(libs.plugins.aboutlibraries) apply false
     id("trees.module.boundaries") apply false
 }
 
