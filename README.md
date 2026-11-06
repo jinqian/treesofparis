@@ -1,5 +1,7 @@
 # Trees of Paris
 
+[![CI](https://github.com/jinqian/treesofparis/actions/workflows/ci.yml/badge.svg)](https://github.com/jinqian/treesofparis/actions/workflows/ci.yml)
+
 An Android app to explore the trees of Paris on an OpenStreetMap map.
 
 - **Carte**: the trees around you, in Paris and in the sites the City of Paris manages nearby (cemeteries of Pantin, Thiais, Ivry…). Tap a tree to see its details and add it to your favorites.
@@ -55,6 +57,18 @@ build-logic/            Gradle convention plugins
 data/                   dataset update script
 docs/                   spec, plan, architecture decision records
 ```
+
+## Continuous integration
+
+GitHub Actions (`.github/workflows/`):
+
+| Workflow | When | What |
+|----------|------|------|
+| `ci.yml` | pull requests, pushes to `main` | Spotless, Detekt, module boundaries, unit tests, Android lint, debug APK, data script tests, dependency review |
+| `pr-title.yml` | pull requests | PR title follows Conventional Commits (it becomes the squash commit message) |
+| `update-data.yml` | monthly, or manually | Rebuilds `trees.db` from Paris Open Data and opens a PR when the data changed |
+
+Dependabot keeps Gradle, GitHub Actions and Python dev dependencies up to date.
 
 ## Contributing
 
