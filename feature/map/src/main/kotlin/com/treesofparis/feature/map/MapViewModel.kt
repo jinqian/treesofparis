@@ -153,7 +153,9 @@ class MapViewModel
             const val USER_ZOOM = 17.0
             const val TREE_ZOOM = 18.0
             val DEFAULT_CAMERA = MapCamera(GeoPoint.PARIS_CENTER, zoom = MIN_TREE_ZOOM)
-            val MAP_CONFIG = MapConfig(GeoBounds.COVERAGE, minZoom = 11.0, maxZoom = 19.0)
+
+            /** OSM tiles stop at zoom 19; osmdroid upscales them up to [MapConfig.maxZoom] for street-level detail. */
+            val MAP_CONFIG = MapConfig(GeoBounds.COVERAGE, minZoom = 11.0, maxZoom = 21.0)
 
             private const val KEY_LAT = "camera_lat"
             private const val KEY_LON = "camera_lon"

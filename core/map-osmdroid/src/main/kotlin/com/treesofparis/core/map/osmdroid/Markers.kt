@@ -16,9 +16,26 @@ internal fun markerIdAt(
 
 internal fun selectedIndex(markers: List<MapMarker>): Int? = markers.indexOfFirst { it.selected }.takeIf { it >= 0 }
 
-private const val TREE_RADIUS_PX = 9f
-private const val USER_RADIUS_PX = 12f
-private const val CELL_SIZE_PX = 12
+/** Marker sizes in pixels for a screen [density], from sizes defined in dp so pins look the same on every screen. */
+internal data class MarkerSizes(
+    val treeRadiusPx: Float,
+    val selectedRadiusPx: Float,
+    val userRadiusPx: Float,
+    val cellSizePx: Int,
+)
+
+private const val TREE_RADIUS_DP = 6f
+private const val SELECTED_RADIUS_DP = 9f
+private const val USER_RADIUS_DP = 8f
+private const val CELL_SIZE_DP = 4f
+
+internal fun markerSizes(density: Float) =
+    MarkerSizes(
+        treeRadiusPx = TREE_RADIUS_DP * density,
+        selectedRadiusPx = SELECTED_RADIUS_DP * density,
+        userRadiusPx = USER_RADIUS_DP * density,
+        cellSizePx = (CELL_SIZE_DP * density).toInt().coerceAtLeast(1),
+    )
 
 private fun fill(color: Int) =
     Paint().apply {
@@ -32,6 +49,7 @@ internal fun treeOverlay(
     markers: List<MapMarker>,
     color: Int,
     selectedColor: Int,
+    sizes: MarkerSizes,
     onMarkerClick: (Long) -> Unit,
 ): SimpleFastPointOverlay {
     val points: List<IGeoPoint> = markers.map { it.position.toOsm() }
@@ -40,12 +58,12 @@ internal fun treeOverlay(
             .getDefaultStyle()
             .setAlgorithm(SimpleFastPointOverlayOptions.RenderingAlgorithm.MAXIMUM_OPTIMIZATION)
             .setSymbol(SimpleFastPointOverlayOptions.Shape.CIRCLE)
-            .setRadius(TREE_RADIUS_PX)
-            .setCellSize(CELL_SIZE_PX)
+            .setRadius(sizes.treeRadiusPx)
+            .setCellSize(sizes.cellSizePx)
             .setIsClickable(true)
             .setPointStyle(fill(color))
             .setSelectedPointStyle(fill(selectedColor))
-            .setSelectedRadius(TREE_RADIUS_PX * 1.6f)
+            .setSelectedRadius(sizes.selectedRadiusPx)
     return SimpleFastPointOverlay(SimplePointTheme(points, false), options).apply {
         setSelectedPoint(selectedIndex(markers))
         setOnClickListener { _, index -> markerIdAt(index, markers)?.let(onMarkerClick) }
@@ -56,12 +74,13 @@ internal fun treeOverlay(
 internal fun userLocationOverlay(
     location: GeoPoint,
     color: Int,
+    sizes: MarkerSizes,
 ): SimpleFastPointOverlay {
     val options =
         SimpleFastPointOverlayOptions
             .getDefaultStyle()
             .setSymbol(SimpleFastPointOverlayOptions.Shape.CIRCLE)
-            .setRadius(USER_RADIUS_PX)
+            .setRadius(sizes.userRadiusPx)
             .setIsClickable(false)
             .setPointStyle(fill(color))
     return SimpleFastPointOverlay(SimplePointTheme(listOf<IGeoPoint>(location.toOsm()), false), options)

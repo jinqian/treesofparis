@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -56,6 +57,7 @@ class OsmdroidMapProvider
                     tree = MaterialTheme.colorScheme.primary.toArgb(),
                     selected = MaterialTheme.colorScheme.tertiary.toArgb(),
                     user = UserLocationBlue.toArgb(),
+                    sizes = markerSizes(LocalDensity.current.density),
                 )
             val state =
                 remember {
@@ -98,6 +100,7 @@ private data class MarkerColors(
     val tree: Int,
     val selected: Int,
     val user: Int,
+    val sizes: MarkerSizes,
 )
 
 /** The map view and the overlays it owns, kept across recompositions. */
@@ -120,7 +123,7 @@ private class OsmdroidState(
         trees =
             markers
                 .takeIf { it.isNotEmpty() }
-                ?.let { treeOverlay(it, colors.tree, colors.selected, onMarkerClick) }
+                ?.let { treeOverlay(it, colors.tree, colors.selected, colors.sizes, onMarkerClick) }
                 ?.also { mapView.overlays.add(it) }
         treesFor = markers
     }
@@ -131,7 +134,7 @@ private class OsmdroidState(
     ) {
         if (location == userFor) return
         user?.let(mapView.overlays::remove)
-        user = location?.let { userLocationOverlay(it, colors.user) }?.also { mapView.overlays.add(it) }
+        user = location?.let { userLocationOverlay(it, colors.user, colors.sizes) }?.also { mapView.overlays.add(it) }
         userFor = location
     }
 }

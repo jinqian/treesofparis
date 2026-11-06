@@ -21,6 +21,14 @@ class MarkersTest {
     }
 
     @Test
+    fun markerSizes_scaleWithDensity() {
+        val sizes = markerSizes(density = 2.625f) // xxhdpi, e.g. Pixel 7
+        assertEquals(15.75f, sizes.treeRadiusPx, 0.01f) // 6 dp
+        assertEquals(23.625f, sizes.selectedRadiusPx, 0.01f) // 9 dp
+        assertEquals(21f, sizes.userRadiusPx, 0.01f) // 8 dp
+    }
+
+    @Test
     fun selectedIndex_findsSelectedMarker() {
         assertEquals(1, selectedIndex(listOf(markers[0], markers[1].copy(selected = true))))
         assertNull(selectedIndex(markers))
