@@ -36,3 +36,10 @@ internal fun Project.configureRobolectricJvmArgs() {
         )
     }
 }
+
+/** Robolectric does not support SDK 37 yet; one shared robolectric.properties pins the SDK it runs. */
+internal fun Project.configureRobolectricSdk() {
+    extensions.configure<com.android.build.api.dsl.CommonExtension> {
+        sourceSets.getByName("test").resources.srcDir(rootProject.file("config/robolectric"))
+    }
+}
