@@ -9,9 +9,10 @@ import com.treesofparis.core.map.MapConfig
 import com.treesofparis.core.map.MapMarker
 import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
+import com.treesofparis.domain.model.UserLocation
 import com.treesofparis.domain.usecase.GetTree
 import com.treesofparis.domain.usecase.GetTreesInBounds
-import com.treesofparis.domain.usecase.GetUserLocationInCoverage
+import com.treesofparis.domain.usecase.LocateUser
 import com.treesofparis.domain.usecase.ObserveIsFavorite
 import com.treesofparis.domain.usecase.ToggleFavorite
 import com.treesofparis.feature.map.mapper.toDetailUi
@@ -36,7 +37,7 @@ class MapViewModel
         private val getTree: GetTree,
         private val observeIsFavorite: ObserveIsFavorite,
         private val toggleFavorite: ToggleFavorite,
-        private val getUserLocation: GetUserLocationInCoverage,
+        private val locateUser: LocateUser,
         private val savedState: SavedStateHandle,
     ) : ViewModel() {
         private val state = MutableStateFlow(MapUiState(initialCamera = savedCamera() ?: DEFAULT_CAMERA))
@@ -76,13 +77,45 @@ class MapViewModel
             viewModelScope.launch { toggleFavorite(id) }
         }
 
-        /** Called with the outcome of the location permission request (also when it was already granted). */
-        fun onLocationPermissionResult(granted: Boolean) {
-            if (!granted) return
-            viewModelScope.launch {
-                val location = getUserLocation() ?: return@launch
-                state.update { it.copy(userLocation = location, cameraRequest = request(location, USER_ZOOM)) }
+        /**
+         * Outcome of the location permission request (also called when it was already granted). [userInitiated] is true
+         * for the "Me localiser" button: then the user gets a message when the map cannot centre on them. The automatic
+         * request at launch stays silent and simply keeps the map on Paris.
+         */
+        fun onLocationPermissionResult(
+            granted: Boolean,
+            userInitiated: Boolean = false,
+        ) {
+            if (!granted) {
+                if (userInitiated) state.update { it.copy(message = MapMessage.PERMISSION_DENIED) }
+                return
             }
+            viewModelScope.launch {
+                state.update { it.copy(isLocating = true) }
+                val result = locateUser()
+                state.update { current ->
+                    when (result) {
+                        is UserLocation.InArea -> {
+                            current.copy(
+                                userLocation = result.point,
+                                cameraRequest = request(result.point, USER_ZOOM),
+                            )
+                        }
+
+                        is UserLocation.OutOfArea -> {
+                            current.copy(message = MapMessage.OUT_OF_AREA.takeIf { userInitiated })
+                        }
+
+                        UserLocation.Unavailable -> {
+                            current.copy(message = MapMessage.LOCATION_UNAVAILABLE.takeIf { userInitiated })
+                        }
+                    }.copy(isLocating = false)
+                }
+            }
+        }
+
+        fun onMessageShown() {
+            state.update { it.copy(message = null) }
         }
 
         /** Opens a tree coming from another screen (Favoris): centre on it and show its details, once per id. */

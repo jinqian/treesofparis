@@ -6,7 +6,7 @@ import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
 import com.treesofparis.domain.usecase.GetTree
 import com.treesofparis.domain.usecase.GetTreesInBounds
-import com.treesofparis.domain.usecase.GetUserLocationInCoverage
+import com.treesofparis.domain.usecase.LocateUser
 import com.treesofparis.domain.usecase.ObserveIsFavorite
 import com.treesofparis.domain.usecase.ToggleFavorite
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,7 +39,7 @@ class MapViewModelTest {
             getTree = GetTree(trees),
             observeIsFavorite = ObserveIsFavorite(favorites),
             toggleFavorite = ToggleFavorite(favorites),
-            getUserLocation = GetUserLocationInCoverage(location),
+            locateUser = LocateUser(location),
             savedState = saved,
         )
 
@@ -121,6 +121,84 @@ class MapViewModelTest {
             advanceUntilIdle()
             assertNull(vm.uiState.value.cameraRequest)
             assertNull(vm.uiState.value.userLocation)
+        }
+
+    @Test
+    fun automaticRequest_outsideCoverage_showsNoMessage() =
+        runTest(main.dispatcher) {
+            location.location = GeoPoint(37.422, -122.084) // emulator default, Mountain View
+            val vm = viewModel()
+            vm.onLocationPermissionResult(granted = true)
+            advanceUntilIdle()
+            assertNull(vm.uiState.value.message)
+        }
+
+    @Test
+    fun locateMe_outsideCoverage_showsOutOfAreaMessage() =
+        runTest(main.dispatcher) {
+            location.location = GeoPoint(37.422, -122.084)
+            val vm = viewModel()
+            vm.onLocationPermissionResult(granted = true, userInitiated = true)
+            advanceUntilIdle()
+            assertEquals(MapMessage.OUT_OF_AREA, vm.uiState.value.message)
+            assertNull(vm.uiState.value.cameraRequest)
+        }
+
+    @Test
+    fun locateMe_unavailable_showsUnavailableMessage() =
+        runTest(main.dispatcher) {
+            location.location = null
+            val vm = viewModel()
+            vm.onLocationPermissionResult(granted = true, userInitiated = true)
+            advanceUntilIdle()
+            assertEquals(MapMessage.LOCATION_UNAVAILABLE, vm.uiState.value.message)
+        }
+
+    @Test
+    fun locateMe_permissionDenied_showsDeniedMessage() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            vm.onLocationPermissionResult(granted = false, userInitiated = true)
+            advanceUntilIdle()
+            assertEquals(MapMessage.PERMISSION_DENIED, vm.uiState.value.message)
+        }
+
+    @Test
+    fun onMessageShown_clearsMessage() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            vm.onLocationPermissionResult(granted = false, userInitiated = true)
+            advanceUntilIdle()
+            vm.onMessageShown()
+            assertNull(vm.uiState.value.message)
+        }
+
+    @Test
+    fun locateMe_showsLocatingWhileWaitingForAFix() =
+        runTest(main.dispatcher) {
+            location.location = GeoPoint(48.86, 2.34)
+            location.delayMs = 1_000
+            val vm = viewModel()
+            vm.onLocationPermissionResult(granted = true, userInitiated = true)
+            runCurrent()
+            assertTrue(vm.uiState.value.isLocating)
+            advanceUntilIdle()
+            assertFalse(vm.uiState.value.isLocating)
+        }
+
+    @Test
+    fun locateMe_twice_recentresEachTime() =
+        runTest(main.dispatcher) {
+            location.location = GeoPoint(48.86, 2.34)
+            val vm = viewModel()
+            vm.onLocationPermissionResult(granted = true, userInitiated = true)
+            advanceUntilIdle()
+            val first = vm.uiState.value.cameraRequest
+            vm.onLocationPermissionResult(granted = true, userInitiated = true)
+            advanceUntilIdle()
+            val second = vm.uiState.value.cameraRequest
+            assertNotNull(first)
+            assertTrue("a new request id moves the map again", first!!.id != second!!.id)
         }
 
     @Test

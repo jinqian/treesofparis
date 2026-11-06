@@ -13,6 +13,9 @@ style:
       - value: 'org.osmdroid.*'
         reason: 'Map provider APIs are only allowed in :core:map-osmdroid (see CLAUDE.md).'
 complexity:
+  TooManyFunctions:
+    # ViewModels expose one public function per UI event; count only those.
+    ignorePrivate: true
   LongParameterList:
     allowedFunctionParameters: 8
     ignoreDefaultParameters: true

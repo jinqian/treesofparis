@@ -70,8 +70,12 @@ class FakeFavoritesRepository : FavoritesRepository {
 
 class FakeLocationRepository(
     var location: GeoPoint?,
+    var delayMs: Long = 0,
 ) : LocationRepository {
-    override suspend fun currentLocation() = location
+    override suspend fun currentLocation(): GeoPoint? {
+        if (delayMs > 0) kotlinx.coroutines.delay(delayMs)
+        return location
+    }
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
