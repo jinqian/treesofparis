@@ -15,6 +15,7 @@ osmdroid = "6.1.20"
 accompanist = "0.37.3"
 detekt = "2.0.0-alpha.6"
 spotless = "8.11.0"
+aboutLibraries = "15.3.0"
 mockk = "1.14.11"
 turbine = "1.2.1"
 robolectric = "4.17"
@@ -60,6 +61,8 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 osmdroid = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroid" }
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
 
+aboutlibraries-compose-core = { module = "com.mikepenz:aboutlibraries-compose-core", version.ref = "aboutLibraries" }
+
 # test
 composeRules = { module = "io.nlopez.compose.rules:detekt", version = "0.6.8" }
 javax-inject = { module = "javax.inject:javax.inject", version = "1" }
@@ -80,3 +83,4 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 room = { id = "androidx.room", version.ref = "room" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+aboutlibraries = { id = "com.mikepenz.aboutlibraries.plugin.android", version.ref = "aboutLibraries" }

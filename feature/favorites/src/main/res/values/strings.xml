@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="favorites_title">Favoris</string>
+    <string name="favorites_empty">Aucun favori pour le moment.\nTouchez un arbre sur la carte puis le cœur pour l’ajouter.</string>
+    <string name="favorites_remove">Retirer %1$s des favoris</string>
+</resources>

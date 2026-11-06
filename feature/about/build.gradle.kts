@@ -1,8 +1,11 @@
 plugins {
-    id("trees.android.library")
-    id("trees.android.compose")
+    id("trees.android.feature")
 }
 
 android {
     namespace = "com.treesofparis.feature.about"
+}
+
+dependencies {
+    implementation(libs.aboutlibraries.compose.core)
 }
