@@ -6,3 +6,7 @@ plugins {
 android {
     namespace = "com.treesofparis.core.designsystem"
 }
+
+dependencies {
+    implementation(libs.compose.material.icons)
+}
