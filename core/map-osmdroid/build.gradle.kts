@@ -6,3 +6,9 @@ plugins {
 android {
     namespace = "com.treesofparis.core.map.osmdroid"
 }
+
+dependencies {
+    api(projects.core.map)
+    implementation(libs.osmdroid)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+}
