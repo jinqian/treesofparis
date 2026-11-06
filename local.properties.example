@@ -1,0 +1,2 @@
+# Copy to local.properties (git-ignored) and adjust. Not needed if ANDROID_HOME is exported.
+sdk.dir=/Users/<you>/Library/Android/sdk
