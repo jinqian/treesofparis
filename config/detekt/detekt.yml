@@ -26,3 +26,8 @@ naming:
 Compose:
   ComposableAnnotationNaming:
     active: true
+  CompositionLocalAllowlist:
+    active: true
+    # LocalMapProvider is the single wiring point for the map implementation (docs/adr/0002).
+    allowedCompositionLocals:
+      - LocalMapProvider

@@ -6,3 +6,7 @@ plugins {
 android {
     namespace = "com.treesofparis.core.map"
 }
+
+dependencies {
+    api(projects.core.domain)
+}
