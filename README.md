@@ -2,7 +2,7 @@
 
 An Android app to explore the trees of Paris on an OpenStreetMap map.
 
-- **Carte**: the trees around you, restricted to Paris. Tap a tree to see its details and add it to your favorites.
+- **Carte**: the trees around you, in Paris and in the sites the City of Paris manages nearby (cemeteries of Pantin, Thiais, Ivry…). Tap a tree to see its details and add it to your favorites.
 - **Favoris**: the trees you saved (stored only on your device).
 - **À propos**: about the app, its data and the open-source projects it uses.
 

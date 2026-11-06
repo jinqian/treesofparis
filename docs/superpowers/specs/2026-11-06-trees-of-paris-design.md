@@ -16,8 +16,9 @@ agent-friendly documentation.
 
 Bottom navigation with three tabs:
 
-- **Carte**: OSM map restricted to Paris. Asks for location permission and centres on the user when they are
-  inside Paris. Shows trees for the visible area. Pinch-zoom and pan. Tapping a tree opens a detail bottom sheet
+- **Carte**: OSM map restricted to the dataset's coverage area: Paris plus the sites the City of Paris manages in
+  the neighbouring departments (cemeteries of Pantin, Saint-Ouen, Thiais, Ivry, Bagneux, etc.). Asks for location
+  permission and centres on the user when they are inside the coverage area. Shows trees for the visible area. Pinch-zoom and pan. Tapping a tree opens a detail bottom sheet
   with a favorite toggle.
 - **Favoris**: list of favorited trees. Favorites are fully local.
 - **À propos**: app information, data source credit (Paris Open Data, ODbL), OpenStreetMap attribution and the
@@ -31,7 +32,11 @@ Accounts, remote sync, search, offline tile packaging, tree photos, iOS, tablet-
 
 - The map library is osmdroid (raster OSM tiles, no API key). The provider must be swappable (see §6).
 - The tree data is pre-packaged in the APK as a Room database built by a Python script.
-- Paris holds about 200k trees, so the map loads by bounding box and caps the number of markers.
+- The dataset holds about 220k trees (2026-11: 220,339). About 195k are in Paris and the two Bois; about 25k are
+  in Hauts-de-Seine, Seine-Saint-Denis and Val-de-Marne (sites managed by the city). **All of them are kept.** The
+  map loads by bounding box and caps the number of markers.
+- Coverage area (`GeoBounds.COVERAGE`): the extent of all trees plus a small margin,
+  S 48.735 / W 2.200 / N 48.920 / E 2.480 (data extent 2026-11: S 48.7423, W 2.2102, N 48.9122, E 2.4698).
 - OSM's tile usage policy is acceptable for a playground. A published app would need its own tile source.
 - Dataset field names will be verified against the live dataset during implementation.
 
@@ -103,14 +108,17 @@ Clean architecture with distinct models per layer and mappers at each boundary:
 4. Tapping a marker loads the tree and opens the detail bottom sheet with a favorite toggle.
 
 Location: the permission is requested with the Compose permission APIs. The map centres on the user only if
-they are inside Paris. If permission is denied, the map shows the centre of Paris.
+they are inside the coverage area. If permission is denied or the user is outside it, the map shows the centre of
+Paris (`GeoPoint.PARIS_CENTER`, 48.8566 N / 2.3522 E).
 
 ## 7. Data pipeline
 
 - `data/scripts/update_trees.py`: Python 3, standard library only.
   1. Downloads the full export from the Paris Open Data API into `data/raw/` (git-ignored) and records a
      checksum.
-  2. Cleans records: drops rows with missing or out-of-Paris coordinates, normalizes fields.
+  2. Cleans records: keeps every tree, including those managed outside the city. Drops only rows with missing or
+     invalid coordinates, or outside the coverage area (reported, so a new far-away site is noticed and the bounds
+     updated). Normalizes fields (0 height/circumference = unknown, common name falls back to the genus).
   3. Writes a SQLite file matching the Room schema exactly, with a spatial index, to
      `core/data/src/main/assets/trees.db`. Room loads it with `createFromAsset`.
 - Tests: pytest, using a small fixture sample.
