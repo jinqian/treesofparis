@@ -1,0 +1,26 @@
+# Gradle / build
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+local.properties
+.kotlin/
+*.hprof
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Agent workspace
+.superpowers/
+
+# Data
+data/raw/
+
+# Python
+data/.venv/
+__pycache__/
+.pytest_cache/
+
+# Claude Code personal settings
+.claude/settings.local.json

@@ -1,0 +1,37 @@
+package com.treesofparis
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.CompositionLocalProvider
+import com.treesofparis.core.designsystem.theme.TreesTheme
+import com.treesofparis.core.map.LocalMapProvider
+import com.treesofparis.core.map.MapProvider
+import com.treesofparis.feature.about.AboutRoute
+import com.treesofparis.feature.favorites.FavoritesRoute
+import com.treesofparis.feature.map.MapRoute
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+
+@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var mapProvider: MapProvider
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
+        setContent {
+            TreesTheme {
+                CompositionLocalProvider(LocalMapProvider provides mapProvider) {
+                    TreesApp(
+                        mapContent = { key -> MapRoute(treeId = key.treeId) },
+                        favoritesContent = { onTreeClick -> FavoritesRoute(onTreeClick = onTreeClick) },
+                        aboutContent = { AboutRoute(librariesResId = R.raw.aboutlibraries) },
+                    )
+                }
+            }
+        }
+    }
+}
