@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="map_zoom_hint">Zoomez pour voir les arbres</string>
+    <string name="map_locate_me">Me localiser</string>
+    <string name="map_detail_unknown_species">Espèce inconnue</string>
+    <string name="map_detail_unknown_height">Hauteur inconnue</string>
+    <string name="map_detail_unknown_circumference">Circonférence inconnue</string>
+    <string name="map_detail_unknown_stage">Stade inconnu</string>
+    <string name="map_detail_height">Hauteur</string>
+    <string name="map_detail_circumference">Circonférence</string>
+    <string name="map_detail_stage">Stade de développement</string>
+    <string name="map_detail_remarkable">Arbre remarquable</string>
+    <string name="map_favorite_add">Ajouter aux favoris</string>
+    <string name="map_favorite_remove">Retirer des favoris</string>
+</resources>

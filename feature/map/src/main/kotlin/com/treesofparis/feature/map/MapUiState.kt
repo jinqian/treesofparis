@@ -1,0 +1,15 @@
+package com.treesofparis.feature.map
+
+import com.treesofparis.core.map.CameraRequest
+import com.treesofparis.core.map.MapCamera
+import com.treesofparis.core.map.MapMarker
+import com.treesofparis.domain.model.GeoPoint
+
+data class MapUiState(
+    val initialCamera: MapCamera,
+    val cameraRequest: CameraRequest? = null,
+    val markers: List<MapMarker> = emptyList(),
+    val userLocation: GeoPoint? = null,
+    val showZoomHint: Boolean = false,
+    val selectedTree: TreeDetailUi? = null,
+)
