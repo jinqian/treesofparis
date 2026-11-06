@@ -35,6 +35,46 @@ class LocationRepositoryImplTest {
             assertEquals(GeoPoint(48.86, 2.34), repository.currentLocation())
         }
 
+    @Test
+    fun noFreshFix_fallsBackToOlderLastKnownLocation() =
+        runTest {
+            shadowOf(app).grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
+            shadowOf(locationManager).simulateLocation(location(48.86, 2.34, NOW - 10 * 60_000))
+            disableAllProviders()
+            assertEquals(GeoPoint(48.86, 2.34), repository.currentLocation())
+        }
+
+    @Test
+    fun noFreshFix_ignoresLastKnownLocationOlderThanAnHour() =
+        runTest {
+            shadowOf(app).grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
+            shadowOf(locationManager).simulateLocation(location(48.86, 2.34, NOW - 2 * 60 * 60_000))
+            disableAllProviders()
+            assertNull(repository.currentLocation())
+        }
+
+    @Test
+    fun freshFix_prefersFusedThenNetworkThenGps() {
+        assertEquals(LocationManager.FUSED_PROVIDER, bestFreshFixProvider(sdkInt = 33) { true })
+        assertEquals(
+            LocationManager.NETWORK_PROVIDER,
+            bestFreshFixProvider(sdkInt = 33) { it != LocationManager.FUSED_PROVIDER },
+        )
+        assertEquals(LocationManager.NETWORK_PROVIDER, bestFreshFixProvider(sdkInt = 30) { true })
+        assertEquals(
+            LocationManager.GPS_PROVIDER,
+            bestFreshFixProvider(sdkInt = 33) {
+                it ==
+                    LocationManager.GPS_PROVIDER
+            },
+        )
+        assertNull(bestFreshFixProvider(sdkInt = 33) { false })
+    }
+
+    private fun disableAllProviders() {
+        locationManager.allProviders.forEach { shadowOf(locationManager).setProviderEnabled(it, false) }
+    }
+
     private fun location(
         lat: Double,
         lon: Double,
