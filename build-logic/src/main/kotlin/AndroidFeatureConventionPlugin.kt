@@ -12,9 +12,10 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
                 add("implementation", project(":core:domain"))
                 add("implementation", project(":core:designsystem"))
                 add("implementation", project(":core:map"))
-                add("implementation", lib("androidx-hilt-navigation-compose"))
+                add("implementation", lib("androidx-hilt-lifecycle-viewmodel-compose"))
                 add("implementation", lib("androidx-lifecycle-runtime-compose"))
                 add("implementation", lib("androidx-lifecycle-viewmodel-compose"))
+                add("implementation", lib("androidx-activity-compose"))
             }
         }
     }
