@@ -44,6 +44,11 @@ class MapViewModelTest {
         )
 
     @Test
+    fun mapConfig_allowsStreetLevelZoom() {
+        assertEquals(21.0, MapViewModel.MAP_CONFIG.maxZoom, 0.0)
+    }
+
+    @Test
     fun initialState_isParisCentre() {
         val state = viewModel().uiState.value
         assertEquals(center, state.initialCamera.center)
