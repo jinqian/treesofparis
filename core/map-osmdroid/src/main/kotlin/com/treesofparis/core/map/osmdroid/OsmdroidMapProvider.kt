@@ -21,6 +21,7 @@ import com.treesofparis.core.map.MapCamera
 import com.treesofparis.core.map.MapConfig
 import com.treesofparis.core.map.MapMarker
 import com.treesofparis.core.map.MapProvider
+import com.treesofparis.core.map.MarkerStyle
 import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
 import org.osmdroid.events.DelayedMapListener
@@ -55,6 +56,7 @@ class OsmdroidMapProvider
             val colors =
                 MarkerColors(
                     tree = MaterialTheme.colorScheme.primary.toArgb(),
+                    remarkable = RemarkableGold.toArgb(),
                     selected = MaterialTheme.colorScheme.tertiary.toArgb(),
                     user = UserLocationBlue.toArgb(),
                     sizes = markerSizes(LocalDensity.current.density),
@@ -92,12 +94,16 @@ class OsmdroidMapProvider
 
         private companion object {
             val UserLocationBlue = Color(0xFF1A73E8)
+
+            /** Remarkable trees stand out in gold, distinct from the chestnut selection colour. */
+            val RemarkableGold = Color(0xFFD4A017)
             const val ANIMATION_MS = 600L
         }
     }
 
 private data class MarkerColors(
     val tree: Int,
+    val remarkable: Int,
     val selected: Int,
     val user: Int,
     val sizes: MarkerSizes,
@@ -108,7 +114,7 @@ private class OsmdroidState(
     val mapView: MapView,
 ) {
     val cameraRequests = CameraRequestTracker()
-    private var trees: SimpleFastPointOverlay? = null
+    private var trees: List<SimpleFastPointOverlay> = emptyList()
     private var treesFor: List<MapMarker>? = null
     private var user: SimpleFastPointOverlay? = null
     private var userFor: GeoPoint? = null
@@ -119,12 +125,22 @@ private class OsmdroidState(
         onMarkerClick: (Long) -> Unit,
     ) {
         if (markers == treesFor) return
-        trees?.let(mapView.overlays::remove)
+        mapView.overlays.removeAll(trees)
         trees =
-            markers
-                .takeIf { it.isNotEmpty() }
-                ?.let { treeOverlay(it, colors.tree, colors.selected, colors.sizes, onMarkerClick) }
-                ?.also { mapView.overlays.add(it) }
+            markerLayers(markers).map { (style, layer) ->
+                val (color, radius) =
+                    when (style) {
+                        MarkerStyle.TREE -> colors.tree to colors.sizes.treeRadiusPx
+                        MarkerStyle.REMARKABLE -> colors.remarkable to colors.sizes.remarkableRadiusPx
+                    }
+                treeOverlay(layer, color, radius, colors.selected, colors.sizes, onMarkerClick)
+            }
+        mapView.overlays.addAll(trees)
+        // Keep the user's position drawn above the trees.
+        user?.let {
+            mapView.overlays.remove(it)
+            mapView.overlays.add(it)
+        }
         treesFor = markers
     }
 

@@ -23,7 +23,11 @@ data class MapMarker(
     val id: Long,
     val position: GeoPoint,
     val selected: Boolean = false,
+    val style: MarkerStyle = MarkerStyle.TREE,
 )
+
+/** Kinds of markers, in drawing order: later styles are drawn on top. Providers decide how each one looks. */
+enum class MarkerStyle { TREE, REMARKABLE }
 
 /** Limits the user cannot leave: panning stays inside [bounds], zoom stays in [minZoom]..[maxZoom]. */
 data class MapConfig(

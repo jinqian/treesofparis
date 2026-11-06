@@ -13,5 +13,6 @@ class GetTreesInBounds
         suspend operator fun invoke(
             bounds: GeoBounds,
             limit: Int,
-        ): List<Tree> = trees.getTreesInBounds(bounds, limit)
+            remarkableOnly: Boolean = false,
+        ): List<Tree> = trees.getTreesInBounds(bounds, limit, remarkableOnly)
     }
