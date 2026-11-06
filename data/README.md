@@ -1,0 +1,61 @@
+# Tree data
+
+The app ships the [Paris Open Data « Les arbres »](https://opendata.paris.fr/explore/dataset/les-arbres/information/)
+dataset (ODbL) as a pre-packaged SQLite database: `core/data/src/main/assets/trees.db`.
+
+`scripts/update_trees.py` downloads the dataset, cleans it and builds that file. It uses only the Python standard
+library (Python 3.10+).
+
+## Refreshing the data
+
+```bash
+python3 data/scripts/update_trees.py                  # download + build
+python3 data/scripts/update_trees.py --skip-download  # rebuild from data/raw/les-arbres.csv
+./gradlew :core:data:testDebugUnitTest                # opens the new asset through Room
+```
+
+The script prints a report such as:
+
+```
+220339 records read, 220339 kept; dropped: 0 invalid coordinates, 0 outside the coverage area, 0 duplicate ids
+Wrote core/data/src/main/assets/trees.db (33.2 MB), data version 1 (unchanged)
+```
+
+Then commit `trees.db`, `core/data/trees-db-version.txt`, `core/data/trees-db-content.sha256` and, if the version
+went up, the new Room schema JSON that the next Gradle build exports to `core/data/schemas/`.
+
+A scheduled GitHub Actions workflow (`.github/workflows/update-data.yml`) does this and opens a pull request when
+the data changed.
+
+## What the script does
+
+1. **Download** the full CSV export to `data/raw/les-arbres.csv` (git-ignored) with a SHA-256 checksum next to it.
+2. **Check** that the expected fields exist; it fails loudly if the dataset format changed.
+3. **Clean**
+   - Keeps every tree, including the ~25k the City manages outside Paris (cemeteries of Pantin, Saint-Ouen,
+     Thiais, Ivry, Bagneux…).
+   - Drops rows with missing, unparsable or `0, 0` coordinates, and rows outside the coverage area
+     (`COVERAGE` in the script = `GeoBounds.COVERAGE` in `:core:domain`; a test keeps them equal). If the report
+     shows trees outside the area, widen both.
+   - Drops duplicate ids (first one wins).
+   - Height or circumference `0` → unknown (NULL).
+   - Missing common name → genus → « Arbre ».
+   - Development stage: « Jeune (arbre) » → « Jeune », « Jeune (arbre)Adulte » → « Jeune adulte ».
+   - Cultivar quotes removed (`''Kanzan''` → `Kanzan`).
+4. **Build** `trees.db` from Room's exported schema JSON (`core/data/schemas/…TreeDatabase/<n>.json`): the same
+   `CREATE TABLE`/index statements and Room's identity hash, so Room accepts the file as is. The Room entity
+   `TreeEntity` owns the schema — to add a column, change the entity, build `:core:data` so Room exports the new
+   schema, update `COLUMNS` in the script, then re-run it.
+5. **Version** the data: `PRAGMA user_version` = `core/data/trees-db-version.txt`, which also becomes
+   `TreeDatabase`'s Room version through `BuildConfig.TREES_DB_VERSION`. The version goes up only when the cleaned
+   content hash (`core/data/trees-db-content.sha256`) changed. A higher version makes the app drop its old copy and
+   copy the new asset; favorites live in a separate database and are kept.
+
+## Tests
+
+```bash
+python3 -m venv data/.venv && data/.venv/bin/pip install -r data/requirements-dev.txt
+data/.venv/bin/python -I -m pytest data/tests
+```
+
+`tests/fixtures/sample.csv` holds real rows (including trees outside Paris) plus crafted edge cases.

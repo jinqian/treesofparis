@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Back up favorites (user.db); the tree data is re-copied from the APK, so it is excluded. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="database" path="user.db" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="database" path="user.db" />
+    </device-transfer>
+</data-extraction-rules>
