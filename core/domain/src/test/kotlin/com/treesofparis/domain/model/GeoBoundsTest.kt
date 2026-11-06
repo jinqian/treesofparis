@@ -6,19 +6,20 @@ import org.junit.Test
 
 class GeoBoundsTest {
     @Test
-    fun contains_pointInsideParis_true() {
-        val notreDame = GeoPoint(lat = 48.8530, lon = 2.3499)
-        assertTrue(GeoBounds.PARIS.contains(notreDame))
+    fun coverage_containsCentralParis() {
+        assertTrue(GeoBounds.COVERAGE.contains(GeoPoint.PARIS_CENTER))
+        assertTrue(GeoBounds.COVERAGE.contains(GeoPoint(lat = 48.8330, lon = 2.4330))) // Bois de Vincennes
     }
 
     @Test
-    fun contains_pointInBoisDeVincennes_true() {
-        assertTrue(GeoBounds.PARIS.contains(GeoPoint(lat = 48.8330, lon = 2.4330)))
+    fun coverage_containsPantinAndThiaisCemeteries() {
+        assertTrue(GeoBounds.COVERAGE.contains(GeoPoint(lat = 48.9059, lon = 2.4101))) // Pantin
+        assertTrue(GeoBounds.COVERAGE.contains(GeoPoint(lat = 48.7423, lon = 2.3600))) // Thiais
     }
 
     @Test
-    fun contains_pointInLondon_false() {
-        assertFalse(GeoBounds.PARIS.contains(GeoPoint(lat = 51.5072, lon = -0.1276)))
+    fun coverage_excludesLondon() {
+        assertFalse(GeoBounds.COVERAGE.contains(GeoPoint(lat = 51.5072, lon = -0.1276)))
     }
 
     @Test
