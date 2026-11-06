@@ -17,4 +17,5 @@
     <string name="map_location_unavailable">Position indisponible. Vérifiez que la localisation est activée.</string>
     <string name="map_location_denied">Autorisez l’accès à la position pour vous localiser.</string>
     <string name="map_location_settings">Réglages</string>
+    <string name="map_filter_remarkable">Arbres remarquables</string>
 </resources>

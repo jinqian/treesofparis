@@ -2,12 +2,16 @@ package com.treesofparis.feature.map
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
@@ -90,6 +94,7 @@ fun MapRoute(
         onLocateMe = { locate(true) },
         onMessageDismiss = viewModel::onMessageShown,
         onOpenSettings = { context.openAppSettings() },
+        onRemarkableFilterToggle = viewModel::onRemarkableFilterToggle,
         modifier = modifier,
     )
 }
@@ -104,6 +109,7 @@ fun MapScreen(
     onLocateMe: () -> Unit,
     onMessageDismiss: () -> Unit,
     onOpenSettings: () -> Unit,
+    onRemarkableFilterToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -119,8 +125,12 @@ fun MapScreen(
             onCameraChange = onCameraChange,
             modifier = Modifier.fillMaxSize(),
         )
-        if (state.showZoomHint) {
-            ZoomHint(modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(TreesSpacing.m))
+        Column(
+            modifier = Modifier.align(Alignment.TopStart).statusBarsPadding().padding(TreesSpacing.m),
+            verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
+        ) {
+            RemarkableFilterChip(selected = state.remarkableOnly, onClick = onRemarkableFilterToggle)
+            if (state.showZoomHint) ZoomHint()
         }
         LocateButton(
             isLocating = state.isLocating,
@@ -190,6 +200,25 @@ private val MapMessage.textRes: Int
             MapMessage.LOCATION_UNAVAILABLE -> R.string.map_location_unavailable
             MapMessage.PERMISSION_DENIED -> R.string.map_location_denied
         }
+
+/** Shows only the remarkable trees; they keep their gold pin either way. */
+@Composable
+private fun RemarkableFilterChip(
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(stringResource(R.string.map_filter_remarkable)) },
+        leadingIcon = { Icon(TreesIcons.Remarkable, contentDescription = null, modifier = Modifier.size(18.dp)) },
+        modifier = modifier,
+        // Opaque on top of the map, whether selected or not.
+        colors = FilterChipDefaults.filterChipColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = FilterChipDefaults.filterChipElevation(elevation = 2.dp),
+    )
+}
 
 @Composable
 private fun ZoomHint(modifier: Modifier = Modifier) {

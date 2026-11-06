@@ -42,13 +42,16 @@ class FakeTreeRepository(
     private val trees: List<Tree>,
 ) : TreeRepository {
     val boundsCalls = mutableListOf<Pair<GeoBounds, Int>>()
+    val remarkableOnlyCalls = mutableListOf<Boolean>()
 
     override suspend fun getTreesInBounds(
         bounds: GeoBounds,
         limit: Int,
+        remarkableOnly: Boolean,
     ): List<Tree> {
         boundsCalls += bounds to limit
-        return trees.filter { bounds.contains(it.location) }.take(limit)
+        remarkableOnlyCalls += remarkableOnly
+        return trees.filter { bounds.contains(it.location) && (!remarkableOnly || it.remarkable) }.take(limit)
     }
 
     override suspend fun getTree(id: Long) = trees.firstOrNull { it.id == id }
