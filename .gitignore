@@ -16,3 +16,8 @@ local.properties
 
 # Data
 data/raw/
+
+# Python
+data/.venv/
+__pycache__/
+.pytest_cache/
