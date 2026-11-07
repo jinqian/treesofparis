@@ -14,6 +14,7 @@ data class MapUiState(
     val selectedTree: TreeDetailUi? = null,
     val isLocating: Boolean = false,
     val remarkableOnly: Boolean = false,
+    val showRemarkableInfo: Boolean = false,
     val message: MapMessage? = null,
 )
 

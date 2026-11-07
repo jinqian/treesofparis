@@ -5,20 +5,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -42,10 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.treesofparis.core.designsystem.component.TreesBottomSheet
@@ -106,12 +96,13 @@ fun MapRoute(
         onLocateMe = { locate(true) },
         onMessageDismiss = viewModel::onMessageShown,
         onOpenSettings = { context.openAppSettings() },
-        onRemarkableFilterToggle = viewModel::onRemarkableFilterToggle,
+        onRemarkableFilterChange = viewModel::onRemarkableFilterChange,
+        onRemarkableInfoOpen = viewModel::onRemarkableInfoOpen,
+        onRemarkableInfoDismiss = viewModel::onRemarkableInfoDismiss,
         modifier = modifier,
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MapScreen(
     state: MapUiState,
@@ -122,7 +113,9 @@ fun MapScreen(
     onLocateMe: () -> Unit,
     onMessageDismiss: () -> Unit,
     onOpenSettings: () -> Unit,
-    onRemarkableFilterToggle: () -> Unit,
+    onRemarkableFilterChange: (Boolean) -> Unit,
+    onRemarkableInfoOpen: () -> Unit,
+    onRemarkableInfoDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -143,16 +136,13 @@ fun MapScreen(
             modifier = Modifier.align(Alignment.TopStart).statusBarsPadding().padding(TreesSpacing.m),
             verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
         ) {
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s, Alignment.Start),
-                verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
-            ) {
-                BrandPill()
-                Spacer(Modifier.weight(1f))
-                RemarkableFilterChip(selected = state.remarkableOnly, onClick = onRemarkableFilterToggle)
-            }
-            if (state.showZoomHint) ZoomHint()
+            RemarkableFilterBar(
+                remarkableOnly = state.remarkableOnly,
+                onRemarkableFilterChange = onRemarkableFilterChange,
+                onInfoClick = onRemarkableInfoOpen,
+            )
+            if (state.remarkableOnly) RemarkableOnlyCaption(Modifier.align(Alignment.CenterHorizontally))
+            if (state.showZoomHint) ZoomHint(Modifier.align(Alignment.CenterHorizontally))
         }
         LocateButton(
             isLocating = state.isLocating,
@@ -166,6 +156,14 @@ fun MapScreen(
         state.selectedTree?.let { detail ->
             TreesBottomSheet(onDismiss = onDetailDismiss) {
                 TreeDetailContent(detail = detail, onFavoriteToggle = onFavoriteToggle)
+            }
+        }
+        if (state.showRemarkableInfo) {
+            TreesBottomSheet(onDismiss = onRemarkableInfoDismiss) {
+                RemarkableInfoContent(
+                    onShowRemarkableOnly = { onRemarkableFilterChange(true) },
+                    onClose = onRemarkableInfoDismiss,
+                )
             }
         }
     }
@@ -195,29 +193,6 @@ private fun FloatingPill(
         shadowElevation = 4.dp,
         content = content,
     )
-}
-
-@Composable
-private fun BrandPill(modifier: Modifier = Modifier) {
-    FloatingPill(modifier) {
-        Row(
-            modifier = Modifier.height(44.dp).padding(start = 12.dp, end = TreesSpacing.m),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s),
-        ) {
-            Icon(
-                imageVector = TreesIcons.Leaf,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp),
-            )
-            Text(
-                text = stringResource(R.string.map_brand),
-                style = MaterialTheme.typography.titleMedium.copy(fontSize = 19.sp),
-                modifier = Modifier.semantics { heading() },
-            )
-        }
-    }
 }
 
 @Composable
@@ -282,48 +257,6 @@ private val MapMessage.textRes: Int
             MapMessage.LOCATION_UNAVAILABLE -> R.string.map_location_unavailable
             MapMessage.PERMISSION_DENIED -> R.string.map_location_denied
         }
-
-/** Shows only the remarkable trees; they keep their gold pin either way. */
-@Composable
-private fun RemarkableFilterChip(
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = MaterialTheme.colorScheme
-    FilterChip(
-        selected = selected,
-        onClick = onClick,
-        label = { Text(stringResource(R.string.map_filter_remarkable), style = MaterialTheme.typography.labelLarge) },
-        leadingIcon = {
-            Icon(
-                if (selected) TreesIcons.Remarkable else TreesIcons.RemarkableOutlined,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-            )
-        },
-        modifier = modifier.height(44.dp),
-        shape = CircleShape,
-        // Opaque on top of the map, whether selected or not.
-        colors =
-            FilterChipDefaults.filterChipColors(
-                containerColor = colors.surfaceContainerLow,
-                labelColor = colors.onSurface,
-                iconColor = colors.onSurface,
-                selectedContainerColor = colors.primary,
-                selectedLabelColor = colors.onPrimary,
-                selectedLeadingIconColor = colors.onPrimary,
-            ),
-        border =
-            FilterChipDefaults.filterChipBorder(
-                enabled = true,
-                selected = selected,
-                borderColor = colors.outlineVariant,
-                selectedBorderColor = colors.primary,
-            ),
-        elevation = FilterChipDefaults.filterChipElevation(elevation = 4.dp),
-    )
-}
 
 @Composable
 private fun ZoomHint(modifier: Modifier = Modifier) {

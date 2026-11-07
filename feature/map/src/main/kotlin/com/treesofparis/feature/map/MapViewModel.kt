@@ -123,12 +123,22 @@ class MapViewModel
             }
         }
 
-        /** Shows only remarkable trees (at every zoom level), or all trees again. */
-        fun onRemarkableFilterToggle() {
-            val enabled = !remarkableOnly.value
+        /**
+         * Shows only remarkable trees (at every zoom level) when [enabled], or all trees. Choosing a filter also closes
+         * the « Qu'est-ce qu'un arbre remarquable ? » sheet, which offers that choice.
+         */
+        fun onRemarkableFilterChange(enabled: Boolean) {
             savedState[KEY_REMARKABLE] = enabled
             remarkableOnly.value = enabled
-            state.update { it.copy(remarkableOnly = enabled) }
+            state.update { it.copy(remarkableOnly = enabled, showRemarkableInfo = false) }
+        }
+
+        fun onRemarkableInfoOpen() {
+            state.update { it.copy(showRemarkableInfo = true) }
+        }
+
+        fun onRemarkableInfoDismiss() {
+            state.update { it.copy(showRemarkableInfo = false) }
         }
 
         fun onMessageShown() {
