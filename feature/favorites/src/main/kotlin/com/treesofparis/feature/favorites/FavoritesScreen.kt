@@ -49,7 +49,6 @@ fun FavoritesScreen(
             FavoritesUiState.Empty -> {
                 EmptyState(
                     message = stringResource(R.string.favorites_empty),
-                    icon = TreesIcons.FavoriteOutlined,
                     modifier = contentModifier,
                 )
             }

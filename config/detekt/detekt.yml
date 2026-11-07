@@ -32,5 +32,7 @@ Compose:
   CompositionLocalAllowlist:
     active: true
     # LocalMapProvider is the single wiring point for the map implementation (docs/adr/0002).
+    # LocalTreesColors carries theme colours Material has no slot for, like MaterialTheme's own locals.
     allowedCompositionLocals:
       - LocalMapProvider
+      - LocalTreesColors

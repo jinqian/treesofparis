@@ -10,20 +10,21 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import com.treesofparis.core.designsystem.theme.TreesSpacing
 import com.treesofparis.core.designsystem.theme.TreesTheme
+import java.util.Locale
 
-/** Section title inside a screen; marked as a heading for accessibility. */
+/** Small uppercase label above a group of rows; marked as a heading for accessibility. */
 @Composable
 fun SectionHeader(
     text: String,
     modifier: Modifier = Modifier,
 ) {
     Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
+        text = text.uppercase(Locale.FRENCH),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier =
             modifier
-                .padding(horizontal = TreesSpacing.m, vertical = TreesSpacing.s)
+                .padding(horizontal = TreesSpacing.s, vertical = TreesSpacing.s)
                 .semantics { heading() },
     )
 }
