@@ -28,13 +28,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.treesofparis.core.designsystem.component.TreesDivider
 import com.treesofparis.core.designsystem.icon.TreesIcons
@@ -73,7 +73,6 @@ internal fun RemarkableFilterBar(
             Segment(
                 label = stringResource(R.string.map_filter_all),
                 dotColor = TreesTheme.colors.treePin,
-                dotSize = 10.dp,
                 selected = !remarkableOnly,
                 onClick = { onRemarkableFilterChange(false) },
                 modifier = Modifier.weight(1f),
@@ -81,7 +80,6 @@ internal fun RemarkableFilterBar(
             Segment(
                 label = stringResource(R.string.map_filter_remarkable),
                 dotColor = TreesTheme.colors.remarkable,
-                dotSize = 12.dp,
                 selected = remarkableOnly,
                 onClick = { onRemarkableFilterChange(true) },
                 modifier = Modifier.weight(1f),
@@ -110,7 +108,6 @@ internal fun RemarkableFilterBar(
 private fun Segment(
     label: String,
     dotColor: Color,
-    dotSize: Dp,
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -130,7 +127,7 @@ private fun Segment(
         horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        LegendDot(color = dotColor, size = dotSize)
+        LegendDot(color = dotColor)
         Text(
             text = label,
             style = MaterialTheme.typography.labelLarge,
@@ -141,17 +138,22 @@ private fun Segment(
     }
 }
 
+internal const val LEGEND_DOT_TAG = "legend_dot"
+
+/** One dot size for every legend, so ordinary and remarkable trees read as equals in the key. */
+private val LEGEND_DOT_SIZE = 12.dp
+
 /** A pin as drawn on the map: a coloured dot with a paper ring. Decorative. */
 @Composable
 internal fun LegendDot(
     color: Color,
-    size: Dp,
     modifier: Modifier = Modifier,
 ) {
     Box(
         modifier =
             modifier
-                .size(size + 4.dp)
+                .testTag(LEGEND_DOT_TAG)
+                .size(LEGEND_DOT_SIZE + 4.dp)
                 .background(TreesTheme.colors.pinRing, CircleShape)
                 .padding(2.dp)
                 .background(color, CircleShape),
@@ -186,9 +188,9 @@ internal fun RemarkableInfoContent(
         )
         Column {
             TreesDivider()
-            LegendRow(stringResource(R.string.map_legend_tree), TreesTheme.colors.treePin, 12.dp)
+            LegendRow(stringResource(R.string.map_legend_tree), TreesTheme.colors.treePin)
             TreesDivider()
-            LegendRow(stringResource(R.string.map_detail_remarkable), TreesTheme.colors.remarkable, 16.dp)
+            LegendRow(stringResource(R.string.map_detail_remarkable), TreesTheme.colors.remarkable)
             TreesDivider()
         }
         Column(verticalArrangement = Arrangement.spacedBy(TreesSpacing.s)) {
@@ -206,14 +208,13 @@ internal fun RemarkableInfoContent(
 private fun LegendRow(
     label: String,
     color: Color,
-    dotSize: Dp,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(modifier = Modifier.size(20.dp), contentAlignment = Alignment.Center) { LegendDot(color, dotSize) }
+        Box(modifier = Modifier.size(20.dp), contentAlignment = Alignment.Center) { LegendDot(color) }
         Text(label, style = MaterialTheme.typography.bodyMedium)
     }
 }
