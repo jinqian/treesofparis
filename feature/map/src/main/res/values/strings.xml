@@ -8,7 +8,7 @@
     <string name="map_detail_unknown_stage">Stade inconnu</string>
     <string name="map_detail_height">Hauteur</string>
     <string name="map_detail_circumference">Circonférence</string>
-    <string name="map_detail_stage">Stade de développement</string>
+    <string name="map_detail_stage">Stade</string>
     <string name="map_detail_remarkable">Arbre remarquable</string>
     <string name="map_favorite_add">Ajouter aux favoris</string>
     <string name="map_favorite_remove">Retirer des favoris</string>

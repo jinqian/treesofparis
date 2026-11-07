@@ -26,6 +26,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.treesofparis.core.designsystem.component.TreesDivider
@@ -35,6 +39,8 @@ import com.treesofparis.core.designsystem.theme.ScientificNameStyle
 import com.treesofparis.core.designsystem.theme.TreesSpacing
 import com.treesofparis.core.designsystem.theme.TreesTheme
 import java.util.Locale
+
+private const val WATERMARK_ALPHA = 0.6f
 
 /** The body of the tree detail bottom sheet, laid out like a herbarium label. */
 @Composable
@@ -47,8 +53,8 @@ fun TreeDetailContent(
         Icon(
             imageVector = TreesIllustrations.PlaneLeaf,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.outlineVariant,
-            modifier = Modifier.align(Alignment.TopEnd).size(150.dp).offset(x = 24.dp),
+            tint = MaterialTheme.colorScheme.outlineVariant.copy(alpha = WATERMARK_ALPHA),
+            modifier = Modifier.align(Alignment.TopEnd).size(120.dp).offset(x = 28.dp, y = (-4).dp),
         )
         Column(
             modifier =
@@ -139,9 +145,16 @@ private fun Location(detail: TreeDetailUi) {
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(18.dp),
         )
-        Text(detail.address, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f, fill = false))
-        Text("·", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
-        Text(detail.area, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        val area = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
+        Text(
+            text =
+                buildAnnotatedString {
+                    append(detail.address)
+                    append(" · ")
+                    withStyle(area) { append(detail.area) }
+                },
+            style = MaterialTheme.typography.bodyMedium,
+        )
     }
 }
 
