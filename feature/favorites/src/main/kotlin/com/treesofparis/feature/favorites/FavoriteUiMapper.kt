@@ -9,4 +9,5 @@ internal fun Tree.toFavoriteUi() =
         id = id,
         title = commonName,
         subtitle = "${formatPlace(address)} · ${formatArea(arrondissement)}",
+        remarkable = remarkable,
     )
