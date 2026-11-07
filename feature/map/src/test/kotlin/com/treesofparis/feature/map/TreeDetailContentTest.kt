@@ -24,7 +24,7 @@ class TreeDetailContentTest {
         compose.setContent { TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}) } }
         compose.onNodeWithText("Espèce inconnue").assertIsDisplayed()
         compose.onNodeWithText("Hauteur inconnue").assertIsDisplayed()
-        compose.onNodeWithText("Paris 19e").assertIsDisplayed()
+        compose.onNodeWithText("Quai de la Seine · Paris 19e").assertIsDisplayed()
     }
 
     @Test
