@@ -27,7 +27,7 @@ import com.treesofparis.navigation.rememberTreesNavigationState
 @Composable
 fun TreesApp(
     mapContent: @Composable (MapKey) -> Unit,
-    favoritesContent: @Composable (onTreeClick: (Long) -> Unit) -> Unit,
+    favoritesContent: @Composable (onTreeClick: (Long) -> Unit, onExploreMap: () -> Unit) -> Unit,
     aboutContent: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -55,7 +55,9 @@ fun TreesApp(
                 state.toDecoratedEntries(
                     entryProvider {
                         entry<MapKey> { key -> mapContent(key) }
-                        entry<FavoritesKey> { favoritesContent(navigator::openTreeOnMap) }
+                        entry<FavoritesKey> {
+                            favoritesContent(navigator::openTreeOnMap) { navigator.selectTab(TopLevelDestination.MAP) }
+                        }
                         entry<AboutKey> { aboutContent() }
                     },
                 ),

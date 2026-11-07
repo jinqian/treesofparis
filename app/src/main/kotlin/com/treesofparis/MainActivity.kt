@@ -27,7 +27,9 @@ class MainActivity : ComponentActivity() {
                 CompositionLocalProvider(LocalMapProvider provides mapProvider) {
                     TreesApp(
                         mapContent = { key -> MapRoute(treeId = key.treeId) },
-                        favoritesContent = { onTreeClick -> FavoritesRoute(onTreeClick = onTreeClick) },
+                        favoritesContent = { onTreeClick, onExploreMap ->
+                            FavoritesRoute(onTreeClick = onTreeClick, onExploreMap = onExploreMap)
+                        },
                         aboutContent = { AboutRoute(librariesResId = R.raw.aboutlibraries) },
                     )
                 }

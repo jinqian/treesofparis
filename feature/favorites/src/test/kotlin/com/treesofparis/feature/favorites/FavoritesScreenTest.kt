@@ -19,14 +19,27 @@ class FavoritesScreenTest {
 
     private val content =
         FavoritesUiState.Content(
-            listOf(FavoriteUiModel(7, "Platane", "Quai de la Seine · Paris 19e")),
+            listOf(FavoriteUiModel(7, "Platane", "Quai de la Seine · Paris 19e", remarkable = true)),
         )
 
     @Test
-    fun empty_showsMessage() {
-        compose.setContent { TreesTheme { FavoritesScreen(FavoritesUiState.Empty, onTreeClick = {}, onRemove = {}) } }
+    fun empty_showsMessageAndExploreActionOpensMap() {
+        var explored = 0
+        compose.setContent {
+            TreesTheme {
+                FavoritesScreen(FavoritesUiState.Empty, onTreeClick = {}, onRemove = {}, onExploreMap = { explored++ })
+            }
+        }
         compose.onNodeWithText("Favoris").assertIsDisplayed()
-        compose.onNodeWithText("Aucun favori pour le moment", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Aucun favori pour le moment").assertIsDisplayed()
+        compose.onNodeWithText("Explorer la carte").performClick()
+        assertEquals(1, explored)
+    }
+
+    @Test
+    fun content_showsCountUnderTitle() {
+        compose.setContent { TreesTheme { FavoritesScreen(content, onTreeClick = {}, onRemove = {}) } }
+        compose.onNodeWithText("1 arbre").assertIsDisplayed()
     }
 
     @Test
