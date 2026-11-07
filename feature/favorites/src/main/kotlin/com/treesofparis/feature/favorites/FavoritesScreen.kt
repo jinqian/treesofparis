@@ -139,8 +139,8 @@ private fun FavoritesScreenPreview() {
             state =
                 FavoritesUiState.Content(
                     listOf(
-                        FavoriteUiModel(1, "Platane", "Quai de la Seine · Paris 19e", remarkable = true),
-                        FavoriteUiModel(2, "Cerisier à fleurs", "Cimetière de Pantin · Seine-Saint-Denis"),
+                        FavoriteUiModel(1, "Platane", "Paris 19e · Quai de la Seine", remarkable = true),
+                        FavoriteUiModel(2, "Cerisier à fleurs", "Seine-Saint-Denis · Cimetière de Pantin"),
                     ),
                 ),
             onTreeClick = {},

@@ -13,7 +13,7 @@ class FavoriteUiMapperTest {
     }
 
     @Test
-    fun toFavoriteUi_formatsPlaceThenArea() {
-        assertEquals("Quai de la Seine · Paris 19e", tree(1).toFavoriteUi().subtitle)
+    fun toFavoriteUi_formatsAreaThenPlace() {
+        assertEquals("Paris 19e · Quai de la Seine", tree(1).toFavoriteUi().subtitle)
     }
 }

@@ -42,8 +42,8 @@ class FavoritesViewModelTest {
                 val content = awaitItem() as FavoritesUiState.Content
                 assertEquals(
                     listOf(
-                        FavoriteUiModel(id = 2, title = "Tilleul", subtitle = "Quai de la Seine · Paris 1er"),
-                        FavoriteUiModel(id = 1, title = "Platane", subtitle = "Quai de la Seine · Paris 19e"),
+                        FavoriteUiModel(id = 2, title = "Tilleul", subtitle = "Paris 1er · Quai de la Seine"),
+                        FavoriteUiModel(id = 1, title = "Platane", subtitle = "Paris 19e · Quai de la Seine"),
                     ),
                     content.items,
                 )

@@ -19,7 +19,7 @@ class FavoritesScreenTest {
 
     private val content =
         FavoritesUiState.Content(
-            listOf(FavoriteUiModel(7, "Platane", "Quai de la Seine · Paris 19e", remarkable = true)),
+            listOf(FavoriteUiModel(7, "Platane", "Paris 19e · Quai de la Seine", remarkable = true)),
         )
 
     @Test
