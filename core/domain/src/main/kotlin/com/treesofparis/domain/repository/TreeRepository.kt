@@ -4,9 +4,11 @@ import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.Tree
 
 interface TreeRepository {
+    /** Trees inside [bounds], at most [limit]; only remarkable trees when [remarkableOnly]. */
     suspend fun getTreesInBounds(
         bounds: GeoBounds,
         limit: Int,
+        remarkableOnly: Boolean,
     ): List<Tree>
 
     suspend fun getTree(id: Long): Tree?

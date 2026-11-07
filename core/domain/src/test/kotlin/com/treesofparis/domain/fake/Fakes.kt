@@ -37,7 +37,8 @@ class FakeTreeRepository(
     override suspend fun getTreesInBounds(
         bounds: GeoBounds,
         limit: Int,
-    ) = byId.values.filter { bounds.contains(it.location) }.take(limit)
+        remarkableOnly: Boolean,
+    ) = byId.values.filter { bounds.contains(it.location) && (!remarkableOnly || it.remarkable) }.take(limit)
 
     override suspend fun getTree(id: Long) = byId[id]
 

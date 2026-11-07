@@ -7,6 +7,7 @@ import com.treesofparis.core.map.CameraRequest
 import com.treesofparis.core.map.MapCamera
 import com.treesofparis.core.map.MapConfig
 import com.treesofparis.core.map.MapMarker
+import com.treesofparis.core.map.MarkerStyle
 import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
 import com.treesofparis.domain.model.UserLocation
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
@@ -40,10 +42,17 @@ class MapViewModel
         private val locateUser: LocateUser,
         private val savedState: SavedStateHandle,
     ) : ViewModel() {
-        private val state = MutableStateFlow(MapUiState(initialCamera = savedCamera() ?: DEFAULT_CAMERA))
+        private val state =
+            MutableStateFlow(
+                MapUiState(
+                    initialCamera = savedCamera() ?: DEFAULT_CAMERA,
+                    remarkableOnly = savedState[KEY_REMARKABLE] ?: false,
+                ),
+            )
         val uiState: StateFlow<MapUiState> = state.asStateFlow()
 
         private val cameraChanges = MutableStateFlow<Pair<MapCamera, GeoBounds>?>(null)
+        private val remarkableOnly = MutableStateFlow(savedState[KEY_REMARKABLE] ?: false)
         private var selectionJob: Job? = null
         private var nextRequestId = 0L
 
@@ -114,6 +123,14 @@ class MapViewModel
             }
         }
 
+        /** Shows only remarkable trees (at every zoom level), or all trees again. */
+        fun onRemarkableFilterToggle() {
+            val enabled = !remarkableOnly.value
+            savedState[KEY_REMARKABLE] = enabled
+            remarkableOnly.value = enabled
+            state.update { it.copy(remarkableOnly = enabled) }
+        }
+
         fun onMessageShown() {
             state.update { it.copy(message = null) }
         }
@@ -132,19 +149,38 @@ class MapViewModel
         @OptIn(FlowPreview::class)
         private fun observeCameraChanges() {
             viewModelScope.launch {
-                cameraChanges.filterNotNull().debounce(CAMERA_DEBOUNCE_MS).collectLatest { (camera, bounds) ->
-                    if (camera.zoom < MIN_TREE_ZOOM) {
-                        state.update { it.copy(markers = emptyList(), showZoomHint = true) }
-                    } else {
-                        val selected = selectedId
-                        val markers =
-                            getTreesInBounds(bounds, MAX_MARKERS).map {
-                                MapMarker(id = it.id, position = it.location, selected = it.id == selected)
-                            }
-                        state.update { it.copy(markers = markers, showZoomHint = false) }
+                // The camera is debounced; a filter change reloads right away with the last camera.
+                combine(cameraChanges.filterNotNull().debounce(CAMERA_DEBOUNCE_MS), remarkableOnly, ::Pair)
+                    .collectLatest { (cameraAndBounds, onlyRemarkable) ->
+                        loadMarkers(cameraAndBounds.first, cameraAndBounds.second, onlyRemarkable)
                     }
-                }
             }
+        }
+
+        /**
+         * Below [MIN_TREE_ZOOM] there are too many trees to show, except with the remarkable filter: there are only a
+         * couple of hundred remarkable trees, so they are shown at every zoom level.
+         */
+        private suspend fun loadMarkers(
+            camera: MapCamera,
+            bounds: GeoBounds,
+            onlyRemarkable: Boolean,
+        ) {
+            if (camera.zoom < MIN_TREE_ZOOM && !onlyRemarkable) {
+                state.update { it.copy(markers = emptyList(), showZoomHint = true) }
+                return
+            }
+            val selected = selectedId
+            val markers =
+                getTreesInBounds(bounds, MAX_MARKERS, onlyRemarkable).map {
+                    MapMarker(
+                        id = it.id,
+                        position = it.location,
+                        selected = it.id == selected,
+                        style = if (it.remarkable) MarkerStyle.REMARKABLE else MarkerStyle.TREE,
+                    )
+                }
+            state.update { it.copy(markers = markers, showZoomHint = false) }
         }
 
         private fun select(id: Long) {
@@ -195,5 +231,6 @@ class MapViewModel
             private const val KEY_ZOOM = "camera_zoom"
             private const val KEY_SELECTED = "selected_tree"
             private const val KEY_OPENED = "opened_tree"
+            private const val KEY_REMARKABLE = "remarkable_only"
         }
     }

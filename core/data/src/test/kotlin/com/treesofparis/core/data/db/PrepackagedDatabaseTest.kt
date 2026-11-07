@@ -38,9 +38,28 @@ class PrepackagedDatabaseTest {
         runTest {
             val db = buildTreeDatabase(context, name = "outside.db").also(opened::add)
             // Pantin cemetery (Seine-Saint-Denis)
-            val pantin = db.treeDao().inBounds(south = 48.900, west = 2.400, north = 48.912, east = 2.424, limit = 10)
+            val pantin =
+                db.treeDao().inBounds(
+                    south = 48.900,
+                    west = 2.400,
+                    north = 48.912,
+                    east = 2.424,
+                    remarkableOnly = false,
+                    limit = 10,
+                )
             assertEquals(true, pantin.isNotEmpty())
             assertEquals(true, pantin.all { it.arrondissement == "SEINE-SAINT-DENIS" })
+        }
+
+    @Test
+    fun prepackagedAsset_has181RemarkableTrees() =
+        runTest {
+            val db = buildTreeDatabase(context, name = "remarkable.db").also(opened::add)
+            val c = com.treesofparis.domain.model.GeoBounds.COVERAGE
+            val remarkable =
+                db.treeDao().inBounds(c.south, c.west, c.north, c.east, remarkableOnly = true, limit = 1_000)
+            assertEquals(181, remarkable.size)
+            assertEquals(true, remarkable.all { it.remarkable })
         }
 
     @Test

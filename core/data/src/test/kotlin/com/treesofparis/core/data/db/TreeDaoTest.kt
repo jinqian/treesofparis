@@ -29,7 +29,18 @@ class TreeDaoTest {
     fun inBounds_returnsOnlyTreesInside() =
         runTest {
             db.insert(treeEntity(1, 48.850, 2.350), treeEntity(2, 48.851, 2.351), treeEntity(3, 48.900, 2.400))
-            val ids = dao.inBounds(south = 48.84, west = 2.34, north = 48.86, east = 2.36, limit = 10).map { it.id }
+            val ids =
+                dao
+                    .inBounds(
+                        south = 48.84,
+                        west = 2.34,
+                        north = 48.86,
+                        east = 2.36,
+                        remarkableOnly = false,
+                        limit = 10,
+                    ).map {
+                        it.id
+                    }
             assertEquals(setOf(1L, 2L), ids.toSet())
         }
 
@@ -37,14 +48,25 @@ class TreeDaoTest {
     fun inBounds_respectsLimit() =
         runTest {
             db.insert(*(1L..20L).map { treeEntity(it, 48.85 + it / 10_000.0, 2.35) }.toTypedArray())
-            assertEquals(5, dao.inBounds(48.84, 2.34, 48.86, 2.36, limit = 5).size)
+            assertEquals(5, dao.inBounds(48.84, 2.34, 48.86, 2.36, remarkableOnly = false, limit = 5).size)
         }
 
     @Test
     fun inBounds_overLimit_keepsTreesClosestToCentre() =
         runTest {
             db.insert(treeEntity(1, 48.841, 2.341), treeEntity(2, 48.850, 2.350), treeEntity(3, 48.859, 2.359))
-            assertEquals(listOf(2L), dao.inBounds(48.84, 2.34, 48.86, 2.36, limit = 1).map { it.id })
+            assertEquals(
+                listOf(2L),
+                dao.inBounds(48.84, 2.34, 48.86, 2.36, remarkableOnly = false, limit = 1).map { it.id },
+            )
+        }
+
+    @Test
+    fun inBounds_remarkableOnly_returnsOnlyRemarkableTrees() =
+        runTest {
+            db.insert(treeEntity(1, 48.850, 2.350), treeEntity(2, 48.851, 2.351).copy(remarkable = true))
+            val ids = dao.inBounds(48.84, 2.34, 48.86, 2.36, remarkableOnly = true, limit = 10).map { it.id }
+            assertEquals(listOf(2L), ids)
         }
 
     @Test
