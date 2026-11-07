@@ -23,13 +23,18 @@ internal data class MarkerSizes(
     val selectedRadiusPx: Float,
     val userRadiusPx: Float,
     val remarkableRadiusPx: Float,
+    val ringWidthPx: Float,
     val cellSizePx: Int,
-)
+) {
+    /** Radius of the ring drawn under a pin of [radiusPx]. */
+    fun ringRadius(radiusPx: Float): Float = radiusPx + ringWidthPx
+}
 
 private const val TREE_RADIUS_DP = 6f
 private const val SELECTED_RADIUS_DP = 9f
 private const val USER_RADIUS_DP = 8f
 private const val REMARKABLE_RADIUS_DP = 8f
+private const val RING_WIDTH_DP = 2f
 private const val CELL_SIZE_DP = 4f
 
 internal fun markerSizes(density: Float) =
@@ -38,6 +43,7 @@ internal fun markerSizes(density: Float) =
         selectedRadiusPx = SELECTED_RADIUS_DP * density,
         userRadiusPx = USER_RADIUS_DP * density,
         remarkableRadiusPx = REMARKABLE_RADIUS_DP * density,
+        ringWidthPx = RING_WIDTH_DP * density,
         cellSizePx = (CELL_SIZE_DP * density).toInt().coerceAtLeast(1),
     )
 
@@ -81,18 +87,21 @@ internal fun treeOverlay(
     }
 }
 
-/** A single non-clickable dot for the user's position. */
-internal fun userLocationOverlay(
-    location: GeoPoint,
+/** Non-clickable dots of one [color] and [radiusPx]: pin rings, the selection halo, the user's position. */
+internal fun dotsOverlay(
+    points: List<GeoPoint>,
     color: Int,
+    radiusPx: Float,
     sizes: MarkerSizes,
 ): SimpleFastPointOverlay {
     val options =
         SimpleFastPointOverlayOptions
             .getDefaultStyle()
+            .setAlgorithm(SimpleFastPointOverlayOptions.RenderingAlgorithm.MAXIMUM_OPTIMIZATION)
             .setSymbol(SimpleFastPointOverlayOptions.Shape.CIRCLE)
-            .setRadius(sizes.userRadiusPx)
+            .setRadius(radiusPx)
+            .setCellSize(sizes.cellSizePx)
             .setIsClickable(false)
             .setPointStyle(fill(color))
-    return SimpleFastPointOverlay(SimplePointTheme(listOf<IGeoPoint>(location.toOsm()), false), options)
+    return SimpleFastPointOverlay(SimplePointTheme(points.map { it.toOsm() }, false), options)
 }

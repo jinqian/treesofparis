@@ -1,14 +1,12 @@
 package com.treesofparis.core.map.osmdroid
 
 import android.content.Context
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -20,6 +18,7 @@ import com.treesofparis.core.map.CameraRequest
 import com.treesofparis.core.map.MapCamera
 import com.treesofparis.core.map.MapConfig
 import com.treesofparis.core.map.MapMarker
+import com.treesofparis.core.map.MapPalette
 import com.treesofparis.core.map.MapProvider
 import com.treesofparis.core.map.MarkerStyle
 import com.treesofparis.domain.model.GeoBounds
@@ -46,6 +45,7 @@ class OsmdroidMapProvider
             markers: List<MapMarker>,
             userLocation: GeoPoint?,
             config: MapConfig,
+            palette: MapPalette,
             onMarkerClick: (Long) -> Unit,
             onCameraChange: (MapCamera, GeoBounds) -> Unit,
             modifier: Modifier,
@@ -55,10 +55,11 @@ class OsmdroidMapProvider
             val currentOnMarkerClick by rememberUpdatedState(onMarkerClick)
             val colors =
                 MarkerColors(
-                    tree = MaterialTheme.colorScheme.primary.toArgb(),
-                    remarkable = RemarkableGold.toArgb(),
-                    selected = MaterialTheme.colorScheme.tertiary.toArgb(),
-                    user = UserLocationBlue.toArgb(),
+                    tree = palette.tree.toArgb(),
+                    remarkable = palette.remarkable.toArgb(),
+                    selected = palette.selected.toArgb(),
+                    ring = palette.ring.toArgb(),
+                    user = palette.userLocation.toArgb(),
                     sizes = markerSizes(LocalDensity.current.density),
                 )
             val state =
@@ -93,10 +94,6 @@ class OsmdroidMapProvider
         }
 
         private companion object {
-            val UserLocationBlue = Color(0xFF1A73E8)
-
-            /** Remarkable trees stand out in gold, distinct from the chestnut selection colour. */
-            val RemarkableGold = Color(0xFFD4A017)
             const val ANIMATION_MS = 600L
         }
     }
@@ -105,6 +102,7 @@ private data class MarkerColors(
     val tree: Int,
     val remarkable: Int,
     val selected: Int,
+    val ring: Int,
     val user: Int,
     val sizes: MarkerSizes,
 )
@@ -116,7 +114,7 @@ private class OsmdroidState(
     val cameraRequests = CameraRequestTracker()
     private var trees: List<SimpleFastPointOverlay> = emptyList()
     private var treesFor: List<MapMarker>? = null
-    private var user: SimpleFastPointOverlay? = null
+    private var user: List<SimpleFastPointOverlay> = emptyList()
     private var userFor: GeoPoint? = null
 
     fun updateTrees(
@@ -126,21 +124,34 @@ private class OsmdroidState(
     ) {
         if (markers == treesFor) return
         mapView.overlays.removeAll(trees)
-        trees =
+        val sizes = colors.sizes
+        val layers =
             markerLayers(markers).map { (style, layer) ->
                 val (color, radius) =
                     when (style) {
-                        MarkerStyle.TREE -> colors.tree to colors.sizes.treeRadiusPx
-                        MarkerStyle.REMARKABLE -> colors.remarkable to colors.sizes.remarkableRadiusPx
+                        MarkerStyle.TREE -> colors.tree to sizes.treeRadiusPx
+                        MarkerStyle.REMARKABLE -> colors.remarkable to sizes.remarkableRadiusPx
                     }
-                treeOverlay(layer, color, radius, colors.selected, colors.sizes, onMarkerClick)
+                Triple(layer, color, radius)
             }
+        // Rings first, then the selection halo, then the pins, so every pin keeps a clean outline.
+        val rings =
+            layers.map { (layer, _, radius) ->
+                dotsOverlay(layer.map { it.position }, colors.ring, sizes.ringRadius(radius), sizes)
+            }
+        val halo =
+            markers
+                .firstOrNull { it.selected }
+                ?.let { dotsOverlay(listOf(it.position), colors.ring, sizes.ringRadius(sizes.selectedRadiusPx), sizes) }
+        val pins =
+            layers.map { (layer, color, radius) ->
+                treeOverlay(layer, color, radius, colors.selected, sizes, onMarkerClick)
+            }
+        trees = rings + listOfNotNull(halo) + pins
         mapView.overlays.addAll(trees)
         // Keep the user's position drawn above the trees.
-        user?.let {
-            mapView.overlays.remove(it)
-            mapView.overlays.add(it)
-        }
+        mapView.overlays.removeAll(user)
+        mapView.overlays.addAll(user)
         treesFor = markers
     }
 
@@ -149,8 +160,17 @@ private class OsmdroidState(
         colors: MarkerColors,
     ) {
         if (location == userFor) return
-        user?.let(mapView.overlays::remove)
-        user = location?.let { userLocationOverlay(it, colors.user, colors.sizes) }?.also { mapView.overlays.add(it) }
+        mapView.overlays.removeAll(user)
+        val sizes = colors.sizes
+        user =
+            location
+                ?.let {
+                    listOf(
+                        dotsOverlay(listOf(it), colors.ring, sizes.ringRadius(sizes.userRadiusPx), sizes),
+                        dotsOverlay(listOf(it), colors.user, sizes.userRadiusPx, sizes),
+                    )
+                }.orEmpty()
+        mapView.overlays.addAll(user)
         userFor = location
     }
 }
