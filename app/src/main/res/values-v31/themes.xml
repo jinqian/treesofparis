@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+: same splash screen as values/themes.xml, plus the « Arbres de Paris » word mark at the bottom. -->
+    <style name="Theme.Trees.Starting" parent="Theme.SplashScreen.IconBackground">
+        <item name="windowSplashScreenBackground">@color/window_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/splash_icon_background</item>
+        <item name="postSplashScreenTheme">@style/Theme.Trees</item>
+        <item name="android:windowSplashScreenBrandingImage">@drawable/splash_wordmark</item>
+    </style>
+</resources>
