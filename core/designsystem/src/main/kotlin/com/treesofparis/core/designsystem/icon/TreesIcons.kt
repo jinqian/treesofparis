@@ -18,6 +18,8 @@ object TreesIcons {
     val FavoriteOutlined: ImageVector = line("FavoriteOutlined", HEART)
     val Favorite: ImageVector = filled("Favorite", HEART)
     val About: ImageVector = line("About", circle(12f, 12f, 9f), "M12 11v5M12 8h.01")
+    val Help: ImageVector =
+        line("Help", circle(12f, 12f, 9f), "M9.6 9.4a2.5 2.5 0 0 1 4.8 1c0 1.6-2.4 2-2.4 3.4M12 17h.01")
     val AboutOutlined: ImageVector = About
     val MyLocation: ImageVector = line("MyLocation", circle(12f, 12f, 4f), "M12 2v3M12 19v3M2 12h3M19 12h3")
     val Remarkable: ImageVector = filled("Remarkable", STAR)
