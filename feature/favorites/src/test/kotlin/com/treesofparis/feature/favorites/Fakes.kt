@@ -42,6 +42,7 @@ class FakeTreeRepository(
     override suspend fun getTreesInBounds(
         bounds: GeoBounds,
         limit: Int,
+        remarkableOnly: Boolean,
     ) = emptyList<Tree>()
 
     override suspend fun getTree(id: Long) = trees.firstOrNull { it.id == id }

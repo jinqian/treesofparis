@@ -2,6 +2,7 @@ package com.treesofparis.core.map.osmdroid
 
 import android.graphics.Paint
 import com.treesofparis.core.map.MapMarker
+import com.treesofparis.core.map.MarkerStyle
 import com.treesofparis.domain.model.GeoPoint
 import org.osmdroid.api.IGeoPoint
 import org.osmdroid.views.overlay.simplefastpoint.SimpleFastPointOverlay
@@ -21,12 +22,14 @@ internal data class MarkerSizes(
     val treeRadiusPx: Float,
     val selectedRadiusPx: Float,
     val userRadiusPx: Float,
+    val remarkableRadiusPx: Float,
     val cellSizePx: Int,
 )
 
 private const val TREE_RADIUS_DP = 6f
 private const val SELECTED_RADIUS_DP = 9f
 private const val USER_RADIUS_DP = 8f
+private const val REMARKABLE_RADIUS_DP = 8f
 private const val CELL_SIZE_DP = 4f
 
 internal fun markerSizes(density: Float) =
@@ -34,6 +37,7 @@ internal fun markerSizes(density: Float) =
         treeRadiusPx = TREE_RADIUS_DP * density,
         selectedRadiusPx = SELECTED_RADIUS_DP * density,
         userRadiusPx = USER_RADIUS_DP * density,
+        remarkableRadiusPx = REMARKABLE_RADIUS_DP * density,
         cellSizePx = (CELL_SIZE_DP * density).toInt().coerceAtLeast(1),
     )
 
@@ -44,10 +48,17 @@ private fun fill(color: Int) =
         isAntiAlias = true
     }
 
-/** One fast overlay for all tree markers: thousands of points without one view object each. */
+/** Markers grouped by style, in drawing order ([MarkerStyle] order), without empty groups. */
+internal fun markerLayers(markers: List<MapMarker>): Map<MarkerStyle, List<MapMarker>> {
+    val byStyle = markers.groupBy { it.style }
+    return MarkerStyle.entries.mapNotNull { style -> byStyle[style]?.let { style to it } }.toMap()
+}
+
+/** One fast overlay per marker style: thousands of points without one view object each. */
 internal fun treeOverlay(
     markers: List<MapMarker>,
     color: Int,
+    radiusPx: Float,
     selectedColor: Int,
     sizes: MarkerSizes,
     onMarkerClick: (Long) -> Unit,
@@ -58,7 +69,7 @@ internal fun treeOverlay(
             .getDefaultStyle()
             .setAlgorithm(SimpleFastPointOverlayOptions.RenderingAlgorithm.MAXIMUM_OPTIMIZATION)
             .setSymbol(SimpleFastPointOverlayOptions.Shape.CIRCLE)
-            .setRadius(sizes.treeRadiusPx)
+            .setRadius(radiusPx)
             .setCellSize(sizes.cellSizePx)
             .setIsClickable(true)
             .setPointStyle(fill(color))

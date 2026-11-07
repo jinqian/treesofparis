@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -46,6 +48,7 @@ class MapScreenTest {
     private var messagesShown = 0
     private var settingsOpened = 0
     private var locateClicks = 0
+    private var filterToggles = 0
 
     private fun show(state: MapUiState) =
         compose.setContent {
@@ -60,12 +63,26 @@ class MapScreenTest {
                         onLocateMe = { locateClicks++ },
                         onMessageDismiss = { messagesShown++ },
                         onOpenSettings = { settingsOpened++ },
+                        onRemarkableFilterToggle = { filterToggles++ },
                     )
                 }
             }
         }
 
     private val base = MapUiState(initialCamera = MapViewModel.DEFAULT_CAMERA)
+
+    @Test
+    fun remarkableChip_togglesFilter() {
+        show(base)
+        compose.onNodeWithText("Arbres remarquables").assertIsNotSelected().performClick()
+        assertEquals(1, filterToggles)
+    }
+
+    @Test
+    fun remarkableChip_isSelectedWhenFiltering() {
+        show(base.copy(remarkableOnly = true))
+        compose.onNodeWithText("Arbres remarquables").assertIsSelected()
+    }
 
     @Test
     fun locateButton_invokesLocateMe() {

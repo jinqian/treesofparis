@@ -2,6 +2,7 @@ package com.treesofparis.feature.map
 
 import androidx.lifecycle.SavedStateHandle
 import com.treesofparis.core.map.MapCamera
+import com.treesofparis.core.map.MarkerStyle
 import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
 import com.treesofparis.domain.usecase.GetTree
@@ -29,7 +30,11 @@ class MapViewModelTest {
 
     private val center = GeoPoint.PARIS_CENTER
     private val near = GeoBounds(south = 48.85, west = 2.34, north = 48.86, east = 2.36)
-    private val trees = FakeTreeRepository((1L..3000L).map { tree(it, 48.855, 2.35) } + tree(9001, 48.9059, 2.4101))
+    private val remarkable = tree(9002, 48.8551, 2.3501).copy(remarkable = true)
+    private val trees =
+        FakeTreeRepository(
+            listOf(remarkable) + (1L..3000L).map { tree(it, 48.855, 2.35) } + tree(9001, 48.9059, 2.4101),
+        )
     private val favorites = FakeFavoritesRepository()
     private val location = FakeLocationRepository(null)
 
@@ -199,6 +204,81 @@ class MapViewModelTest {
             val second = vm.uiState.value.cameraRequest
             assertNotNull(first)
             assertTrue("a new request id moves the map again", first!!.id != second!!.id)
+        }
+
+    @Test
+    fun markers_remarkableTreesHaveRemarkableStyle() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            vm.onCameraChange(MapCamera(center, zoom = 17.0), near)
+            advanceUntilIdle()
+            val styles =
+                vm.uiState.value.markers
+                    .associate { it.id to it.style }
+            assertEquals(MarkerStyle.REMARKABLE, styles[9002])
+            assertEquals(MarkerStyle.TREE, styles[1])
+        }
+
+    @Test
+    fun remarkableFilter_showsOnlyRemarkableTreesAtAnyZoom() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            vm.onCameraChange(MapCamera(center, zoom = 12.0), GeoBounds.COVERAGE)
+            advanceUntilIdle()
+            assertTrue(vm.uiState.value.showZoomHint)
+
+            vm.onRemarkableFilterToggle()
+            advanceUntilIdle()
+
+            assertTrue(vm.uiState.value.remarkableOnly)
+            assertFalse(vm.uiState.value.showZoomHint)
+            assertEquals(
+                listOf(9002L),
+                vm.uiState.value.markers
+                    .map { it.id },
+            )
+            assertEquals(true, trees.remarkableOnlyCalls.last())
+        }
+
+    @Test
+    fun remarkableFilter_toggleReloadsWithoutWaitingForTheCameraDebounce() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            vm.onCameraChange(MapCamera(center, zoom = 17.0), near)
+            advanceUntilIdle()
+            vm.onRemarkableFilterToggle()
+            runCurrent()
+            assertEquals(
+                listOf(9002L),
+                vm.uiState.value.markers
+                    .map { it.id },
+            )
+        }
+
+    @Test
+    fun remarkableFilter_off_restoresAllTreesAndZoomHint() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            vm.onCameraChange(MapCamera(center, zoom = 12.0), GeoBounds.COVERAGE)
+            vm.onRemarkableFilterToggle()
+            advanceUntilIdle()
+            vm.onRemarkableFilterToggle()
+            advanceUntilIdle()
+            assertFalse(vm.uiState.value.remarkableOnly)
+            assertTrue(vm.uiState.value.showZoomHint)
+            assertTrue(
+                vm.uiState.value.markers
+                    .isEmpty(),
+            )
+        }
+
+    @Test
+    fun remarkableFilter_survivesRecreation() =
+        runTest(main.dispatcher) {
+            val saved = SavedStateHandle()
+            viewModel(saved).onRemarkableFilterToggle()
+            advanceUntilIdle()
+            assertTrue(viewModel(saved).uiState.value.remarkableOnly)
         }
 
     @Test
