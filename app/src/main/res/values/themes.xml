@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Paper window behind Compose, so there is no white flash between the splash screen and the first frame. -->
+    <style name="Theme.Trees" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
+
+    <!-- Splash screen: the moss icon on paper (ground at night). Android 12+ shows only the icon, no text. -->
+    <style name="Theme.Trees.Starting" parent="Theme.SplashScreen.IconBackground">
+        <item name="windowSplashScreenBackground">@color/window_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/splash_icon_background</item>
+        <item name="postSplashScreenTheme">@style/Theme.Trees</item>
+    </style>
+</resources>

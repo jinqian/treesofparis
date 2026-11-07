@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.treesofparis.core.designsystem.theme.TreesTheme
 import com.treesofparis.core.map.LocalMapProvider
 import com.treesofparis.core.map.MapProvider
@@ -20,6 +21,7 @@ class MainActivity : ComponentActivity() {
     lateinit var mapProvider: MapProvider
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
