@@ -1,5 +1,7 @@
 package com.treesofparis.core.map
 
+import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.Color
 import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
 
@@ -34,4 +36,17 @@ data class MapConfig(
     val bounds: GeoBounds,
     val minZoom: Double,
     val maxZoom: Double,
+)
+
+/**
+ * Colours of what the map draws itself, chosen by the feature from its theme. Every pin gets a [ring] so it reads on
+ * any tile; [selected] highlights the tree whose sheet is open.
+ */
+@Immutable
+data class MapPalette(
+    val tree: Color,
+    val remarkable: Color,
+    val selected: Color,
+    val ring: Color,
+    val userLocation: Color,
 )

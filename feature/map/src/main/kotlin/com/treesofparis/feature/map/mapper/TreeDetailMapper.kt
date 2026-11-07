@@ -3,6 +3,7 @@ package com.treesofparis.feature.map.mapper
 import com.treesofparis.domain.format.formatArea
 import com.treesofparis.domain.format.formatPlace
 import com.treesofparis.domain.model.Tree
+import com.treesofparis.feature.map.MeasureUi
 import com.treesofparis.feature.map.TreeDetailUi
 
 fun Tree.toDetailUi(isFavorite: Boolean) =
@@ -12,8 +13,8 @@ fun Tree.toDetailUi(isFavorite: Boolean) =
         scientificName = scientificName(),
         area = formatArea(arrondissement),
         address = formatPlace(address),
-        height = heightM?.let { "$it m" },
-        circumference = circumferenceCm?.let { "$it cm" },
+        height = heightM?.let { MeasureUi(it.toString(), "m") },
+        circumference = circumferenceCm?.let { MeasureUi(it.toString(), "cm") },
         stage = stage,
         remarkable = remarkable,
         isFavorite = isFavorite,
