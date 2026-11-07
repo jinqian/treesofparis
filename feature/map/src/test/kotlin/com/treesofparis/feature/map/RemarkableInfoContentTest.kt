@@ -5,6 +5,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.treesofparis.core.designsystem.theme.TreesTheme
@@ -37,6 +38,14 @@ class RemarkableInfoContentTest {
             .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
         compose.onNodeWithText("Arbre").assertIsDisplayed()
         compose.onNodeWithText("Arbre remarquable").assertIsDisplayed()
+    }
+
+    @Test
+    fun legendDots_allHaveTheSameSize() {
+        show()
+        val sizes = compose.onAllNodesWithTag(LEGEND_DOT_TAG).fetchSemanticsNodes().map { it.size }
+        assertEquals(2, sizes.size)
+        assertEquals(1, sizes.distinct().size)
     }
 
     @Test

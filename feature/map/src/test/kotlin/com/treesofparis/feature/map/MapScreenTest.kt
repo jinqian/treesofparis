@@ -8,6 +8,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -83,6 +84,20 @@ class MapScreenTest {
         compose.onNodeWithText("Remarquables").assertIsNotSelected()
         compose.onNodeWithText("Arbres de Paris").assertDoesNotExist()
         compose.onNodeWithText("Seuls les arbres remarquables sont affichés").assertDoesNotExist()
+    }
+
+    @Test
+    fun filterSegments_dotsHaveTheSameSize() {
+        show(base)
+        val sizes =
+            compose
+                .onAllNodesWithTag(
+                    LEGEND_DOT_TAG,
+                    useUnmergedTree = true,
+                ).fetchSemanticsNodes()
+                .map { it.size }
+        assertEquals(2, sizes.size)
+        assertEquals(1, sizes.distinct().size)
     }
 
     @Test
