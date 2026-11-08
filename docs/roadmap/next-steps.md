@@ -6,10 +6,10 @@ the open decisions and when it is done. Sizes are rough: **S** ≈ half a day, *
 | # | Task | Size | Status | Blocks a public release? |
 |---|------|------|--------|--------------------------|
 | 1 | [Map provider → MapLibre](#1-map-provider--maplibre) | L | To do (planned, parked) | Yes (OSM tile policy) |
-| 2 | [Wikipedia links for trees](#2-wikipedia-links-for-trees) | M | To do | No |
+| 2 | [Wikipedia links for trees](#2-wikipedia-links-for-trees) | M | **Done** (2026-11-08) | No |
 | 3 | [Release notes](#3-release-notes) | S | **Done** (2026-11-08), two follow-ups | Yes, before the first store release |
 
-Next: 2, then 1 when the design work is done. Before the first store release: the follow-ups of task 3 (signing,
+Next: 1 when the design work is done. Before the first store release: the follow-ups of task 3 (signing,
 store target).
 
 ---
@@ -41,39 +41,24 @@ osmdroid removed, ADR 0005 written.
 
 ## 2. Wikipedia links for trees
 
-**Goal.** From a tree's sheet, open the French Wikipedia article of its species (or its genus when the species has no
-article), so curious users can read more without the app shipping long texts.
+**Status: done** — commits `feat(data): link each species to its French Wikipedia article` and
+`feat(map): open the tree's French Wikipedia article from its sheet`. Design: option A of the « Fiche arbre — lien
+Wikipédia » row on the canvas.
 
-**What the data gives us.** `genus`, `species` and `cultivar` columns (1,004 distinct genus + species pairs), with
-dataset quirks: `sp.` or empty species, hybrids written `x hispanica`, varieties such as
-`triacanthos f. Inermis`.
+**What was built.**
+- `update_trees.py` looks every genus + species up on Wikidata (taxon name, P225) and keeps the French article,
+  falling back to the plant genus's article. Answers, including « no article », are cached in
+  `data/wikipedia-titles.json`; failed lookups are logged and retried next run, never failing the build.
+- The links ship in a new `taxon_links` table (Room schema 2, data version 2), about one row per species: 91 % of
+  trees get their species article, 8 % their genus article, 0.6 % none.
+- `TreeRepository.getTree` returns the article; the sheet shows a « En savoir plus sur Wikipédia » card with the
+  article title (« Le genre … sur Wikipédia » for a genus fallback), opened in a Custom Tab (`androidx.browser`).
 
-**Approach (recommended): resolve links when the data is built, not in the app.**
-- In `data/scripts/update_trees.py`, after cleaning, look each distinct `genus species` up on Wikidata (taxon name,
-  property P225) and keep its French Wikipedia article title (`frwiki` sitelink). Fall back to the genus when the
-  species is unknown or has no French article. Cache the results in a committed JSON file
-  (`data/wikipedia-titles.json`) so monthly refreshes only look up new taxa and the CI job stays fast and stable.
-- Store the title with the tree data. The schema is owned by Room: add a `wikipedia_title` column to `TreeEntity`
-  (or a small `taxa` entity keyed by genus + species), export the schema, update `COLUMNS` in the script, rebuild.
-- Domain: `Tree.wikipediaTitle: String?`. Map feature: `TreeDetailUi.wikipediaUrl: String?`
-  (`https://fr.wikipedia.org/wiki/<title>`), built in `TreeDetailMapper`.
-- Detail sheet: a « En savoir plus sur Wikipédia » row under the figures, shown only when a link exists, opened with
-  `LocalUriHandler` (as À propos does) or a Custom Tab (`androidx.browser`, new dependency in the catalog).
+**Decisions taken.** Link only, no offline extract (no CC BY-SA text in the app) · Custom Tab, falling back to the
+default browser · generic wording plus the article title, to avoid French elision (« le platane », « l'érable »).
 
-**Alternative.** Build the URL in the app from the Latin name (`fr.wikipedia.org/wiki/Platanus_×_hispanica`) and rely
-on Wikipedia redirects. No pipeline work, but many links will land on « page inexistante » because of the quirks above.
-
-**Work.**
-1. Script: Wikidata lookup with cache, report how many taxa resolved (species / genus / none), pytest with recorded
-   responses (no network in tests).
-2. Room column + schema export + data version bump; mapper and domain field; tests on the mapper.
-3. Sheet row + Compose test (shown with a link, hidden without); TalkBack label « Ouvrir l'article Wikipédia ».
-
-**Decisions to take.** Link only, or also a short offline extract (it would need CC BY-SA attribution and a licence
-line in À propos) · Custom Tab or the default browser · show the link for genus-level fallbacks or only exact species.
-
-**Done when.** Most trees (target: the 21 drawn genera at least) show a working link; trees without a match show no
-row; the data README documents the lookup and its cache.
+**Follow-ups (optional).** Show the same link in the Herbier tab's genus rows · re-check the cached « no article »
+answers once a year (delete them from the cache to look them up again).
 
 ---
 
