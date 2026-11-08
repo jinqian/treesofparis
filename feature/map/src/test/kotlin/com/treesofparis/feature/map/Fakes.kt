@@ -1,9 +1,11 @@
 package com.treesofparis.feature.map
 
+import com.treesofparis.domain.model.FloweringSheet
 import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
 import com.treesofparis.domain.model.Tree
 import com.treesofparis.domain.repository.FavoritesRepository
+import com.treesofparis.domain.repository.FloweringRepository
 import com.treesofparis.domain.repository.LocationRepository
 import com.treesofparis.domain.repository.TreeRepository
 import kotlinx.coroutines.Dispatchers
@@ -17,6 +19,10 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
+import java.time.Clock
+import java.time.Instant
+import java.time.Month
+import java.time.ZoneId
 
 fun tree(
     id: Long,
@@ -96,3 +102,21 @@ class MainDispatcherRule(
 
     override fun finished(description: Description) = Dispatchers.resetMain()
 }
+
+/** The guide's lime and plane calendars, enough for the sheet. */
+class FakeFloweringRepository : FloweringRepository {
+    override fun sheets() =
+        listOf(
+            sheet("Tilia", setOf(Month.MAY, Month.JUNE)),
+            sheet("Prunus", setOf(Month.MARCH, Month.APRIL), showy = true),
+        )
+
+    private fun sheet(
+        genus: String,
+        months: Set<Month>,
+        showy: Boolean = false,
+    ) = FloweringSheet(genus, "$genus sp.", genus, months, showy, "https://example.org/$genus.pdf")
+}
+
+/** 8 November 2026 in Paris. */
+val NOVEMBER: Clock = Clock.fixed(Instant.parse("2026-11-08T10:00:00Z"), ZoneId.of("Europe/Paris"))

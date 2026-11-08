@@ -6,13 +6,16 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.treesofparis.core.designsystem.theme.TreesTheme
+import com.treesofparis.domain.model.FloweringSeason
 import com.treesofparis.domain.model.WikipediaArticle
 import com.treesofparis.feature.map.mapper.toDetailUi
+import com.treesofparis.feature.map.mapper.toFloweringUi
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.time.Month
 
 @RunWith(RobolectricTestRunner::class)
 class TreeDetailContentTest {
@@ -38,6 +41,38 @@ class TreeDetailContentTest {
         compose.onNodeWithText("Adulte").assertIsDisplayed()
         compose.onNodeWithText("Source : « Les arbres », Paris Data").assertIsDisplayed()
         compose.onNodeWithText("ARBRE REMARQUABLE").assertDoesNotExist()
+    }
+
+    @Test
+    fun flowering_showsTheRangeKindAndWait() {
+        val season = FloweringSeason("Platanus", setOf(Month.MAY, Month.JUNE), showyFlowers = false)
+        val detail = tree(1).toDetailUi(isFavorite = false, flowering = season.toFloweringUi(Month.NOVEMBER))
+        compose.setContent { TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}) } }
+        compose.onNodeWithText("FLORAISON").assertIsDisplayed()
+        compose.onNodeWithText("mai – juin · fleurs discrètes").assertIsDisplayed()
+        compose.onNodeWithText("Nous sommes en novembre : prochaine floraison dans 6 mois.").assertIsDisplayed()
+    }
+
+    @Test
+    fun flowering_inSeason_saysSo() {
+        val season = FloweringSeason("Prunus", setOf(Month.MARCH, Month.APRIL), showyFlowers = true)
+        val detail = tree(1).toDetailUi(isFavorite = false, flowering = season.toFloweringUi(Month.APRIL))
+        compose.setContent { TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}) } }
+        compose.onNodeWithText("mars – avril · fleurs voyantes").assertIsDisplayed()
+        compose.onNodeWithText("En fleur ce mois-ci.").assertIsDisplayed()
+    }
+
+    @Test
+    fun noFlowering_noSection() {
+        compose.setContent {
+            TreesTheme {
+                TreeDetailContent(
+                    detail = tree(1).toDetailUi(false),
+                    onFavoriteToggle = {},
+                )
+            }
+        }
+        compose.onNodeWithText("FLORAISON").assertDoesNotExist()
     }
 
     @Test

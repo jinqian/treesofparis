@@ -73,6 +73,7 @@ fun TreeDetailContent(
             Header(detail, onFavoriteToggle)
             Location(detail)
             Stats(detail)
+            detail.flowering?.let { FloweringSection(it) }
             detail.wikipedia?.let { WikipediaRow(it, onOpenWikipedia) }
             Text(
                 text = stringResource(R.string.map_detail_source),

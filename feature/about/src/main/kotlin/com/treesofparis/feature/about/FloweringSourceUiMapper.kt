@@ -1,17 +1,10 @@
 package com.treesofparis.feature.about
 
+import com.treesofparis.domain.format.formatMonthRange
 import com.treesofparis.domain.model.FloweringSheet
-import java.time.format.TextStyle
-import java.util.Locale
 
-/** « Prunus avium · mars – avril · fleurs voyantes ». The guide's months are always one run. */
+/** « Prunus avium · mars – avril · fleurs voyantes ». */
 internal fun FloweringSheet.toUi(): FloweringSourceUi {
-    val sorted = months.sorted()
-    val names =
-        listOf(
-            sorted.first(),
-            sorted.last(),
-        ).distinct().map { it.getDisplayName(TextStyle.FULL, Locale.FRENCH) }
-    val detail = listOfNotNull(scientificName, names.joinToString(" – "), "fleurs voyantes".takeIf { showyFlowers })
+    val detail = listOfNotNull(scientificName, formatMonthRange(months), "fleurs voyantes".takeIf { showyFlowers })
     return FloweringSourceUi(commonName = commonName, detail = detail.joinToString(" · "), url = url)
 }

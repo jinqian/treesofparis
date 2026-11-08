@@ -12,12 +12,14 @@ import com.treesofparis.core.map.MarkerStyle
 import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
 import com.treesofparis.domain.model.UserLocation
+import com.treesofparis.domain.usecase.GetFloweringSeason
 import com.treesofparis.domain.usecase.GetTree
 import com.treesofparis.domain.usecase.GetTreesInBounds
 import com.treesofparis.domain.usecase.LocateUser
 import com.treesofparis.domain.usecase.ObserveIsFavorite
 import com.treesofparis.domain.usecase.ToggleFavorite
 import com.treesofparis.feature.map.mapper.toDetailUi
+import com.treesofparis.feature.map.mapper.toFloweringUi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -30,6 +32,8 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Clock
+import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
@@ -42,6 +46,8 @@ class MapViewModel
         private val observeIsFavorite: ObserveIsFavorite,
         private val toggleFavorite: ToggleFavorite,
         private val locateUser: LocateUser,
+        private val getFloweringSeason: GetFloweringSeason,
+        private val clock: Clock,
         private val savedState: SavedStateHandle,
     ) : ViewModel() {
         private val state =
@@ -237,8 +243,9 @@ class MapViewModel
                         onDetailDismissed()
                         return@launch
                     }
+                    val flowering = getFloweringSeason(tree.genus)?.toFloweringUi(LocalDate.now(clock).month)
                     observeIsFavorite(id).collect { isFavorite ->
-                        state.update { it.copy(selectedTree = tree.toDetailUi(isFavorite)) }
+                        state.update { it.copy(selectedTree = tree.toDetailUi(isFavorite, flowering)) }
                     }
                 }
         }
