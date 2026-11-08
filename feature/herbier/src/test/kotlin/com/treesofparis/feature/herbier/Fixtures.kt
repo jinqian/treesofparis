@@ -1,12 +1,15 @@
 package com.treesofparis.feature.herbier
 
 import com.treesofparis.domain.model.AreaCount
+import com.treesofparis.domain.model.FloweringSeason
+import com.treesofparis.domain.model.FloweringSheet
 import com.treesofparis.domain.model.GenusCount
 import com.treesofparis.domain.model.GeoPoint
 import com.treesofparis.domain.model.RemarkableStatistics
 import com.treesofparis.domain.model.StageCount
 import com.treesofparis.domain.model.Tree
 import com.treesofparis.domain.model.TreeStatistics
+import com.treesofparis.domain.repository.FloweringRepository
 import com.treesofparis.domain.repository.TreeStatisticsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,6 +19,10 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
+import java.time.Clock
+import java.time.Instant
+import java.time.Month
+import java.time.ZoneId
 
 /** Real figures from the dataset, trimmed to a dozen genera. */
 val PARIS =
@@ -103,3 +110,24 @@ class MainDispatcherRule(
 
     override fun finished(description: Description) = Dispatchers.resetMain()
 }
+
+/** A few real calendars of the guide: hazel and elm open the year, the cherry is showy. */
+val SEASONS =
+    listOf(
+        FloweringSeason("Corylus", months(2..3), showyFlowers = false),
+        FloweringSeason("Ulmus", months(2..4), showyFlowers = false),
+        FloweringSeason("Prunus", months(3..4), showyFlowers = true),
+        FloweringSeason("Platanus", months(5..6), showyFlowers = false),
+        FloweringSeason("Aesculus", months(5..6), showyFlowers = true),
+        FloweringSeason("Tilia", months(5..6), showyFlowers = false),
+    )
+
+fun months(range: IntRange): Set<Month> = range.map(Month::of).toSet()
+
+class FakeFloweringRepository : FloweringRepository {
+    override fun sheets() =
+        SEASONS.map { FloweringSheet(it.genus, "${it.genus} sp.", it.genus, it.months, it.showyFlowers, "https://x") }
+}
+
+/** 8 November 2026 in Paris. */
+val NOVEMBER: Clock = Clock.fixed(Instant.parse("2026-11-08T10:00:00Z"), ZoneId.of("Europe/Paris"))

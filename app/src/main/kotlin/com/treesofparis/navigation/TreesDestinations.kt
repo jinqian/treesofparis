@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
 import com.treesofparis.R
 import com.treesofparis.core.designsystem.icon.TreesIcons
+import com.treesofparis.feature.herbier.HerbierSection
 import kotlinx.serialization.Serializable
 
 /**
@@ -20,6 +21,12 @@ data class MapKey(
 
 @Serializable
 data object HerbierKey : NavKey
+
+/** A level-2 Herbier screen, pushed on the Herbier back stack. */
+@Serializable
+data class HerbierSectionKey(
+    val section: HerbierSection,
+) : NavKey
 
 @Serializable
 data object FavoritesKey : NavKey

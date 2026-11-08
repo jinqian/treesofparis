@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.treesofparis.TreesApp
 import com.treesofparis.core.designsystem.theme.TreesTheme
+import com.treesofparis.feature.herbier.HerbierSection
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,10 +34,17 @@ class TreesAppTest {
                         Button(onClick = onExploreMap) { Text("explore") }
                     }
                 },
-                herbierContent = { onGenusClick ->
+                herbierContent = { onOpenSection ->
                     Column {
                         Text("herbier screen")
+                        Button(onClick = { onOpenSection(HerbierSection.GENERA) }) { Text("essences") }
+                    }
+                },
+                herbierSectionContent = { section, onBack, onGenusClick ->
+                    Column {
+                        Text("section $section")
                         Button(onClick = { onGenusClick("Tilia") }) { Text("tilleul") }
+                        Button(onClick = onBack) { Text("back") }
                     }
                 },
                 aboutContent = { onOpenLibraries, onOpenFloweringSources ->
@@ -81,9 +89,23 @@ class TreesAppTest {
     }
 
     @Test
+    fun herbierSection_pushedOnTheHerbierStack_andBackReturnsHome() {
+        compose.setContent(app)
+        compose.onNodeWithText("Herbier").performClick()
+        compose.onNodeWithText("essences").performClick()
+        compose.onNodeWithText("section GENERA").assertIsDisplayed()
+        compose.onNodeWithText("Carte").performClick()
+        compose.onNodeWithText("Herbier").performClick()
+        compose.onNodeWithText("section GENERA").assertIsDisplayed()
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.onNodeWithText("herbier screen").assertIsDisplayed()
+    }
+
+    @Test
     fun genusFromHerbier_opensTheMapFilteredToIt() {
         compose.setContent(app)
         compose.onNodeWithText("Herbier").performClick()
+        compose.onNodeWithText("essences").performClick()
         compose.onNodeWithText("tilleul").performClick()
         compose.onNodeWithText("map tree=null genus=Tilia").assertIsDisplayed()
         compose.onNodeWithText("Carte").assertIsSelected()

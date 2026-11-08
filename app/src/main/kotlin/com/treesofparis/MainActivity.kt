@@ -14,6 +14,7 @@ import com.treesofparis.feature.about.FloweringSourcesRoute
 import com.treesofparis.feature.about.LibrariesRoute
 import com.treesofparis.feature.favorites.FavoritesRoute
 import com.treesofparis.feature.herbier.HerbierRoute
+import com.treesofparis.feature.herbier.HerbierSectionRoute
 import com.treesofparis.feature.map.MapRoute
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -35,7 +36,10 @@ class MainActivity : ComponentActivity() {
                         favoritesContent = { onTreeClick, onExploreMap ->
                             FavoritesRoute(onTreeClick = onTreeClick, onExploreMap = onExploreMap)
                         },
-                        herbierContent = { onGenusClick -> HerbierRoute(onGenusClick = onGenusClick) },
+                        herbierContent = { onOpenSection -> HerbierRoute(onOpenSection = onOpenSection) },
+                        herbierSectionContent = { section, onBack, onGenusClick ->
+                            HerbierSectionRoute(section = section, onBack = onBack, onGenusClick = onGenusClick)
+                        },
                         aboutContent = { onOpenLibraries, onOpenFloweringSources ->
                             AboutRoute(
                                 onOpenLibraries = onOpenLibraries,

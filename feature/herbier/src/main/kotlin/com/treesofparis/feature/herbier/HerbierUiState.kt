@@ -7,10 +7,12 @@ sealed interface HerbierUiState {
 
     data class Content(
         val herbier: HerbierUi,
-        /** The genus list shows the first [HerbierUi.COLLAPSED_GENERA] until the user asks for all. */
-        val showAllGenera: Boolean = false,
+        val flowering: FloweringCalendarUi,
     ) : HerbierUiState
 }
+
+/** The level-2 screens of the Herbier, one per card of the home screen. */
+enum class HerbierSection { GENERA, FLOWERING, REMARKABLE, AGE_AND_AREAS }
 
 /** Everything the Herbier screen shows, already formatted for French. */
 data class HerbierUi(
@@ -21,16 +23,14 @@ data class HerbierUi(
     val headline: HeadlineUi?,
     /** Drawn genera only, most planted first. */
     val genera: List<GenusUi>,
+    /** Share of all trees in a drawn genus: « 85 % ». */
+    val drawnShare: String,
     /** Known stages, youngest first. */
     val stages: List<StageUi>,
     val unknownStageCount: String?,
     val remarkable: RemarkableUi,
     val areas: List<AreaUi>,
-) {
-    companion object {
-        const val COLLAPSED_GENERA = 10
-    }
-}
+)
 
 data class HeadlineUi(
     val leaf: TreeLeaf,
@@ -87,4 +87,33 @@ data class AreaUi(
     val rank: Int,
     val name: String,
     val count: String,
+)
+
+/** The flowering calendar of the drawn genera, seen from [currentMonth]. */
+data class FloweringCalendarUi(
+    /** 1 for January. */
+    val currentMonth: Int,
+    /** « novembre ». */
+    val currentMonthName: String,
+    /** In the order of the year. */
+    val rows: List<FloweringRowUi>,
+    /** The genera in flower this month, most planted first. */
+    val inFlower: List<TreeLeaf>,
+    /** When nothing flowers this month: the next month with flowers. */
+    val next: NextFloweringUi?,
+)
+
+data class FloweringRowUi(
+    val leaf: TreeLeaf,
+    /** Twelve flags, January first. */
+    val months: List<Boolean>,
+    val showyFlowers: Boolean,
+    /** « mai – juin ». */
+    val range: String,
+)
+
+/** « Prochaines floraisons dès février : noisetier et orme ». */
+data class NextFloweringUi(
+    val monthName: String,
+    val leaves: List<TreeLeaf>,
 )

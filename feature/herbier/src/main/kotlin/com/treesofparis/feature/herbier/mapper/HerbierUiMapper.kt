@@ -60,6 +60,7 @@ fun TreeStatistics.toHerbierUi(): HerbierUi {
                     fraction = it.count.toFloat() / first,
                 )
             },
+        drawnShare = "${(drawn.sumOf { it.count } * PERCENT / total.coerceAtLeast(1)).roundToInt()}\u202F%",
         stages = stages.toStageUi(),
         unknownStageCount =
             stages

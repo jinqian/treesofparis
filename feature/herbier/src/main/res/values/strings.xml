@@ -7,10 +7,10 @@
     <string name="herbier_headline_detail">%1$s %2$s, devant %3$s %4$s.</string>
     <string name="herbier_headline_detail_alone">%1$s %2$s.</string>
     <string name="herbier_section_genera">Les essences</string>
-    <string name="herbier_genera_hint">part des arbres</string>
+    <string name="herbier_genera_hint">La part de chaque essence parmi les arbres de Paris. Touchez-en une pour la voir sur la carte.</string>
+    <string name="herbier_genera_subtitle">%1$d essences dessinées · %2$s des arbres</string>
     <string name="herbier_see_on_map">Voir sur la carte</string>
     <string name="herbier_trees">%1$s arbres</string>
-    <string name="herbier_show_all">Voir les %1$d essences dessinées</string>
     <string name="herbier_section_stages">Âge des arbres</string>
     <string name="herbier_unknown_stage">%1$s arbres sans stade renseigné.</string>
     <string name="herbier_section_remarkable">Remarquables</string>
@@ -21,4 +21,28 @@
     <string name="herbier_record_height">%1$s · %2$s</string>
     <string name="herbier_record_girth">%1$s · %2$s de tour</string>
     <string name="herbier_section_areas">Les plus boisés</string>
+    <string name="herbier_explore">Explorer</string>
+    <string name="herbier_section_flowering">Floraisons</string>
+    <string name="herbier_section_age_areas">Âge et quartiers</string>
+    <string name="herbier_card_genera">%1$d essences dessinées, %2$s des arbres</string>
+    <string name="herbier_card_flowering">Le calendrier des %1$d essences</string>
+    <string name="herbier_card_remarkable">Le plus haut mesure %1$s</string>
+    <string name="herbier_card_remarkable_none">Les arbres d’exception de Paris</string>
+    <string name="herbier_card_age_areas">Les stades, les arrondissements les plus boisés</string>
+    <string name="herbier_flowering_now">En fleur en %1$s</string>
+    <string name="herbier_flowering_approx">≈ à Paris</string>
+    <string name="herbier_flowering_rest">Les arbres se reposent.</string>
+    <string name="herbier_flowering_next">Prochaines floraisons dès %1$s : %2$s.</string>
+    <plurals name="herbier_flowering_count">
+        <item quantity="one">%1$d essence en fleur</item>
+        <item quantity="many">%1$d essences en fleur</item>
+        <item quantity="other">%1$d essences en fleur</item>
+    </plurals>
+    <string name="herbier_flowering_subtitle">Quand fleurissent les %1$d essences dessinées</string>
+    <string name="herbier_flowering_intro">Les mois sont indicatifs : selon l’espèce et la météo de l’année, une floraison peut avancer ou reculer de deux à trois semaines. La colonne dorée marque le mois en cours.</string>
+    <string name="herbier_flowering_calendar">Calendrier des floraisons</string>
+    <string name="herbier_flowering_showy">Fleurs voyantes</string>
+    <string name="herbier_flowering_discreet">Fleurs discrètes</string>
+    <string name="herbier_flowering_row">%1$s : %2$s, %3$s</string>
+    <string name="herbier_flowering_source">Source : les fiches espèces du Guide des Essences de Paris (Ville de Paris, Cerema, 2023), listées dans À propos.</string>
 </resources>

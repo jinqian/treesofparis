@@ -1,13 +1,12 @@
 package com.treesofparis.feature.herbier
 
+import com.treesofparis.domain.usecase.GetFloweringSeasons
 import com.treesofparis.domain.usecase.GetTreeStatistics
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -16,7 +15,12 @@ class HerbierViewModelTest {
     @get:Rule
     val main = MainDispatcherRule()
 
-    private fun viewModel() = HerbierViewModel(GetTreeStatistics(FakeStatisticsRepository()))
+    private fun viewModel() =
+        HerbierViewModel(
+            GetTreeStatistics(FakeStatisticsRepository()),
+            GetFloweringSeasons(FakeFloweringRepository()),
+            NOVEMBER,
+        )
 
     @Test
     fun startsLoading() {
@@ -24,24 +28,14 @@ class HerbierViewModelTest {
     }
 
     @Test
-    fun loadsStatistics_showingTheTopGeneraFirst() =
+    fun loadsStatisticsAndTheFloweringOfTheParisMonth() =
         runTest(main.dispatcher) {
             val vm = viewModel()
             vm.uiState.launchIn(backgroundScope)
             advanceUntilIdle()
             val content = vm.uiState.value as HerbierUiState.Content
-            assertEquals("220 339", content.herbier.totalTrees)
-            assertFalse(content.showAllGenera)
-        }
-
-    @Test
-    fun onShowAllGenera_expandsTheList() =
-        runTest(main.dispatcher) {
-            val vm = viewModel()
-            vm.uiState.launchIn(backgroundScope)
-            advanceUntilIdle()
-            vm.onShowAllGenera()
-            advanceUntilIdle()
-            assertTrue((vm.uiState.value as HerbierUiState.Content).showAllGenera)
+            assertEquals("220\u202F339", content.herbier.totalTrees)
+            assertEquals(11, content.flowering.currentMonth)
+            assertEquals(SEASONS.size, content.flowering.rows.size)
         }
 }

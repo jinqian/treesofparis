@@ -35,6 +35,8 @@ class HerbierUiMapperTest {
         assertEquals("19,3 %", ui.genera.first().share)
         assertEquals(1f, ui.genera.first().fraction)
         assertEquals(24_795f / 42_591f, ui.genera[1].fraction, 1e-4f)
+        // The drawn genera hold 162 053 of the 220 339 trees.
+        assertEquals("74\u202F%", ui.drawnShare)
     }
 
     @Test

@@ -19,10 +19,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
+import com.treesofparis.feature.herbier.HerbierSection
 import com.treesofparis.navigation.AboutKey
 import com.treesofparis.navigation.FavoritesKey
 import com.treesofparis.navigation.FloweringSourcesKey
 import com.treesofparis.navigation.HerbierKey
+import com.treesofparis.navigation.HerbierSectionKey
 import com.treesofparis.navigation.LibrariesKey
 import com.treesofparis.navigation.MapKey
 import com.treesofparis.navigation.TopLevelDestination
@@ -37,7 +39,12 @@ import com.treesofparis.navigation.rememberTreesNavigationState
 fun TreesApp(
     mapContent: @Composable (MapKey) -> Unit,
     favoritesContent: @Composable (onTreeClick: (Long) -> Unit, onExploreMap: () -> Unit) -> Unit,
-    herbierContent: @Composable (onGenusClick: (String) -> Unit) -> Unit,
+    herbierContent: @Composable (onOpenSection: (HerbierSection) -> Unit) -> Unit,
+    herbierSectionContent: @Composable (
+        section: HerbierSection,
+        onBack: () -> Unit,
+        onGenusClick: (String) -> Unit,
+    ) -> Unit,
     aboutContent: @Composable (onOpenLibraries: () -> Unit, onOpenFloweringSources: () -> Unit) -> Unit,
     librariesContent: @Composable (onBack: () -> Unit) -> Unit,
     floweringSourcesContent: @Composable (onBack: () -> Unit) -> Unit,
@@ -84,7 +91,10 @@ fun TreesApp(
                 state.toDecoratedEntries(
                     entryProvider {
                         entry<MapKey> { key -> mapContent(key) }
-                        entry<HerbierKey> { herbierContent(navigator::openGenusOnMap) }
+                        entry<HerbierKey> { herbierContent(navigator::openHerbierSection) }
+                        entry<HerbierSectionKey> { key ->
+                            herbierSectionContent(key.section, navigator::goBack, navigator::openGenusOnMap)
+                        }
                         entry<FavoritesKey> {
                             favoritesContent(navigator::openTreeOnMap) { navigator.selectTab(TopLevelDestination.MAP) }
                         }
