@@ -37,6 +37,59 @@ watermark », not « update screen »).
    git tag -a v<versionName> -m "Arbres de Paris <versionName>"
    git push origin v<versionName>
    ```
-6. Build the release artifact with `./gradlew bundleRelease` (signing to be set up before the first store release).
+6. Build the signed App Bundle with `./gradlew bundleRelease` (see « Release build » below) and upload it with its
+   R8 mapping file.
 
 Between releases, `git cliff -o CHANGELOG.md` refreshes the « Unreleased » section.
+
+## Release build
+
+The `release` build type runs R8 (code shrinking, optimisation, obfuscation) and resource shrinking. Rules live in
+`app/proguard-rules.pro`; the libraries ship their own (Room, Hilt, Compose, kotlinx.serialization, Navigation 3).
+CI builds an unsigned release APK on every run, so a missing R8 rule fails the PR, not the store upload.
+
+**Signing.** Google Play wants the bundle signed with your *upload key* (Play App Signing then re-signs it for users).
+Create the key once, keep it and its passwords out of the repository (`*.jks` and `keystore.properties` are
+git-ignored) and back them up:
+
+```bash
+keytool -genkeypair -v -keystore upload-keystore.jks -alias upload -keyalg RSA -keysize 4096 -validity 10000
+```
+
+Then create `keystore.properties` at the repository root:
+
+```properties
+storeFile=upload-keystore.jks
+storePassword=…
+keyAlias=upload
+keyPassword=…
+```
+
+In CI, set `TREES_KEYSTORE_FILE`, `TREES_KEYSTORE_PASSWORD`, `TREES_KEY_ALIAS` and `TREES_KEY_PASSWORD` instead.
+Without either, the release build is **unsigned** on purpose (it is never silently signed with the debug key, which
+Google Play rejects).
+
+**Build and measure.**
+
+```bash
+./gradlew bundleRelease    # app/build/outputs/bundle/release/app-release.aab, for Google Play
+./gradlew assembleRelease  # app/build/outputs/apk/release/, to measure or test the shrunk app
+```
+
+R8 writes `app/build/outputs/mapping/release/mapping.txt`: upload it with each release in the Play Console (App
+bundle explorer → Downloads → ReTrace mapping file) so crash reports show real class and line names.
+
+**Testing a release build on a device** without the upload key: sign a copy with the debug key, outside Gradle.
+
+```bash
+BT=$ANDROID_HOME/build-tools/<version>
+$BT/zipalign -f -p 4 app/build/outputs/apk/release/app-release-unsigned.apk /tmp/aligned.apk
+$BT/apksigner sign --ks ~/.android/debug.keystore --ks-pass pass:android --out /tmp/release-test.apk /tmp/aligned.apk
+adb install -r /tmp/release-test.apk
+```
+
+Check at least: the map and pins, a tree sheet and its Wikipedia link, Herbier, adding a favourite, À propos →
+libraries, and that the app comes back on the same tab after `adb shell am kill com.treesofparis` in the background.
+
+**Size (0.1.0, 2026-11-08).** Release APK 12.6 MB (21.0 MB before R8): code 1.2 MB, `trees.db` 10.0 MB, fonts
+1.0 MB, resources 0.2 MB (compressed sizes). App Bundle 14.8 MB; Play serves per-device APKs close to the APK size.

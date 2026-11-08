@@ -3,6 +3,11 @@
 build/
 !gradle/wrapper/gradle-wrapper.jar
 local.properties
+
+# Release signing: never commit the upload key or its passwords
+keystore.properties
+*.jks
+*.keystore
 .kotlin/
 *.hprof
 
