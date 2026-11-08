@@ -6,6 +6,7 @@
     <string name="about_version">Version %1$s</string>
     <string name="about_section_data">Données</string>
     <string name="about_data_credit">« Les arbres », Paris Data — Ville de Paris</string>
+    <string name="about_data_extraction">Extraction du %1$s · %2$s arbres</string>
     <string name="about_data_license">Licence ODbL</string>
     <string name="about_section_map">Carte</string>
     <string name="about_map_credit">© les contributeurs d’OpenStreetMap</string>

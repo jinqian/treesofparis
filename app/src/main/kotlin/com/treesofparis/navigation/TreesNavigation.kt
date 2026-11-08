@@ -75,6 +75,14 @@ class TreesNavigator(
         state.selected = TopLevelDestination.MAP
     }
 
+    /** Shows the open source libraries on top of À propos, so back returns there. */
+    fun openLibraries() {
+        state.backStacks.getValue(TopLevelDestination.ABOUT).apply {
+            if (lastOrNull() != LibrariesKey) add(LibrariesKey)
+        }
+        state.selected = TopLevelDestination.ABOUT
+    }
+
     fun goBack() {
         val stack = state.backStacks.getValue(state.selected)
         when {

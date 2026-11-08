@@ -9,6 +9,9 @@ Standard library only. Usage (from the repository root):
 
     python3 data/scripts/update_trees.py                 # download, clean, build
     python3 data/scripts/update_trees.py --skip-download # rebuild from data/raw/les-arbres.csv
+
+Each run also writes core/data/trees-db-meta.json: when the data was extracted, from where, the dataset's own
+« last modified » date, and how many records were kept or dropped. The app shows the extraction date from it.
 """
 
 from __future__ import annotations
@@ -24,12 +27,15 @@ import sys
 import tempfile
 import urllib.request
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 EXPORT_URL = (
     "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/les-arbres/exports/csv?delimiter=%3B"
 )
+METADATA_URL = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/les-arbres"
+DATASET_PAGE = "https://opendata.paris.fr/explore/dataset/les-arbres/information/"
 USER_AGENT = "treesofparis-data-update (+https://github.com/jinqian/treesofparis)"
 
 # Must match GeoBounds.COVERAGE in :core:domain (checked by the tests): south, west, north, east.
@@ -266,6 +272,60 @@ def build_db(rows: list[dict], schema: dict, out: Path, version: int) -> None:
 # --- CLI -----------------------------------------------------------------------------------------------------------
 
 
+# --- extraction metadata -------------------------------------------------------------------------------------------
+
+
+def extracted_at(raw: Path) -> str:
+    """When the CSV was downloaded (its modification time), as an ISO 8601 UTC timestamp."""
+    when = datetime.fromtimestamp(raw.stat().st_mtime, tz=timezone.utc)
+    return when.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def fetch_metadata() -> dict | None:
+    """The dataset's Opendatasoft metadata, or None when it cannot be fetched (the build does not depend on it)."""
+    request = urllib.request.Request(METADATA_URL, headers={"User-Agent": USER_AGENT})
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:
+            return json.load(response)
+    except (OSError, ValueError) as error:
+        print(f"WARNING: could not read the dataset metadata ({error}); datasetModifiedAt left empty.")
+        return None
+
+
+def dataset_modified_at(metadata: dict | None) -> str | None:
+    """The dataset's own « last modified » date from its Opendatasoft metadata."""
+    return ((metadata or {}).get("metas") or {}).get("default", {}).get("modified")
+
+
+def previous_dataset_modified_at(meta_file: Path) -> str | None:
+    """Keeps the dataset date of the last download when the data is rebuilt without downloading."""
+    if not meta_file.exists():
+        return None
+    return json.loads(meta_file.read_text()).get("datasetModifiedAt")
+
+
+def build_meta(report: Report, version: int, extracted: str, dataset_modified: str | None) -> dict:
+    return {
+        "dataVersion": version,
+        "datasetModifiedAt": dataset_modified,
+        "dropped": {
+            "duplicateIds": report.duplicates,
+            "invalidCoordinates": report.invalid_coordinates,
+            "outsideCoverage": report.outside_coverage,
+        },
+        "extractedAt": extracted,
+        "license": "ODbL",
+        "recordsKept": report.kept,
+        "recordsRead": report.total,
+        "source": DATASET_PAGE,
+        "sourceExport": EXPORT_URL,
+    }
+
+
+def write_meta(path: Path, meta: dict) -> None:
+    path.write_text(json.dumps(meta, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--raw", type=Path, default=REPO / "data/raw/les-arbres.csv", help="downloaded CSV")
@@ -276,6 +336,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--version-file", type=Path, default=REPO / "core/data/trees-db-version.txt")
     parser.add_argument("--hash-file", type=Path, default=REPO / "core/data/trees-db-content.sha256")
+    parser.add_argument("--meta-file", type=Path, default=REPO / "core/data/trees-db-meta.json")
     args = parser.parse_args(argv)
 
     if not args.skip_download:
@@ -292,6 +353,13 @@ def main(argv: list[str] | None = None) -> int:
     build_db(rows, latest_schema(args.schema_dir, version), args.output, version)
     args.version_file.write_text(f"{version}\n")
     args.hash_file.write_text(f"{new_hash}\n")
+
+    modified = (
+        previous_dataset_modified_at(args.meta_file) if args.skip_download else dataset_modified_at(fetch_metadata())
+    )
+    meta = build_meta(report, version, extracted_at(args.raw), modified)
+    write_meta(args.meta_file, meta)
+    print(f"Extraction {meta['extractedAt']} (dataset modified {modified or 'unknown'}) -> {args.meta_file.name}")
 
     size_mb = args.output.stat().st_size / 1_000_000
     change = "unchanged" if version == current else f"bumped {current} -> {version}"

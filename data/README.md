@@ -21,11 +21,30 @@ The script prints a report such as:
 Wrote core/data/src/main/assets/trees.db (33.2 MB), data version 1 (unchanged)
 ```
 
-Then commit `trees.db`, `core/data/trees-db-version.txt`, `core/data/trees-db-content.sha256` and, if the version
-went up, the new Room schema JSON that the next Gradle build exports to `core/data/schemas/`.
+Then commit `trees.db`, `core/data/trees-db-version.txt`, `core/data/trees-db-content.sha256`,
+`core/data/trees-db-meta.json` and, if the version went up, the new Room schema JSON that the next Gradle build
+exports to `core/data/schemas/`.
 
 A scheduled GitHub Actions workflow (`.github/workflows/update-data.yml`) does this and opens a pull request when
 the data changed.
+
+## Data provenance
+
+`core/data/trees-db-meta.json` records which extraction the app ships. The script rewrites it on every run:
+
+| Field | Meaning |
+|-------|---------|
+| `extractedAt` | When the CSV was downloaded (UTC). A `--skip-download` rebuild keeps the download time of the CSV on disk. |
+| `datasetModifiedAt` | The dataset's own « last modified » date, from the Opendatasoft metadata API (kept on `--skip-download`). |
+| `recordsRead`, `recordsKept`, `dropped` | The cleaning report: rows in the export, rows shipped, and why the others were dropped. |
+| `dataVersion` | The data version, as in `trees-db-version.txt`. |
+| `source`, `sourceExport`, `license` | The dataset page, the export URL used, and its licence (ODbL). |
+
+The app shows the extraction date and the number of trees in À propos (« Extraction du 6 novembre 2026 · 220 339
+arbres »): `:core:data` reads the file at build time into `BuildConfig` and provides it as `DatasetInfo`.
+
+**Current extraction:** downloaded on 2026-11-06 at 16:30 UTC from the dataset last modified on 2026-11-06 at
+09:34 UTC; 220,339 records read and kept, none dropped; data version 1.
 
 ## What the script does
 

@@ -3,15 +3,16 @@
 Detailed from the original notes (2026-11-08). Each task lists the goal, the approach in this codebase, the work,
 the open decisions and when it is done. Sizes are rough: **S** ≈ half a day, **M** ≈ 1–2 days, **L** ≈ 3+ days.
 
-| # | Task | Size | Blocks a public release? |
-|---|------|------|--------------------------|
-| 1 | [Map provider → MapLibre](#1-map-provider--maplibre) | L | Yes (OSM tile policy) |
-| 2 | [Wikipedia links for trees](#2-wikipedia-links-for-trees) | M | No |
-| 3 | [Open source libraries on their own screen](#3-open-source-libraries-on-their-own-screen) | S | No |
-| 4 | [Show which data extraction the app uses](#4-show-which-data-extraction-the-app-uses) | S–M | No, but expected by ODbL users |
-| 5 | [Release notes](#5-release-notes) | S | Yes, before the first store release |
+| # | Task | Size | Status | Blocks a public release? |
+|---|------|------|--------|--------------------------|
+| 1 | [Map provider → MapLibre](#1-map-provider--maplibre) | L | To do (planned, parked) | Yes (OSM tile policy) |
+| 2 | [Wikipedia links for trees](#2-wikipedia-links-for-trees) | M | To do | No |
+| 3 | [Open source libraries on their own screen](#3-open-source-libraries-on-their-own-screen) | S | **Done** (2026-11-08) | No |
+| 4 | [Show which data extraction the app uses](#4-show-which-data-extraction-the-app-uses) | S–M | **Done** (2026-11-08) | No, but expected by ODbL users |
+| 5 | [Release notes](#5-release-notes) | S | **Done** (2026-11-08), two follow-ups | Yes, before the first store release |
 
-Suggested order: 3 and 4 (small, independent), then 5 before any release, 2, and 1 when the design work is done.
+Next: 2, then 1 when the design work is done. Before the first store release: the follow-ups of task 5 (signing,
+store target).
 
 ---
 
@@ -80,77 +81,65 @@ row; the data README documents the lookup and its cache.
 
 ## 3. Open source libraries on their own screen
 
-**Goal.** À propos stays short (app card, Données, Carte, Projet, Polices); the long list of libraries moves to a
-secondary screen, as already drawn on the design canvas (« Bibliothèques open source » row with a chevron).
+**Status: done** — commit `feat(about): move the open source libraries to their own screen`.
 
-**Today.** `AboutRoute` reads the AboutLibraries JSON (`R.raw.aboutlibraries`, generated in `:app`) with
-`produceLibraries` and `AboutScreen` appends every library to the same `LazyColumn`.
+**What was built.**
+- À propos keeps a « Bibliothèques open source » row (chevron) in the Projet card; the libraries list moved to
+  `LibrariesScreen`/`LibrariesRoute` in `:feature:about`, which now owns the AboutLibraries loading (with a loading
+  state).
+- Navigation 3: `LibrariesKey` is pushed on the À propos back stack by `TreesNavigator.openLibraries()`, so the back
+  button and the system back gesture both return to À propos, which keeps its scroll position.
+- Design system: `TreesScaffold`/`ScreenHeader` take an optional `onBack` and show a « Retour » back arrow above
+  the title; `TreesIcons.Back` added.
+- Tests: scaffold back button (shown / absent), À propos row → callback, libraries list + link + back, app navigation
+  À propos → libraries → back (button and system back).
 
-**Approach.**
-- `:feature:about`: a new `LibrariesRoute`/`LibrariesScreen` (title « Bibliothèques open source », back arrow) that
-  takes over the libraries loading; `AboutScreen` gets an `InfoRow` with `InfoRowTrailing.CHEVRON` and an
-  `onOpenLibraries` callback, and no longer needs the libraries list.
-- Navigation 3: a `LibrariesKey` pushed on the À propos back stack, so system back returns to À propos and the tab
-  remembers it (`TreesNavigator` gains `openLibraries()`; `TreesApp` gets a `librariesContent` slot like the others).
-- `TreesScaffold` has no back button today: add an optional `onBack` to it (design system) rather than a one-off bar.
-
-**Work.** Move the existing library tests to the new screen · AboutTest checks the row and the callback · TreesAppTest
-checks À propos → libraries → back · previews light/dark.
-
-**Done when.** À propos fits on about one screen; the libraries screen lists every library with its licence and opens
-its page; back works from the screen and from the system gesture.
+**Follow-ups.** None.
 
 ---
 
 ## 4. Show which data extraction the app uses
 
-**Goal.** Say clearly which version of « Les arbres » the app contains: when it was extracted, from where, how many
-trees were kept and dropped. Users should see it in the app; maintainers should find it in the repo.
+**Status: done** — commit `feat(data): record and show which dataset extraction the app ships`.
 
-**Today.** The CSV comes from the Opendatasoft export URL in `update_trees.py`; the shipped `trees.db` was built from
-the 2026-11-06 download (220,339 records read and kept). Only a data version number (`core/data/trees-db-version.txt`)
-and a content hash are recorded; the extraction date and the report are printed, then lost.
+**What was built.**
+- `data/scripts/update_trees.py` writes `core/data/trees-db-meta.json` on every run: `extractedAt` (download time of
+  the CSV, UTC), `datasetModifiedAt` (the dataset's « modified » date from the Opendatasoft metadata API, kept on
+  `--skip-download`; a failed fetch leaves it empty without failing the build), `recordsRead`, `recordsKept`,
+  `dropped` by reason, `dataVersion`, `source`, `sourceExport`, `license`. pytest covers each piece.
+- The monthly `update-data.yml` workflow commits the meta file with the data.
+- `:core:data` reads the file at build time into `BuildConfig` (`TREES_EXTRACTED_AT`, `TREES_RECORDS_KEPT`) and
+  provides a domain `DatasetInfo`; no Room schema change.
+- À propos shows « Extraction du 6 novembre 2026 · 220 339 arbres » under the dataset credit (date in Paris time).
+- `data/README.md` has a « Data provenance » section describing every field and the current extraction.
 
-**Approach.**
-- Script: write a committed `core/data/trees-db-meta.json` next to the version file, with `extractedAt` (download
-  time, UTC), `sourceUrl`, `datasetModifiedAt` (the dataset's « modified » date from the Opendatasoft metadata API),
-  `recordsRead`, `recordsKept`, dropped counts by reason, and the data version. `--skip-download` keeps the previous
-  extraction date. pytest covers the file.
-- Extraction note for people: a « Data provenance » section in `data/README.md` (current extraction, what was dropped
-  and why, licence ODbL), plus the report in the body of the monthly update PR (already sent by `update-data.yml`).
-- App: expose the JSON through `BuildConfig` fields generated by the `:core:data` build (as `TREES_DB_VERSION` is
-  today) and an `AppInfo`-like domain model (`DatasetInfo`), so no schema change is needed.
-- UI: in À propos « Données », a row « Extraction du 6 novembre 2026 · 220 339 arbres » under the dataset credit;
-  optionally the same line in small print at the bottom of the Herbier tab, since its figures come from it.
+**Current extraction.** Downloaded 2026-11-06 16:30 UTC; dataset last modified 2026-11-06 09:34 UTC (checked: the
+API's record count still matches); 220,339 records read and kept.
 
-**Decisions to take.** Show the extraction date only, or also the dataset's own « last modified » date · put the line
-in Herbier too or only in À propos.
-
-**Done when.** After `update_trees.py` runs, the meta file changes with the data; the app shows the date and count
-from it; the README explains how to read it.
+**Decisions taken.** The app shows the extraction date and tree count only; the dataset's own date stays in the meta
+file and README. The line is in À propos only, not in Herbier (easy to add there later from `DatasetInfo`).
 
 ---
 
 ## 5. Release notes
 
-**Goal.** Every release says what changed, in French for users and in English for the repo, without writing it twice.
+**Status: done** — commit `docs: changelog, French release note and releasing guide`.
 
-**Today.** `versionCode = 1`, `versionName = "0.1.0"`, no tags, no changelog. Commits follow Conventional Commits
-(checked by Lefthook and the `pr-title` workflow), which is enough to generate a changelog.
+**What was built.**
+- `cliff.toml` + generated `CHANGELOG.md`: Conventional Commits grouped as Added / Fixed / Changed / Documentation;
+  `build`, `ci`, `chore`, `test` and merge commits are left out. Everything so far is under « Unreleased ».
+- First user-facing note, in French: `fastlane/metadata/android/fr-FR/changelogs/1.txt` (408 of the 500 characters
+  Google Play allows), in the layout fastlane `supply` and F-Droid read.
+- `RELEASING.md`: SemVer `versionName` (`0.y.z` until the first public release), `versionCode` + 1 per release,
+  `v<versionName>` tags on `main`, and the step-by-step release (bump, French note, `git cliff --tag`, `chore(release)`
+  commit, tag). README and `CLAUDE.md` (new `release` scope) point to it.
 
-**Approach.**
-- `CHANGELOG.md` at the root, generated from commits between tags with git-cliff (config `cliff.toml`, grouping
-  `feat` → « Added », `fix` → « Fixed », skipping `build`/`ci`/`deps` noise). Run it locally or in a release workflow.
-- User-facing notes in French for the store: `fastlane/metadata/android/fr-FR/changelogs/<versionCode>.txt`
-  (Google Play limit: 500 characters), written by hand from the changelog, a few lines per release.
-- Versioning rule written in the README: `versionName` follows SemVer (`0.y.z` until the first public release),
-  `versionCode` goes up by one per release; tag `v<versionName>` on `main`.
-- Later, optional: an in-app « Nouveautés » sheet shown once after an update (last seen `versionCode` in DataStore).
-
-**Work.** Add `cliff.toml` and generate the first `CHANGELOG.md` (Herbier redesign, leaves, Herbier tab…) · write the
-first French store note · document the release steps (bump, changelog, tag) in the README or a `RELEASING.md`.
-
-**Decisions to take.** Will the app go to Google Play (then fastlane metadata is worth it) or only GitHub releases
-(then the changelog in the release body is enough) · do we want the in-app « Nouveautés » sheet.
-
-**Done when.** Tagging a release produces an up-to-date `CHANGELOG.md`, and each store release has its French note.
+**Follow-ups (decisions still open).**
+- **Store target.** Google Play, F-Droid or GitHub releases only? The French note's location works for the first two;
+  for GitHub only, paste the changelog section into the release body instead.
+- **Release signing.** There is no signing config yet; `bundleRelease` needs one (keystore outside the repo, secrets in
+  CI) before any store upload.
+- **Release automation (optional).** A workflow on `v*` tags that builds the bundle and creates the GitHub release with
+  the changelog section.
+- **In-app « Nouveautés » sheet (optional).** Show the French note once after an update (last seen `versionCode` in
+  DataStore). Not started.

@@ -34,7 +34,18 @@ class TreesAppTest {
                     }
                 },
                 herbierContent = { Text("herbier screen") },
-                aboutContent = { Text("about screen") },
+                aboutContent = { onOpenLibraries ->
+                    Column {
+                        Text("about screen")
+                        Button(onClick = onOpenLibraries) { Text("libraries") }
+                    }
+                },
+                librariesContent = { onBack ->
+                    Column {
+                        Text("libraries screen")
+                        Button(onClick = onBack) { Text("back") }
+                    }
+                },
             )
         }
     }
@@ -81,6 +92,26 @@ class TreesAppTest {
         compose.onNodeWithText("explore").performClick()
         compose.onNodeWithText("map tree=null").assertIsDisplayed()
         compose.onNodeWithText("Carte").assertIsSelected()
+    }
+
+    @Test
+    fun libraries_openFromAbout_andBackReturnsToAbout() {
+        compose.setContent(app)
+        compose.onNodeWithText("À propos").performClick()
+        compose.onNodeWithText("libraries").performClick()
+        compose.onNodeWithText("libraries screen").assertIsDisplayed()
+        compose.onNodeWithText("À propos").assertIsSelected()
+        compose.onNodeWithText("back").performClick()
+        compose.onNodeWithText("about screen").assertIsDisplayed()
+    }
+
+    @Test
+    fun systemBack_fromLibraries_returnsToAbout() {
+        compose.setContent(app)
+        compose.onNodeWithText("À propos").performClick()
+        compose.onNodeWithText("libraries").performClick()
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.onNodeWithText("about screen").assertIsDisplayed()
     }
 
     @Test

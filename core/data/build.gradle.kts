@@ -10,11 +10,20 @@ val treesDbVersion =
         it.trim()
     }
 
+/** Which extraction the asset was built from; written by data/scripts/update_trees.py. */
+@Suppress("UNCHECKED_CAST")
+val treesDbMeta =
+    providers.fileContents(layout.projectDirectory.file("trees-db-meta.json")).asText.map {
+        groovy.json.JsonSlurper().parseText(it) as Map<String, Any?>
+    }
+
 android {
     namespace = "com.treesofparis.core.data"
     buildFeatures.buildConfig = true
     defaultConfig {
         buildConfigField("int", "TREES_DB_VERSION", treesDbVersion.get())
+        buildConfigField("String", "TREES_EXTRACTED_AT", "\"${treesDbMeta.get()["extractedAt"] ?: ""}\"")
+        buildConfigField("int", "TREES_RECORDS_KEPT", "${treesDbMeta.get()["recordsKept"] ?: 0}")
     }
 }
 

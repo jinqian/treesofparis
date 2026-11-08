@@ -60,5 +60,6 @@ jobs:
             core/data/src/main/assets/trees.db
             core/data/trees-db-version.txt
             core/data/trees-db-content.sha256
+            core/data/trees-db-meta.json
             core/data/schemas/**
           delete-branch: true
