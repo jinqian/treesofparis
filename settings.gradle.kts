@@ -27,5 +27,6 @@ include(
     ":core:map-osmdroid",
     ":feature:map",
     ":feature:favorites",
+    ":feature:herbier",
     ":feature:about",
 )
