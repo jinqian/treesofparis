@@ -12,6 +12,8 @@ import com.treesofparis.core.data.BuildConfig
 abstract class TreeDatabase : RoomDatabase() {
     abstract fun treeDao(): TreeDao
 
+    internal abstract fun treeStatisticsDao(): TreeStatisticsDao
+
     companion object {
         const val FILE_NAME = "trees.db"
         const val ASSET_PATH = "trees.db"

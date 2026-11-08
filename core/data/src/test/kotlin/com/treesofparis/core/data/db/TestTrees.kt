@@ -1,22 +1,30 @@
 package com.treesofparis.core.data.db
 
+@Suppress("LongParameterList") // a test fixture with defaults for every column
 fun treeEntity(
     id: Long,
     lat: Double = 48.85,
     lon: Double = 2.35,
     commonName: String = "Platane",
+    genus: String? = "Platanus",
+    species: String? = null,
+    stage: String? = null,
+    remarkable: Boolean = false,
+    heightM: Int? = null,
+    circumferenceCm: Int? = null,
+    arrondissement: String = "PARIS 5E ARRDT",
 ) = TreeEntity(
     id = id,
     commonName = commonName,
-    genus = "Platanus",
-    species = null,
+    genus = genus,
+    species = species,
     cultivar = null,
-    circumferenceCm = null,
-    heightM = null,
-    stage = null,
-    remarkable = false,
+    circumferenceCm = circumferenceCm,
+    heightM = heightM,
+    stage = stage,
+    remarkable = remarkable,
     address = "Quai de la Tournelle",
-    arrondissement = "PARIS 5E ARRDT",
+    arrondissement = arrondissement,
     lat = lat,
     lon = lon,
 )
