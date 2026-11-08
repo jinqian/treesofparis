@@ -99,6 +99,7 @@ fun MapRoute(
         onRemarkableFilterChange = viewModel::onRemarkableFilterChange,
         onRemarkableInfoOpen = viewModel::onRemarkableInfoOpen,
         onRemarkableInfoDismiss = viewModel::onRemarkableInfoDismiss,
+        onOpenWikipedia = { url -> context.openInCustomTab(url) },
         modifier = modifier,
     )
 }
@@ -116,6 +117,7 @@ fun MapScreen(
     onRemarkableFilterChange: (Boolean) -> Unit,
     onRemarkableInfoOpen: () -> Unit,
     onRemarkableInfoDismiss: () -> Unit,
+    onOpenWikipedia: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -155,7 +157,11 @@ fun MapScreen(
         )
         state.selectedTree?.let { detail ->
             TreesBottomSheet(onDismiss = onDetailDismiss) {
-                TreeDetailContent(detail = detail, onFavoriteToggle = onFavoriteToggle)
+                TreeDetailContent(
+                    detail = detail,
+                    onFavoriteToggle = onFavoriteToggle,
+                    onOpenWikipedia = onOpenWikipedia,
+                )
             }
         }
         if (state.showRemarkableInfo) {

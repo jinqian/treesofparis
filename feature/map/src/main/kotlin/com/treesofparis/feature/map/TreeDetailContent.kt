@@ -1,6 +1,8 @@
 package com.treesofparis.feature.map
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -25,7 +28,9 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -47,6 +52,7 @@ fun TreeDetailContent(
     detail: TreeDetailUi,
     onFavoriteToggle: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenWikipedia: (String) -> Unit = {},
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
         LeafDrawing(
@@ -67,6 +73,7 @@ fun TreeDetailContent(
             Header(detail, onFavoriteToggle)
             Location(detail)
             Stats(detail)
+            detail.wikipedia?.let { WikipediaRow(it, onOpenWikipedia) }
             Text(
                 text = stringResource(R.string.map_detail_source),
                 style = MaterialTheme.typography.labelSmall,
@@ -184,6 +191,59 @@ private fun Stats(detail: TreeDetailUi) {
             )
         }
         TreesDivider()
+    }
+}
+
+/** Option A of the design: a soft card under the figures that opens the article outside the app. */
+@Composable
+private fun WikipediaRow(
+    wikipedia: WikipediaUi,
+    onOpen: (String) -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    val openLabel = stringResource(R.string.map_wikipedia_open)
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        color = colors.background,
+        border = BorderStroke(1.dp, colors.outlineVariant),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clip(MaterialTheme.shapes.medium)
+                .clickable(onClickLabel = openLabel, role = Role.Button) { onOpen(wikipedia.url) },
+    ) {
+        Row(
+            modifier = Modifier.heightIn(min = 64.dp).padding(start = 10.dp, end = 14.dp, top = 10.dp, bottom = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier.size(44.dp).background(colors.primaryContainer, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(TreesIcons.Book, contentDescription = null, tint = colors.primary, modifier = Modifier.size(22.dp))
+            }
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text =
+                        wikipedia.genus?.let { stringResource(R.string.map_wikipedia_genus, it) }
+                            ?: stringResource(R.string.map_wikipedia_more),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                )
+                Text(
+                    text = stringResource(R.string.map_wikipedia_site, wikipedia.title),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = colors.onSurfaceVariant,
+                )
+            }
+            Icon(
+                TreesIcons.OpenExternal,
+                contentDescription = null,
+                tint = colors.onSurfaceVariant,
+                modifier = Modifier.size(18.dp),
+            )
+        }
     }
 }
 

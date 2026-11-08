@@ -70,6 +70,7 @@ class MapScreenTest {
                         onRemarkableFilterChange = { filterChanges += it },
                         onRemarkableInfoOpen = { infoOpens++ },
                         onRemarkableInfoDismiss = {},
+                        onOpenWikipedia = {},
                     )
                 }
             }
