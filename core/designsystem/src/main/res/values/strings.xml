@@ -2,4 +2,26 @@
 <resources>
     <string name="designsystem_retry">Réessayer</string>
     <string name="designsystem_loading">Chargement…</string>
+    <string name="leaf_platanus">Platane</string>
+    <string name="leaf_aesculus">Marronnier</string>
+    <string name="leaf_tilia">Tilleul</string>
+    <string name="leaf_acer">Érable</string>
+    <string name="leaf_styphnolobium">Sophora</string>
+    <string name="leaf_prunus">Cerisier, prunier</string>
+    <string name="leaf_quercus">Chêne</string>
+    <string name="leaf_fraxinus">Frêne</string>
+    <string name="leaf_celtis">Micocoulier</string>
+    <string name="leaf_pinus">Pin</string>
+    <string name="leaf_pyrus">Poirier</string>
+    <string name="leaf_carpinus">Charme</string>
+    <string name="leaf_corylus">Noisetier</string>
+    <string name="leaf_malus">Pommier</string>
+    <string name="leaf_populus">Peuplier</string>
+    <string name="leaf_taxus">If</string>
+    <string name="leaf_ulmus">Orme</string>
+    <string name="leaf_gleditsia">Févier</string>
+    <string name="leaf_robinia">Robinier</string>
+    <string name="leaf_betula">Bouleau</string>
+    <string name="leaf_fagus">Hêtre</string>
+    <string name="leaf_generic">Autres arbres</string>
 </resources>
