@@ -5,16 +5,24 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -34,14 +42,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.treesofparis.core.designsystem.component.TreesBottomSheet
 import com.treesofparis.core.designsystem.icon.TreesIcons
 import com.treesofparis.core.designsystem.theme.TreesSpacing
+import com.treesofparis.core.designsystem.theme.TreesTheme
 import com.treesofparis.core.map.MapCamera
+import com.treesofparis.core.map.MapPalette
 import com.treesofparis.core.map.TreeMapView
 import com.treesofparis.domain.model.GeoBounds
 
@@ -99,6 +111,7 @@ fun MapRoute(
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MapScreen(
     state: MapUiState,
@@ -121,6 +134,7 @@ fun MapScreen(
             markers = state.markers,
             userLocation = state.userLocation,
             config = MapViewModel.MAP_CONFIG,
+            palette = mapPalette(),
             onMarkerClick = onMarkerClick,
             onCameraChange = onCameraChange,
             modifier = Modifier.fillMaxSize(),
@@ -129,7 +143,15 @@ fun MapScreen(
             modifier = Modifier.align(Alignment.TopStart).statusBarsPadding().padding(TreesSpacing.m),
             verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
         ) {
-            RemarkableFilterChip(selected = state.remarkableOnly, onClick = onRemarkableFilterToggle)
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s, Alignment.Start),
+                verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
+            ) {
+                BrandPill()
+                Spacer(Modifier.weight(1f))
+                RemarkableFilterChip(selected = state.remarkableOnly, onClick = onRemarkableFilterToggle)
+            }
             if (state.showZoomHint) ZoomHint()
         }
         LocateButton(
@@ -149,13 +171,69 @@ fun MapScreen(
     }
 }
 
+/** Pin colours from the theme: moss trees, gold remarkable ones, an ink selection, paper rings. */
+@Composable
+private fun mapPalette() =
+    MapPalette(
+        tree = TreesTheme.colors.treePin,
+        remarkable = TreesTheme.colors.remarkable,
+        selected = MaterialTheme.colorScheme.onSurface,
+        ring = TreesTheme.colors.pinRing,
+        userLocation = TreesTheme.colors.userLocation,
+    )
+
+/** A paper pill floating over the map, softly shadowed. */
+@Composable
+private fun FloatingPill(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Surface(
+        modifier = modifier,
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shadowElevation = 4.dp,
+        content = content,
+    )
+}
+
+@Composable
+private fun BrandPill(modifier: Modifier = Modifier) {
+    FloatingPill(modifier) {
+        Row(
+            modifier = Modifier.height(44.dp).padding(start = 12.dp, end = TreesSpacing.m),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s),
+        ) {
+            Icon(
+                imageVector = TreesIcons.Leaf,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp),
+            )
+            Text(
+                text = stringResource(R.string.map_brand),
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 19.sp),
+                modifier = Modifier.semantics { heading() },
+            )
+        }
+    }
+}
+
 @Composable
 private fun LocateButton(
     isLocating: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SmallFloatingActionButton(onClick = { if (!isLocating) onClick() }, modifier = modifier) {
+    FloatingActionButton(
+        onClick = { if (!isLocating) onClick() },
+        modifier = modifier.size(52.dp),
+        shape = CircleShape,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = MaterialTheme.colorScheme.primary,
+        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp, pressedElevation = 6.dp),
+    ) {
         if (isLocating) {
             val description = stringResource(R.string.map_locating)
             CircularProgressIndicator(
@@ -163,7 +241,11 @@ private fun LocateButton(
                 strokeWidth = 2.dp,
             )
         } else {
-            Icon(TreesIcons.MyLocation, contentDescription = stringResource(R.string.map_locate_me))
+            Icon(
+                TreesIcons.MyLocation,
+                contentDescription = stringResource(R.string.map_locate_me),
+                modifier = Modifier.size(22.dp),
+            )
         }
     }
 }
@@ -208,29 +290,47 @@ private fun RemarkableFilterChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colors = MaterialTheme.colorScheme
     FilterChip(
         selected = selected,
         onClick = onClick,
-        label = { Text(stringResource(R.string.map_filter_remarkable)) },
-        leadingIcon = { Icon(TreesIcons.Remarkable, contentDescription = null, modifier = Modifier.size(18.dp)) },
-        modifier = modifier,
+        label = { Text(stringResource(R.string.map_filter_remarkable), style = MaterialTheme.typography.labelLarge) },
+        leadingIcon = {
+            Icon(
+                if (selected) TreesIcons.Remarkable else TreesIcons.RemarkableOutlined,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+            )
+        },
+        modifier = modifier.height(44.dp),
+        shape = CircleShape,
         // Opaque on top of the map, whether selected or not.
-        colors = FilterChipDefaults.filterChipColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = FilterChipDefaults.filterChipElevation(elevation = 2.dp),
+        colors =
+            FilterChipDefaults.filterChipColors(
+                containerColor = colors.surfaceContainerLow,
+                labelColor = colors.onSurface,
+                iconColor = colors.onSurface,
+                selectedContainerColor = colors.primary,
+                selectedLabelColor = colors.onPrimary,
+                selectedLeadingIconColor = colors.onPrimary,
+            ),
+        border =
+            FilterChipDefaults.filterChipBorder(
+                enabled = true,
+                selected = selected,
+                borderColor = colors.outlineVariant,
+                selectedBorderColor = colors.primary,
+            ),
+        elevation = FilterChipDefaults.filterChipElevation(elevation = 4.dp),
     )
 }
 
 @Composable
 private fun ZoomHint(modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.extraLarge,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        shadowElevation = TreesSpacing.xs,
-    ) {
+    FloatingPill(modifier) {
         Text(
             text = stringResource(R.string.map_zoom_hint),
-            modifier = Modifier.padding(horizontal = TreesSpacing.m, vertical = TreesSpacing.s),
+            modifier = Modifier.padding(horizontal = TreesSpacing.m, vertical = 10.dp),
             style = MaterialTheme.typography.labelLarge,
         )
     }

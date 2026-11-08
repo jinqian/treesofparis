@@ -24,6 +24,7 @@ interface MapProvider {
         markers: List<MapMarker>,
         userLocation: GeoPoint?,
         config: MapConfig,
+        palette: MapPalette,
         onMarkerClick: (Long) -> Unit,
         onCameraChange: (MapCamera, GeoBounds) -> Unit,
         modifier: Modifier,

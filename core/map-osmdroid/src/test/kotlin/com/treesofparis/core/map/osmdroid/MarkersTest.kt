@@ -28,6 +28,13 @@ class MarkersTest {
         assertEquals(23.625f, sizes.selectedRadiusPx, 0.01f) // 9 dp
         assertEquals(21f, sizes.userRadiusPx, 0.01f) // 8 dp
         assertEquals(21f, sizes.remarkableRadiusPx, 0.01f) // 8 dp
+        assertEquals(5.25f, sizes.ringWidthPx, 0.01f) // 2 dp
+    }
+
+    @Test
+    fun ringRadius_addsRingWidthAroundThePin() {
+        val sizes = markerSizes(density = 2f)
+        assertEquals(16f, sizes.ringRadius(sizes.treeRadiusPx), 0.01f) // (6 + 2) dp
     }
 
     @Test

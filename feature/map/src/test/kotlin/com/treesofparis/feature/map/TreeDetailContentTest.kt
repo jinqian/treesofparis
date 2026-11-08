@@ -24,7 +24,33 @@ class TreeDetailContentTest {
         compose.setContent { TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}) } }
         compose.onNodeWithText("Espèce inconnue").assertIsDisplayed()
         compose.onNodeWithText("Hauteur inconnue").assertIsDisplayed()
-        compose.onNodeWithText("Paris 19e").assertIsDisplayed()
+        compose.onNodeWithText("Quai de la Seine · Paris 19e").assertIsDisplayed()
+    }
+
+    @Test
+    fun knownFields_showFiguresUnitsAndSource() {
+        val detail = tree(1).toDetailUi(isFavorite = false)
+        compose.setContent { TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}) } }
+        compose.onNodeWithText("Platanus x hispanica").assertIsDisplayed()
+        compose.onNodeWithText("16").assertIsDisplayed()
+        compose.onNodeWithText("165").assertIsDisplayed()
+        compose.onNodeWithText("Adulte").assertIsDisplayed()
+        compose.onNodeWithText("Source : « Les arbres », Paris Data").assertIsDisplayed()
+        compose.onNodeWithText("ARBRE REMARQUABLE").assertDoesNotExist()
+    }
+
+    @Test
+    fun remarkableTree_showsGoldEyebrow() {
+        val detail = tree(1).copy(remarkable = true).toDetailUi(isFavorite = false)
+        compose.setContent { TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}) } }
+        compose.onNodeWithText("ARBRE REMARQUABLE").assertIsDisplayed()
+    }
+
+    @Test
+    fun favoriteTree_offersRemoval() {
+        val detail = tree(1).toDetailUi(isFavorite = true)
+        compose.setContent { TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}) } }
+        compose.onNodeWithContentDescription("Retirer des favoris").assertIsDisplayed()
     }
 
     @Test
