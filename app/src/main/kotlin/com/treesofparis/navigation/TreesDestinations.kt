@@ -18,6 +18,9 @@ data class MapKey(
 ) : NavKey
 
 @Serializable
+data object HerbierKey : NavKey
+
+@Serializable
 data object FavoritesKey : NavKey
 
 @Serializable
@@ -31,6 +34,7 @@ enum class TopLevelDestination(
     val startKey: NavKey,
 ) {
     MAP(R.string.tab_map, TreesIcons.Map, TreesIcons.MapOutlined, MapKey()),
+    HERBIER(R.string.tab_herbier, TreesIcons.Leaf, TreesIcons.Leaf, HerbierKey),
     FAVORITES(R.string.tab_favorites, TreesIcons.Favorite, TreesIcons.FavoriteOutlined, FavoritesKey),
     ABOUT(R.string.tab_about, TreesIcons.About, TreesIcons.AboutOutlined, AboutKey),
 }

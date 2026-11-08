@@ -33,18 +33,28 @@ class TreesAppTest {
                         Button(onClick = onExploreMap) { Text("explore") }
                     }
                 },
+                herbierContent = { Text("herbier screen") },
                 aboutContent = { Text("about screen") },
             )
         }
     }
 
     @Test
-    fun bottomBar_showsThreeFrenchTabs() {
+    fun bottomBar_showsFourFrenchTabs() {
         compose.setContent(app)
         compose.onNodeWithText("Carte").assertIsDisplayed().assertIsSelected()
+        compose.onNodeWithText("Herbier").assertIsDisplayed()
         compose.onNodeWithText("Favoris").assertIsDisplayed()
         compose.onNodeWithText("À propos").assertIsDisplayed()
         compose.onNodeWithText("map tree=null").assertIsDisplayed()
+    }
+
+    @Test
+    fun selectingHerbier_showsHerbierScreen() {
+        compose.setContent(app)
+        compose.onNodeWithText("Herbier").performClick()
+        compose.onNodeWithText("herbier screen").assertIsDisplayed()
+        compose.onNodeWithText("Herbier").assertIsSelected()
     }
 
     @Test

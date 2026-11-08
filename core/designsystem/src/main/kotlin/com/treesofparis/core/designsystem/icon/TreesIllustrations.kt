@@ -21,17 +21,4 @@ object TreesIllustrations {
             "M72 40C76 30 82 22 92 16C92 28 84 36 72 40Z",
             "M50 150L90 150",
         )
-
-    /** A plane-tree leaf with its veins: a faint watermark on the tree sheet. */
-    val PlaneLeaf: ImageVector =
-        lineDrawing(
-            "PlaneLeaf",
-            width = 100f,
-            height = 100f,
-            strokeWidth = 1.2f,
-            "M50 92L50 52",
-            "M50 52C40 50 26 54 14 46C22 44 26 36 22 26C32 30 38 26 40 16C44 22 48 22 50 10" +
-                "C52 22 56 22 60 16C62 26 68 30 78 26C74 36 78 44 86 46C74 54 60 50 50 52Z",
-            "M50 52L30 30M50 52L50 18M50 52L70 30M50 52L22 44M50 52L78 44",
-        )
 }

@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#2E6B44</color>
+    <!-- « Herbier » palette, see HerbierPalette in :core:designsystem. -->
+    <color name="ic_launcher_background">#3F5F45</color>
+    <color name="icon_leaf">#F4F3EC</color>
+    <color name="icon_gold">#C9962E</color>
+    <color name="window_background">#F4F3EC</color>
+    <color name="splash_icon_background">#3F5F45</color>
+    <color name="splash_wordmark">#1E2620</color>
 </resources>

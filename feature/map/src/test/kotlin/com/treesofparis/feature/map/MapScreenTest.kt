@@ -8,6 +8,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -50,7 +51,8 @@ class MapScreenTest {
     private var messagesShown = 0
     private var settingsOpened = 0
     private var locateClicks = 0
-    private var filterToggles = 0
+    private val filterChanges = mutableListOf<Boolean>()
+    private var infoOpens = 0
 
     private fun show(state: MapUiState) =
         compose.setContent {
@@ -65,7 +67,9 @@ class MapScreenTest {
                         onLocateMe = { locateClicks++ },
                         onMessageDismiss = { messagesShown++ },
                         onOpenSettings = { settingsOpened++ },
-                        onRemarkableFilterToggle = { filterToggles++ },
+                        onRemarkableFilterChange = { filterChanges += it },
+                        onRemarkableInfoOpen = { infoOpens++ },
+                        onRemarkableInfoDismiss = {},
                     )
                 }
             }
@@ -74,16 +78,48 @@ class MapScreenTest {
     private val base = MapUiState(initialCamera = MapViewModel.DEFAULT_CAMERA)
 
     @Test
-    fun remarkableChip_togglesFilter() {
+    fun filterSegments_showAllSelectedAndNoAppNamePill() {
         show(base)
-        compose.onNodeWithText("Remarquables").assertIsNotSelected().performClick()
-        assertEquals(1, filterToggles)
+        compose.onNodeWithText("Tous les arbres").assertIsSelected()
+        compose.onNodeWithText("Remarquables").assertIsNotSelected()
+        compose.onNodeWithText("Arbres de Paris").assertDoesNotExist()
+        compose.onNodeWithText("Seuls les arbres remarquables sont affichés").assertDoesNotExist()
     }
 
     @Test
-    fun remarkableChip_isSelectedWhenFiltering() {
+    fun filterSegments_dotsHaveTheSameSize() {
+        show(base)
+        val sizes =
+            compose
+                .onAllNodesWithTag(
+                    LEGEND_DOT_TAG,
+                    useUnmergedTree = true,
+                ).fetchSemanticsNodes()
+                .map { it.size }
+        assertEquals(2, sizes.size)
+        assertEquals(1, sizes.distinct().size)
+    }
+
+    @Test
+    fun filterSegments_chooseRemarkableThenAll() {
+        show(base)
+        compose.onNodeWithText("Remarquables").performClick()
+        compose.onNodeWithText("Tous les arbres").performClick()
+        assertEquals(listOf(true, false), filterChanges)
+    }
+
+    @Test
+    fun filterSegments_remarkableSelectedShowsCaption() {
         show(base.copy(remarkableOnly = true))
         compose.onNodeWithText("Remarquables").assertIsSelected()
+        compose.onNodeWithText("Seuls les arbres remarquables sont affichés").assertIsDisplayed()
+    }
+
+    @Test
+    fun infoButton_opensExplanation() {
+        show(base)
+        compose.onNodeWithContentDescription("Qu’est-ce qu’un arbre remarquable ?").performClick()
+        assertEquals(1, infoOpens)
     }
 
     @Test

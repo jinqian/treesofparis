@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -25,10 +26,14 @@ import com.treesofparis.core.designsystem.icon.TreesIcons
 import com.treesofparis.core.designsystem.theme.TreesSpacing
 import com.treesofparis.core.designsystem.theme.TreesTheme
 
-/** A light card with a hairline border that groups rows; separate rows with [TreesDivider]. */
+/**
+ * A light card with a hairline border that groups rows; separate rows with [TreesDivider]. Pass no [contentPadding]
+ * when the first or last row has its own background (e.g. a coloured header) so it reaches the rounded edge.
+ */
 @Composable
 fun TreesCardGroup(
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(vertical = TreesSpacing.xs),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Surface(
@@ -37,7 +42,7 @@ fun TreesCardGroup(
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
-        Column(modifier = Modifier.padding(vertical = TreesSpacing.xs), content = content)
+        Column(modifier = Modifier.padding(contentPadding), content = content)
     }
 }
 

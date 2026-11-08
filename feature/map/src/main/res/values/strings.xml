@@ -18,6 +18,12 @@
     <string name="map_location_denied">Autorisez l’accès à la position pour vous localiser.</string>
     <string name="map_location_settings">Réglages</string>
     <string name="map_filter_remarkable">Remarquables</string>
-    <string name="map_brand">Arbres de Paris</string>
+    <string name="map_filter_all">Tous les arbres</string>
+    <string name="map_filter_remarkable_caption">Seuls les arbres remarquables sont affichés</string>
+    <string name="map_legend_tree">Arbre</string>
+    <string name="map_remarkable_info_title">Qu’est-ce qu’un arbre remarquable ?</string>
+    <string name="map_remarkable_info_body">La Ville de Paris distingue certains arbres pour leur âge, leurs dimensions, leur rareté ou leur histoire. Sur la carte, ils se reconnaissent à leur point doré.</string>
+    <string name="map_remarkable_info_show">Voir seulement les remarquables</string>
+    <string name="map_remarkable_info_close">Fermer</string>
     <string name="map_detail_source">Source : « Les arbres », Paris Data</string>
 </resources>

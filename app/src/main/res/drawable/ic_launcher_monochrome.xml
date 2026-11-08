@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed icon (Android 13+): one colour, tinted by the system. Plane-tree leaf in line art with a small gold dot (remarkable trees), inside the 66 dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.74"
+        android:scaleY="0.74"
+        android:translateX="54"
+        android:translateY="56">
+        <group
+            android:translateX="-50"
+            android:translateY="-40">
+            <path
+                android:pathData="M50,52C40,50 26,54 14,46C22,44 26,36 22,26C32,30 38,26 40,16C44,22 48,22 50,10C52,22 56,22 60,16C62,26 68,30 78,26C74,36 78,44 86,46C74,54 60,50 50,52Z"
+                android:strokeWidth="3.4"
+                android:strokeColor="#FF000000"
+                android:strokeLineCap="round"
+                android:strokeLineJoin="round" />
+            <path
+                android:pathData="M50,52L30,30M50,52L50,18M50,52L70,30M50,52L22,44M50,52L78,44"
+                android:strokeWidth="2.2"
+                android:strokeColor="#FF000000"
+                android:strokeLineCap="round" />
+            <path
+                android:pathData="M50,52L50,70"
+                android:strokeWidth="3.4"
+                android:strokeColor="#FF000000"
+                android:strokeLineCap="round" />
+        </group>
+    </group>
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M73,70m-4.5,0a4.5,4.5 0,1 1,9 0a4.5,4.5 0,1 1,-9 0" />
+</vector>

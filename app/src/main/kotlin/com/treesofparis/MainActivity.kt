@@ -5,11 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.treesofparis.core.designsystem.theme.TreesTheme
 import com.treesofparis.core.map.LocalMapProvider
 import com.treesofparis.core.map.MapProvider
 import com.treesofparis.feature.about.AboutRoute
 import com.treesofparis.feature.favorites.FavoritesRoute
+import com.treesofparis.feature.herbier.HerbierRoute
 import com.treesofparis.feature.map.MapRoute
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -20,6 +22,7 @@ class MainActivity : ComponentActivity() {
     lateinit var mapProvider: MapProvider
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
@@ -30,6 +33,7 @@ class MainActivity : ComponentActivity() {
                         favoritesContent = { onTreeClick, onExploreMap ->
                             FavoritesRoute(onTreeClick = onTreeClick, onExploreMap = onExploreMap)
                         },
+                        herbierContent = { HerbierRoute() },
                         aboutContent = { AboutRoute(librariesResId = R.raw.aboutlibraries) },
                     )
                 }

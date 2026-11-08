@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="herbier_title">Herbier</string>
+    <string name="herbier_totals">%1$s arbres · %2$s genres · %3$s espèces et variétés</string>
+    <string name="herbier_did_you_know">Le saviez-vous ?</string>
+    <string name="herbier_headline">1 arbre sur %1$d à Paris est un %2$s.</string>
+    <string name="herbier_headline_detail">%1$s %2$s, devant %3$s %4$s.</string>
+    <string name="herbier_headline_detail_alone">%1$s %2$s.</string>
+    <string name="herbier_section_genera">Les essences</string>
+    <string name="herbier_genera_hint">part des arbres</string>
+    <string name="herbier_trees">%1$s arbres</string>
+    <string name="herbier_show_all">Voir les %1$d essences dessinées</string>
+    <string name="herbier_section_stages">Âge des arbres</string>
+    <string name="herbier_unknown_stage">%1$s arbres sans stade renseigné.</string>
+    <string name="herbier_section_remarkable">Remarquables</string>
+    <string name="herbier_remarkable_count">%1$s arbres remarquables</string>
+    <string name="herbier_remarkable_count_leading">%1$s arbres remarquables, dont %2$d %3$s</string>
+    <string name="herbier_record_tallest">Le plus haut</string>
+    <string name="herbier_record_widest">Le plus large</string>
+    <string name="herbier_record_height">%1$s · %2$s</string>
+    <string name="herbier_record_girth">%1$s · %2$s de tour</string>
+    <string name="herbier_section_areas">Les plus boisés</string>
+</resources>

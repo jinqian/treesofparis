@@ -29,9 +29,11 @@ dependencies {
     implementation(projects.core.mapOsmdroid)
     implementation(projects.feature.map)
     implementation(projects.feature.favorites)
+    implementation(projects.feature.herbier)
     implementation(projects.feature.about)
 
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)

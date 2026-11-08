@@ -227,7 +227,7 @@ class MapViewModelTest {
             advanceUntilIdle()
             assertTrue(vm.uiState.value.showZoomHint)
 
-            vm.onRemarkableFilterToggle()
+            vm.onRemarkableFilterChange(true)
             advanceUntilIdle()
 
             assertTrue(vm.uiState.value.remarkableOnly)
@@ -246,7 +246,7 @@ class MapViewModelTest {
             val vm = viewModel()
             vm.onCameraChange(MapCamera(center, zoom = 17.0), near)
             advanceUntilIdle()
-            vm.onRemarkableFilterToggle()
+            vm.onRemarkableFilterChange(true)
             runCurrent()
             assertEquals(
                 listOf(9002L),
@@ -260,9 +260,9 @@ class MapViewModelTest {
         runTest(main.dispatcher) {
             val vm = viewModel()
             vm.onCameraChange(MapCamera(center, zoom = 12.0), GeoBounds.COVERAGE)
-            vm.onRemarkableFilterToggle()
+            vm.onRemarkableFilterChange(true)
             advanceUntilIdle()
-            vm.onRemarkableFilterToggle()
+            vm.onRemarkableFilterChange(false)
             advanceUntilIdle()
             assertFalse(vm.uiState.value.remarkableOnly)
             assertTrue(vm.uiState.value.showZoomHint)
@@ -273,10 +273,31 @@ class MapViewModelTest {
         }
 
     @Test
+    fun remarkableInfo_opensThenClosesWhenAFilterIsChosen() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            vm.onRemarkableInfoOpen()
+            assertTrue(vm.uiState.value.showRemarkableInfo)
+            vm.onRemarkableFilterChange(true)
+            assertFalse(vm.uiState.value.showRemarkableInfo)
+            assertTrue(vm.uiState.value.remarkableOnly)
+        }
+
+    @Test
+    fun remarkableInfo_dismiss_keepsTheFilter() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            vm.onRemarkableInfoOpen()
+            vm.onRemarkableInfoDismiss()
+            assertFalse(vm.uiState.value.showRemarkableInfo)
+            assertFalse(vm.uiState.value.remarkableOnly)
+        }
+
+    @Test
     fun remarkableFilter_survivesRecreation() =
         runTest(main.dispatcher) {
             val saved = SavedStateHandle()
-            viewModel(saved).onRemarkableFilterToggle()
+            viewModel(saved).onRemarkableFilterChange(true)
             advanceUntilIdle()
             assertTrue(viewModel(saved).uiState.value.remarkableOnly)
         }
