@@ -47,6 +47,8 @@ data class GenusCountUi(
 
 data class GenusUi(
     val leaf: TreeLeaf,
+    /** The dataset genus (« Tilia »), to open it on the map. */
+    val genus: String,
     /** Share of all trees: « 19,3 % ». */
     val share: String,
     val count: String,

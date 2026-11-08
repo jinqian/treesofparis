@@ -54,6 +54,7 @@ fun TreeStatistics.toHerbierUi(): HerbierUi {
             drawn.map {
                 GenusUi(
                     leaf = TreeLeaf.forGenus(it.genus),
+                    genus = it.genus,
                     share = String.format(FRENCH, "%.1f %%", shareOf(it) * PERCENT),
                     count = formatCount(it.count),
                     fraction = it.count.toFloat() / first,

@@ -38,6 +38,8 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.treesofparis.core.designsystem.component.TreesDivider
 import com.treesofparis.core.designsystem.icon.TreesIcons
+import com.treesofparis.core.designsystem.leaf.LeafDrawing
+import com.treesofparis.core.designsystem.leaf.TreeLeaf
 import com.treesofparis.core.designsystem.theme.TreesSpacing
 import com.treesofparis.core.designsystem.theme.TreesTheme
 
@@ -48,6 +50,7 @@ import com.treesofparis.core.designsystem.theme.TreesTheme
 @Composable
 internal fun RemarkableFilterBar(
     remarkableOnly: Boolean,
+    genusFilterActive: Boolean,
     onRemarkableFilterChange: (Boolean) -> Unit,
     onInfoClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -73,7 +76,7 @@ internal fun RemarkableFilterBar(
             Segment(
                 label = stringResource(R.string.map_filter_all),
                 dotColor = TreesTheme.colors.treePin,
-                selected = !remarkableOnly,
+                selected = !remarkableOnly && !genusFilterActive,
                 onClick = { onRemarkableFilterChange(false) },
                 modifier = Modifier.weight(1f),
             )
@@ -219,6 +222,41 @@ private fun LegendRow(
     }
 }
 
+/** « Seulement : Tilleul » with the genus leaf and a button to show every tree again. */
+@Composable
+internal fun GenusFilterPill(
+    filter: GenusFilterUi,
+    onClear: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = MaterialTheme.colorScheme
+    val name = if (filter.leaf == TreeLeaf.GENERIC) filter.genus else stringResource(filter.leaf.label)
+    Surface(
+        modifier = modifier,
+        shape = CircleShape,
+        color = colors.surfaceContainerLow,
+        border = BorderStroke(1.dp, colors.outlineVariant),
+        shadowElevation = 2.dp,
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            LeafDrawing(filter.leaf, Modifier.size(22.dp), strokeWidth = 1.3.dp)
+            Text(stringResource(R.string.map_filter_genus, name), style = MaterialTheme.typography.labelLarge)
+            IconButton(onClick = onClear) {
+                Icon(
+                    TreesIcons.Close,
+                    contentDescription = stringResource(R.string.map_filter_genus_clear),
+                    tint = colors.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        }
+    }
+}
+
 /** Small note under the segments while only remarkable trees are shown. */
 @Composable
 internal fun RemarkableOnlyCaption(modifier: Modifier = Modifier) {
@@ -244,8 +282,18 @@ private const val CAPTION_ALPHA = 0.94f
 private fun RemarkableFilterBarPreview() {
     TreesTheme {
         Column(Modifier.padding(TreesSpacing.m), verticalArrangement = Arrangement.spacedBy(TreesSpacing.m)) {
-            RemarkableFilterBar(remarkableOnly = false, onRemarkableFilterChange = {}, onInfoClick = {})
-            RemarkableFilterBar(remarkableOnly = true, onRemarkableFilterChange = {}, onInfoClick = {})
+            RemarkableFilterBar(
+                remarkableOnly = false,
+                genusFilterActive = false,
+                onRemarkableFilterChange = {},
+                onInfoClick = {},
+            )
+            RemarkableFilterBar(
+                remarkableOnly = true,
+                genusFilterActive = false,
+                onRemarkableFilterChange = {},
+                onInfoClick = {},
+            )
             RemarkableOnlyCaption()
         }
     }

@@ -30,11 +30,11 @@ class MainActivity : ComponentActivity() {
             TreesTheme {
                 CompositionLocalProvider(LocalMapProvider provides mapProvider) {
                     TreesApp(
-                        mapContent = { key -> MapRoute(treeId = key.treeId) },
+                        mapContent = { key -> MapRoute(treeId = key.treeId, genus = key.genus) },
                         favoritesContent = { onTreeClick, onExploreMap ->
                             FavoritesRoute(onTreeClick = onTreeClick, onExploreMap = onExploreMap)
                         },
-                        herbierContent = { HerbierRoute() },
+                        herbierContent = { onGenusClick -> HerbierRoute(onGenusClick = onGenusClick) },
                         aboutContent = { onOpenLibraries -> AboutRoute(onOpenLibraries = onOpenLibraries) },
                         librariesContent = { onBack ->
                             LibrariesRoute(librariesResId = R.raw.aboutlibraries, onBack = onBack)

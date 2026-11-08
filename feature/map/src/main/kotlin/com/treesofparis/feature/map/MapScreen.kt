@@ -48,13 +48,14 @@ import com.treesofparis.core.map.TreeMapView
 import com.treesofparis.domain.model.GeoBounds
 
 /**
- * The Carte tab. [treeId] opens a tree coming from another screen (Favoris). Asks for the location permission once;
- * the map works without it.
+ * The Carte tab. [treeId] opens a tree coming from another screen (Favoris); [genus] shows only that genus (from
+ * Herbier). Asks for the location permission once; the map works without it.
  */
 @Composable
 fun MapRoute(
     treeId: Long?,
     modifier: Modifier = Modifier,
+    genus: String? = null,
     viewModel: MapViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -86,6 +87,7 @@ fun MapRoute(
         }
     }
     LaunchedEffect(treeId) { treeId?.let(viewModel::onOpenTree) }
+    LaunchedEffect(genus) { genus?.let(viewModel::onGenusFilterRequest) }
 
     MapScreen(
         state = state,
@@ -100,6 +102,7 @@ fun MapRoute(
         onRemarkableInfoOpen = viewModel::onRemarkableInfoOpen,
         onRemarkableInfoDismiss = viewModel::onRemarkableInfoDismiss,
         onOpenWikipedia = { url -> context.openInCustomTab(url) },
+        onGenusFilterClear = viewModel::onGenusFilterClear,
         modifier = modifier,
     )
 }
@@ -118,6 +121,7 @@ fun MapScreen(
     onRemarkableInfoOpen: () -> Unit,
     onRemarkableInfoDismiss: () -> Unit,
     onOpenWikipedia: (String) -> Unit,
+    onGenusFilterClear: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -134,18 +138,13 @@ fun MapScreen(
             onCameraChange = onCameraChange,
             modifier = Modifier.fillMaxSize(),
         )
-        Column(
-            modifier = Modifier.align(Alignment.TopStart).statusBarsPadding().padding(TreesSpacing.m),
-            verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
-        ) {
-            RemarkableFilterBar(
-                remarkableOnly = state.remarkableOnly,
-                onRemarkableFilterChange = onRemarkableFilterChange,
-                onInfoClick = onRemarkableInfoOpen,
-            )
-            if (state.remarkableOnly) RemarkableOnlyCaption(Modifier.align(Alignment.CenterHorizontally))
-            if (state.showZoomHint) ZoomHint(Modifier.align(Alignment.CenterHorizontally))
-        }
+        MapFilters(
+            state = state,
+            onRemarkableFilterChange = onRemarkableFilterChange,
+            onRemarkableInfoOpen = onRemarkableInfoOpen,
+            onGenusFilterClear = onGenusFilterClear,
+            modifier = Modifier.align(Alignment.TopStart),
+        )
         LocateButton(
             isLocating = state.isLocating,
             onClick = onLocateMe,
@@ -172,6 +171,37 @@ fun MapScreen(
                 )
             }
         }
+    }
+}
+
+/** The filter segments and, under them, the active filter's pill and the zoom hint. */
+@Composable
+private fun MapFilters(
+    state: MapUiState,
+    onRemarkableFilterChange: (Boolean) -> Unit,
+    onRemarkableInfoOpen: () -> Unit,
+    onGenusFilterClear: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.statusBarsPadding().padding(TreesSpacing.m),
+        verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
+    ) {
+        RemarkableFilterBar(
+            remarkableOnly = state.remarkableOnly,
+            genusFilterActive = state.genusFilter != null,
+            onRemarkableFilterChange = onRemarkableFilterChange,
+            onInfoClick = onRemarkableInfoOpen,
+        )
+        if (state.remarkableOnly) RemarkableOnlyCaption(Modifier.align(Alignment.CenterHorizontally))
+        state.genusFilter?.let {
+            GenusFilterPill(
+                it,
+                onGenusFilterClear,
+                Modifier.align(Alignment.CenterHorizontally),
+            )
+        }
+        if (state.showZoomHint) ZoomHint(Modifier.align(Alignment.CenterHorizontally))
     }
 }
 

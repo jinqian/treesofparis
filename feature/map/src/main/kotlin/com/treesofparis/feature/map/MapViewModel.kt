@@ -3,6 +3,7 @@ package com.treesofparis.feature.map
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.treesofparis.core.designsystem.leaf.TreeLeaf
 import com.treesofparis.core.map.CameraRequest
 import com.treesofparis.core.map.MapCamera
 import com.treesofparis.core.map.MapConfig
@@ -32,6 +33,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
+@Suppress("TooManyFunctions") // one handler per user event, as the ViewModel convention asks
 class MapViewModel
     @Inject
     constructor(
@@ -47,12 +49,14 @@ class MapViewModel
                 MapUiState(
                     initialCamera = savedCamera() ?: DEFAULT_CAMERA,
                     remarkableOnly = savedState[KEY_REMARKABLE] ?: false,
+                    genusFilter = savedState.get<String>(KEY_GENUS)?.toGenusFilter(),
                 ),
             )
         val uiState: StateFlow<MapUiState> = state.asStateFlow()
 
         private val cameraChanges = MutableStateFlow<Pair<MapCamera, GeoBounds>?>(null)
         private val remarkableOnly = MutableStateFlow(savedState[KEY_REMARKABLE] ?: false)
+        private val genus = MutableStateFlow(savedState.get<String>(KEY_GENUS))
         private var selectionJob: Job? = null
         private var nextRequestId = 0L
 
@@ -128,10 +132,36 @@ class MapViewModel
          * the « Qu'est-ce qu'un arbre remarquable ? » sheet, which offers that choice.
          */
         fun onRemarkableFilterChange(enabled: Boolean) {
+            setGenus(null)
             savedState[KEY_REMARKABLE] = enabled
             remarkableOnly.value = enabled
             state.update { it.copy(remarkableOnly = enabled, showRemarkableInfo = false) }
         }
+
+        /** Shows only the trees of [genus] (a dataset genus, e.g. « Tilia »), at every zoom level. */
+        fun onGenusFilter(genus: String) {
+            savedState[KEY_REMARKABLE] = false
+            remarkableOnly.value = false
+            state.update { it.copy(remarkableOnly = false) }
+            setGenus(genus)
+        }
+
+        /** A genus asked for by navigation (from Herbier): applied once, not again when the screen is recreated. */
+        fun onGenusFilterRequest(genus: String) {
+            if (savedState.get<Boolean>(KEY_GENUS_REQUEST_APPLIED) == true) return
+            savedState[KEY_GENUS_REQUEST_APPLIED] = true
+            onGenusFilter(genus)
+        }
+
+        fun onGenusFilterClear() = setGenus(null)
+
+        private fun setGenus(value: String?) {
+            savedState[KEY_GENUS] = value
+            genus.value = value
+            state.update { it.copy(genusFilter = value?.toGenusFilter()) }
+        }
+
+        private fun String.toGenusFilter() = GenusFilterUi(genus = this, leaf = TreeLeaf.forGenus(this))
 
         fun onRemarkableInfoOpen() {
             state.update { it.copy(showRemarkableInfo = true) }
@@ -160,29 +190,32 @@ class MapViewModel
         private fun observeCameraChanges() {
             viewModelScope.launch {
                 // The camera is debounced; a filter change reloads right away with the last camera.
-                combine(cameraChanges.filterNotNull().debounce(CAMERA_DEBOUNCE_MS), remarkableOnly, ::Pair)
-                    .collectLatest { (cameraAndBounds, onlyRemarkable) ->
-                        loadMarkers(cameraAndBounds.first, cameraAndBounds.second, onlyRemarkable)
+                val camera = cameraChanges.filterNotNull().debounce(CAMERA_DEBOUNCE_MS)
+                combine(camera, remarkableOnly, genus, ::Triple)
+                    .collectLatest { (cameraAndBounds, onlyRemarkable, onlyGenus) ->
+                        loadMarkers(cameraAndBounds.first, cameraAndBounds.second, onlyRemarkable, onlyGenus)
                     }
             }
         }
 
         /**
-         * Below [MIN_TREE_ZOOM] there are too many trees to show, except with the remarkable filter: there are only a
-         * couple of hundred remarkable trees, so they are shown at every zoom level.
+         * Below [MIN_TREE_ZOOM] there are too many trees to show, except with a filter: there are only a couple
+         * of hundred remarkable trees, and a genus is shown at every zoom too, capped at the [MAX_MARKERS] trees
+         * closest to the centre, so its spread across the city stays visible.
          */
         private suspend fun loadMarkers(
             camera: MapCamera,
             bounds: GeoBounds,
             onlyRemarkable: Boolean,
+            onlyGenus: String?,
         ) {
-            if (camera.zoom < MIN_TREE_ZOOM && !onlyRemarkable) {
+            if (camera.zoom < MIN_TREE_ZOOM && !onlyRemarkable && onlyGenus == null) {
                 state.update { it.copy(markers = emptyList(), showZoomHint = true) }
                 return
             }
             val selected = selectedId
             val markers =
-                getTreesInBounds(bounds, MAX_MARKERS, onlyRemarkable).map {
+                getTreesInBounds(bounds, MAX_MARKERS, onlyRemarkable, onlyGenus).map {
                     MapMarker(
                         id = it.id,
                         position = it.location,
@@ -242,5 +275,7 @@ class MapViewModel
             private const val KEY_SELECTED = "selected_tree"
             private const val KEY_OPENED = "opened_tree"
             private const val KEY_REMARKABLE = "remarkable_only"
+            private const val KEY_GENUS = "genus_filter"
+            private const val KEY_GENUS_REQUEST_APPLIED = "genus_request_applied"
         }
     }

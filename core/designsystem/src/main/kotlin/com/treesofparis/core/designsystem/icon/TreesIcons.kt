@@ -27,6 +27,7 @@ object TreesIcons {
     val Leaf: ImageVector = line("Leaf", "M5 19c0-8 6-14 15-14 0 9-6 15-14 15", "M5 19 13 11")
     val Place: ImageVector = line("Place", "M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z", circle(12f, 10f, 2f))
     val ChevronRight: ImageVector = line("ChevronRight", "M9 6l6 6-6 6")
+    val Close: ImageVector = line("Close", "M6 6l12 12M18 6 6 18")
     val Back: ImageVector = line("Back", "M19 12H5", "M11 6l-6 6 6 6")
     val OpenExternal: ImageVector = line("OpenExternal", "M7 17 17 7M9 7h8v8")
     val Book: ImageVector =

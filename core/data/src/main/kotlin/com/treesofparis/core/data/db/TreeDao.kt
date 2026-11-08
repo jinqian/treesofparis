@@ -6,14 +6,15 @@ import androidx.room.Query
 @Dao
 interface TreeDao {
     /**
-     * Trees inside the box, only remarkable ones when [remarkableOnly]. When there are more than [limit], the ones
-     * closest to the box centre win.
+     * Trees inside the box, only remarkable ones when [remarkableOnly], only one [genus] when set. When there are more
+     * than [limit], the ones closest to the box centre win.
      */
     @Query(
         """
         SELECT * FROM trees
         WHERE lat BETWEEN :south AND :north AND lon BETWEEN :west AND :east
           AND (:remarkableOnly = 0 OR remarkable = 1)
+          AND (:genus IS NULL OR genus = :genus)
         ORDER BY (lat - (:south + :north) / 2) * (lat - (:south + :north) / 2)
                + (lon - (:west + :east) / 2) * (lon - (:west + :east) / 2)
         LIMIT :limit
@@ -25,6 +26,7 @@ interface TreeDao {
         north: Double,
         east: Double,
         remarkableOnly: Boolean,
+        genus: String?,
         limit: Int,
     ): List<TreeEntity>
 

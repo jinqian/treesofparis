@@ -14,5 +14,6 @@ class GetTreesInBounds
             bounds: GeoBounds,
             limit: Int,
             remarkableOnly: Boolean = false,
-        ): List<Tree> = trees.getTreesInBounds(bounds, limit, remarkableOnly)
+            genus: String? = null,
+        ): List<Tree> = trees.getTreesInBounds(bounds, limit, remarkableOnly, genus)
     }

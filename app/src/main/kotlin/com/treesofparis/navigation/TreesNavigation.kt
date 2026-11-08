@@ -83,6 +83,15 @@ class TreesNavigator(
         state.selected = TopLevelDestination.ABOUT
     }
 
+    /** Shows only [genus] on the map (from Herbier): the Carte stack restarts at a new map entry for it. */
+    fun openGenusOnMap(genus: String) {
+        state.backStacks.getValue(TopLevelDestination.MAP).apply {
+            clear()
+            add(MapKey(genus = genus, request = System.currentTimeMillis()))
+        }
+        state.selected = TopLevelDestination.MAP
+    }
+
     fun goBack() {
         val stack = state.backStacks.getValue(state.selected)
         when {

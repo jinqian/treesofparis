@@ -24,6 +24,7 @@ class HerbierScreenTest {
     val compose = createComposeRule()
 
     private var showAllClicks = 0
+    private val genusClicks = mutableListOf<String>()
 
     private fun show(showAll: Boolean = false) =
         compose.setContent {
@@ -31,6 +32,7 @@ class HerbierScreenTest {
                 HerbierScreen(
                     state = HerbierUiState.Content(PARIS.toHerbierUi(), showAllGenera = showAll),
                     onShowAllGenera = { showAllClicks++ },
+                    onGenusClick = { genusClicks += it },
                 )
             }
         }
@@ -62,6 +64,14 @@ class HerbierScreenTest {
         scrollTo("Hêtre")
         compose.onNodeWithText("Hêtre").assertIsDisplayed()
         compose.onNodeWithText("Voir les 12 essences dessinées").assertDoesNotExist()
+    }
+
+    @Test
+    fun genusRow_opensItOnTheMap() {
+        show()
+        scrollTo("Tilleul")
+        compose.onNodeWithText("Tilleul").performClick()
+        assertEquals(listOf("Tilia"), genusClicks)
     }
 
     @Test

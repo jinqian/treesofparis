@@ -16,9 +16,10 @@ internal class TreeRepositoryImpl
             bounds: GeoBounds,
             limit: Int,
             remarkableOnly: Boolean,
+            genus: String?,
         ): List<Tree> =
             dao
-                .inBounds(bounds.south, bounds.west, bounds.north, bounds.east, remarkableOnly, limit)
+                .inBounds(bounds.south, bounds.west, bounds.north, bounds.east, remarkableOnly, genus, limit)
                 .map { it.toDomain() }
 
         override suspend fun getTree(id: Long): Tree? {
