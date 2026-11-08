@@ -34,13 +34,12 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import com.treesofparis.core.designsystem.component.TreesDivider
 import com.treesofparis.core.designsystem.icon.TreesIcons
-import com.treesofparis.core.designsystem.icon.TreesIllustrations
+import com.treesofparis.core.designsystem.leaf.LeafDrawing
+import com.treesofparis.core.designsystem.leaf.TreeLeaf
 import com.treesofparis.core.designsystem.theme.ScientificNameStyle
 import com.treesofparis.core.designsystem.theme.TreesSpacing
 import com.treesofparis.core.designsystem.theme.TreesTheme
 import java.util.Locale
-
-private const val WATERMARK_ALPHA = 0.6f
 
 /** The body of the tree detail bottom sheet, laid out like a herbarium label. */
 @Composable
@@ -50,11 +49,11 @@ fun TreeDetailContent(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxWidth()) {
-        Icon(
-            imageVector = TreesIllustrations.PlaneLeaf,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.outlineVariant.copy(alpha = WATERMARK_ALPHA),
-            modifier = Modifier.align(Alignment.TopEnd).size(120.dp).offset(x = 28.dp, y = (-4).dp),
+        LeafDrawing(
+            leaf = detail.leaf,
+            color = MaterialTheme.colorScheme.outlineVariant,
+            strokeWidth = 1.4.dp,
+            modifier = Modifier.align(Alignment.TopEnd).size(132.dp).offset(x = 28.dp, y = (-4).dp),
         )
         Column(
             modifier =
@@ -255,6 +254,7 @@ private fun TreeDetailContentPreview() {
                         stage = "Adulte",
                         remarkable = true,
                         isFavorite = false,
+                        leaf = TreeLeaf.PLATANUS,
                     ),
                 onFavoriteToggle = {},
             )
