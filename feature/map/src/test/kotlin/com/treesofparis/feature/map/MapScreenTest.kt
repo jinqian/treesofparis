@@ -17,6 +17,7 @@ import com.treesofparis.core.map.LocalMapProvider
 import com.treesofparis.core.map.MapCamera
 import com.treesofparis.core.map.MapConfig
 import com.treesofparis.core.map.MapMarker
+import com.treesofparis.core.map.MapPalette
 import com.treesofparis.core.map.MapProvider
 import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
@@ -39,6 +40,7 @@ class MapScreenTest {
             markers: List<MapMarker>,
             userLocation: GeoPoint?,
             config: MapConfig,
+            palette: MapPalette,
             onMarkerClick: (Long) -> Unit,
             onCameraChange: (MapCamera, GeoBounds) -> Unit,
             modifier: Modifier,
@@ -74,14 +76,14 @@ class MapScreenTest {
     @Test
     fun remarkableChip_togglesFilter() {
         show(base)
-        compose.onNodeWithText("Arbres remarquables").assertIsNotSelected().performClick()
+        compose.onNodeWithText("Remarquables").assertIsNotSelected().performClick()
         assertEquals(1, filterToggles)
     }
 
     @Test
     fun remarkableChip_isSelectedWhenFiltering() {
         show(base.copy(remarkableOnly = true))
-        compose.onNodeWithText("Arbres remarquables").assertIsSelected()
+        compose.onNodeWithText("Remarquables").assertIsSelected()
     }
 
     @Test

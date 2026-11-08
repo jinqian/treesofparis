@@ -30,7 +30,7 @@ class AboutTest {
     @Test
     fun aboutScreen_showsVersionAndCredits() {
         compose.setContent { TreesTheme { AboutScreen(state, libraries = emptyList(), onOpenUrl = {}) } }
-        compose.onNodeWithText("Version 0.1.0").assertIsDisplayed()
+        compose.onNodeWithText("VERSION 0.1.0").assertIsDisplayed()
         compose.onNodeWithText("« Les arbres », Paris Data — Ville de Paris").assertIsDisplayed()
     }
 
@@ -39,6 +39,13 @@ class AboutTest {
         compose.setContent { TreesTheme { AboutScreen(state, libraries = emptyList(), onOpenUrl = {}) } }
         compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText("© les contributeurs d’OpenStreetMap"))
         compose.onNodeWithText("© les contributeurs d’OpenStreetMap").assertIsDisplayed()
+    }
+
+    @Test
+    fun aboutScreen_creditsBundledFonts() {
+        compose.setContent { TreesTheme { AboutScreen(state, libraries = emptyList(), onOpenUrl = {}) } }
+        compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText("Newsreader et Inter"))
+        compose.onNodeWithText("SIL Open Font License 1.1").assertIsDisplayed()
     }
 
     @Test

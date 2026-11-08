@@ -1,6 +1,7 @@
 package com.treesofparis.navigation
 
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.ui.test.assertIsDisplayed
@@ -26,7 +27,12 @@ class TreesAppTest {
         TreesTheme {
             TreesApp(
                 mapContent = { key -> Text("map tree=${key.treeId}") },
-                favoritesContent = { onTreeClick -> Button(onClick = { onTreeClick(42) }) { Text("open 42") } },
+                favoritesContent = { onTreeClick, onExploreMap ->
+                    Column {
+                        Button(onClick = { onTreeClick(42) }) { Text("open 42") }
+                        Button(onClick = onExploreMap) { Text("explore") }
+                    }
+                },
                 aboutContent = { Text("about screen") },
             )
         }
@@ -55,6 +61,15 @@ class TreesAppTest {
         compose.onNodeWithText("Favoris").performClick()
         compose.onNodeWithText("open 42").performClick()
         compose.onNodeWithText("map tree=42").assertIsDisplayed()
+        compose.onNodeWithText("Carte").assertIsSelected()
+    }
+
+    @Test
+    fun exploreMap_fromFavoris_selectsCarte() {
+        compose.setContent(app)
+        compose.onNodeWithText("Favoris").performClick()
+        compose.onNodeWithText("explore").performClick()
+        compose.onNodeWithText("map tree=null").assertIsDisplayed()
         compose.onNodeWithText("Carte").assertIsSelected()
     }
 

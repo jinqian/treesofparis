@@ -1,5 +1,6 @@
 package com.treesofparis.feature.map.mapper
 
+import com.treesofparis.feature.map.MeasureUi
 import com.treesofparis.feature.map.tree
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -10,8 +11,8 @@ class TreeDetailMapperTest {
     fun toDetailUi_buildsScientificName() {
         val detail = tree(1).copy(cultivar = "Kanzan").toDetailUi(isFavorite = true)
         assertEquals("Platanus x hispanica 'Kanzan'", detail.scientificName)
-        assertEquals("16 m", detail.height)
-        assertEquals("165 cm", detail.circumference)
+        assertEquals(MeasureUi("16", "m"), detail.height)
+        assertEquals(MeasureUi("165", "cm"), detail.circumference)
         assertEquals(true, detail.isFavorite)
         assertEquals("Paris 19e", detail.area)
         assertEquals("Quai de la Seine", detail.address)

@@ -8,7 +8,7 @@
     <string name="map_detail_unknown_stage">Stade inconnu</string>
     <string name="map_detail_height">Hauteur</string>
     <string name="map_detail_circumference">Circonférence</string>
-    <string name="map_detail_stage">Stade de développement</string>
+    <string name="map_detail_stage">Stade</string>
     <string name="map_detail_remarkable">Arbre remarquable</string>
     <string name="map_favorite_add">Ajouter aux favoris</string>
     <string name="map_favorite_remove">Retirer des favoris</string>
@@ -17,5 +17,7 @@
     <string name="map_location_unavailable">Position indisponible. Vérifiez que la localisation est activée.</string>
     <string name="map_location_denied">Autorisez l’accès à la position pour vous localiser.</string>
     <string name="map_location_settings">Réglages</string>
-    <string name="map_filter_remarkable">Arbres remarquables</string>
+    <string name="map_filter_remarkable">Remarquables</string>
+    <string name="map_brand">Arbres de Paris</string>
+    <string name="map_detail_source">Source : « Les arbres », Paris Data</string>
 </resources>

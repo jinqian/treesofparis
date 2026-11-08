@@ -4,6 +4,7 @@ data class FavoriteUiModel(
     val id: Long,
     val title: String,
     val subtitle: String,
+    val remarkable: Boolean = false,
 )
 
 sealed interface FavoritesUiState {
