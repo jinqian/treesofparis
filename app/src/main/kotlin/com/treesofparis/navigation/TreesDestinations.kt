@@ -14,6 +14,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class MapKey(
     val treeId: Long? = null,
+    val genus: String? = null,
     val request: Long = 0,
 ) : NavKey
 

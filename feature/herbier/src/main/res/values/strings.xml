@@ -8,6 +8,7 @@
     <string name="herbier_headline_detail_alone">%1$s %2$s.</string>
     <string name="herbier_section_genera">Les essences</string>
     <string name="herbier_genera_hint">part des arbres</string>
+    <string name="herbier_see_on_map">Voir sur la carte</string>
     <string name="herbier_trees">%1$s arbres</string>
     <string name="herbier_show_all">Voir les %1$d essences dessinées</string>
     <string name="herbier_section_stages">Âge des arbres</string>

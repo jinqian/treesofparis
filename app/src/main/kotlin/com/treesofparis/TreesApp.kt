@@ -36,7 +36,7 @@ import com.treesofparis.navigation.rememberTreesNavigationState
 fun TreesApp(
     mapContent: @Composable (MapKey) -> Unit,
     favoritesContent: @Composable (onTreeClick: (Long) -> Unit, onExploreMap: () -> Unit) -> Unit,
-    herbierContent: @Composable () -> Unit,
+    herbierContent: @Composable (onGenusClick: (String) -> Unit) -> Unit,
     aboutContent: @Composable (onOpenLibraries: () -> Unit) -> Unit,
     librariesContent: @Composable (onBack: () -> Unit) -> Unit,
     modifier: Modifier = Modifier,
@@ -82,7 +82,7 @@ fun TreesApp(
                 state.toDecoratedEntries(
                     entryProvider {
                         entry<MapKey> { key -> mapContent(key) }
-                        entry<HerbierKey> { herbierContent() }
+                        entry<HerbierKey> { herbierContent(navigator::openGenusOnMap) }
                         entry<FavoritesKey> {
                             favoritesContent(navigator::openTreeOnMap) { navigator.selectTab(TopLevelDestination.MAP) }
                         }

@@ -1,6 +1,7 @@
 package com.treesofparis.feature.map
 
 import androidx.lifecycle.SavedStateHandle
+import com.treesofparis.core.designsystem.leaf.TreeLeaf
 import com.treesofparis.core.map.MapCamera
 import com.treesofparis.core.map.MarkerStyle
 import com.treesofparis.domain.model.GeoBounds
@@ -31,9 +32,10 @@ class MapViewModelTest {
     private val center = GeoPoint.PARIS_CENTER
     private val near = GeoBounds(south = 48.85, west = 2.34, north = 48.86, east = 2.36)
     private val remarkable = tree(9002, 48.8551, 2.3501).copy(remarkable = true)
+    private val lime = tree(9003, 48.8552, 2.3502).copy(genus = "Tilia")
     private val trees =
         FakeTreeRepository(
-            listOf(remarkable) + (1L..3000L).map { tree(it, 48.855, 2.35) } + tree(9001, 48.9059, 2.4101),
+            listOf(remarkable, lime) + (1L..3000L).map { tree(it, 48.855, 2.35) } + tree(9001, 48.9059, 2.4101),
         )
     private val favorites = FakeFavoritesRepository()
     private val location = FakeLocationRepository(null)
@@ -291,6 +293,60 @@ class MapViewModelTest {
             vm.onRemarkableInfoDismiss()
             assertFalse(vm.uiState.value.showRemarkableInfo)
             assertFalse(vm.uiState.value.remarkableOnly)
+        }
+
+    @Test
+    fun genusFilter_showsOnlyThatGenusAtAnyZoom() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            vm.onCameraChange(MapCamera(center, zoom = 12.0), GeoBounds.COVERAGE)
+            vm.onGenusFilter("Tilia")
+            advanceUntilIdle()
+            assertEquals(GenusFilterUi("Tilia", TreeLeaf.TILIA), vm.uiState.value.genusFilter)
+            assertFalse(vm.uiState.value.showZoomHint)
+            assertEquals(
+                listOf(9003L),
+                vm.uiState.value.markers
+                    .map { it.id },
+            )
+            assertEquals("Tilia", trees.genusCalls.last())
+        }
+
+    @Test
+    fun genusFilter_andRemarkableExcludeEachOther() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            vm.onRemarkableFilterChange(true)
+            vm.onGenusFilter("Tilia")
+            assertFalse(vm.uiState.value.remarkableOnly)
+            vm.onRemarkableFilterChange(true)
+            assertNull(vm.uiState.value.genusFilter)
+        }
+
+    @Test
+    fun genusFilter_clear_showsAllTreesAgain() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            vm.onGenusFilter("Tilia")
+            vm.onGenusFilterClear()
+            vm.onCameraChange(MapCamera(center, zoom = 17.0), near)
+            advanceUntilIdle()
+            assertNull(vm.uiState.value.genusFilter)
+            assertEquals(null, trees.genusCalls.last())
+        }
+
+    @Test
+    fun genusFilter_fromNavigation_isAppliedOnceAndSurvivesRecreation() =
+        runTest(main.dispatcher) {
+            val saved = SavedStateHandle()
+            viewModel(saved).apply {
+                onGenusFilterRequest("Tilia")
+                onGenusFilterClear()
+            }
+            // Recreated: the request is not applied again over the user's choice.
+            val recreated = viewModel(saved)
+            recreated.onGenusFilterRequest("Tilia")
+            assertNull(recreated.uiState.value.genusFilter)
         }
 
     @Test

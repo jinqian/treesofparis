@@ -1,6 +1,7 @@
 package com.treesofparis.feature.herbier
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -28,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -40,6 +43,7 @@ import com.treesofparis.core.designsystem.component.SectionHeader
 import com.treesofparis.core.designsystem.component.TreesCardGroup
 import com.treesofparis.core.designsystem.component.TreesDivider
 import com.treesofparis.core.designsystem.component.TreesScaffold
+import com.treesofparis.core.designsystem.icon.TreesIcons
 import com.treesofparis.core.designsystem.leaf.LeafDrawing
 import com.treesofparis.core.designsystem.leaf.TreeLeaf
 import com.treesofparis.core.designsystem.theme.TreesSpacing
@@ -48,14 +52,20 @@ import java.util.Locale
 
 const val HERBIER_LIST_TAG = "herbier_list"
 
-/** The Herbier tab: what the trees of Paris are, in figures and leaves. */
+/** The Herbier tab: what the trees of Paris are, in figures and leaves. [onGenusClick] shows a genus on the map. */
 @Composable
 fun HerbierRoute(
+    onGenusClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HerbierViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    HerbierScreen(state = state, onShowAllGenera = viewModel::onShowAllGenera, modifier = modifier)
+    HerbierScreen(
+        state = state,
+        onShowAllGenera = viewModel::onShowAllGenera,
+        onGenusClick = onGenusClick,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -63,6 +73,7 @@ fun HerbierScreen(
     state: HerbierUiState,
     onShowAllGenera: () -> Unit,
     modifier: Modifier = Modifier,
+    onGenusClick: (String) -> Unit = {},
 ) {
     val subtitle =
         (state as? HerbierUiState.Content)?.herbier?.let {
@@ -86,7 +97,7 @@ fun HerbierScreen(
                     verticalArrangement = Arrangement.spacedBy(TreesSpacing.l),
                 ) {
                     state.herbier.headline?.let { headline -> item { HeadlineCard(headline) } }
-                    generaSection(state.herbier.genera, state.showAllGenera, onShowAllGenera)
+                    generaSection(state.herbier.genera, state.showAllGenera, onShowAllGenera, onGenusClick)
                     item { StagesSection(state.herbier.stages, state.herbier.unknownStageCount) }
                     item { RemarkableSection(state.herbier.remarkable) }
                     if (state.herbier.areas.isNotEmpty()) item { AreasSection(state.herbier.areas) }
@@ -143,6 +154,7 @@ private fun LazyListScope.generaSection(
     genera: List<GenusUi>,
     showAll: Boolean,
     onShowAll: () -> Unit,
+    onGenusClick: (String) -> Unit,
 ) {
     if (genera.isEmpty()) return
     item {
@@ -164,7 +176,7 @@ private fun LazyListScope.generaSection(
     item {
         TreesCardGroup {
             visible.forEachIndexed { index, genus ->
-                GenusRow(genus)
+                GenusRow(genus, onClick = { onGenusClick(genus.genus) })
                 if (index < visible.lastIndex) TreesDivider()
             }
             if (visible.size < genera.size) {
@@ -181,9 +193,19 @@ private fun LazyListScope.generaSection(
 }
 
 @Composable
-private fun GenusRow(genus: GenusUi) {
+private fun GenusRow(
+    genus: GenusUi,
+    onClick: () -> Unit,
+) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = TreesSpacing.m, vertical = 10.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(
+                    onClickLabel = stringResource(R.string.herbier_see_on_map),
+                    role = Role.Button,
+                    onClick = onClick,
+                ).padding(start = TreesSpacing.m, end = TreesSpacing.s, top = 10.dp, bottom = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -211,6 +233,12 @@ private fun GenusRow(genus: GenusUi) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+        Icon(
+            TreesIcons.ChevronRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(18.dp),
+        )
     }
 }
 
@@ -397,8 +425,8 @@ private fun HerbierScreenPreview() {
                             ),
                         genera =
                             listOf(
-                                GenusUi(TreeLeaf.PLATANUS, "19,3 %", "42 591", 1f),
-                                GenusUi(TreeLeaf.AESCULUS, "11,3 %", "24 795", 0.58f),
+                                GenusUi(TreeLeaf.PLATANUS, "Platanus", "19,3 %", "42 591", 1f),
+                                GenusUi(TreeLeaf.AESCULUS, "Aesculus", "11,3 %", "24 795", 0.58f),
                             ),
                         stages = listOf(StageUi("Jeune", "45 781", 0.51f), StageUi("Adulte", "89 118", 1f)),
                         unknownStageCount = "36 239",

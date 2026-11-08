@@ -45,6 +45,7 @@ class PrepackagedDatabaseTest {
                     north = 48.912,
                     east = 2.424,
                     remarkableOnly = false,
+                    genus = null,
                     limit = 10,
                 )
             assertEquals(true, pantin.isNotEmpty())
@@ -57,7 +58,15 @@ class PrepackagedDatabaseTest {
             val db = buildTreeDatabase(context, name = "remarkable.db").also(opened::add)
             val c = com.treesofparis.domain.model.GeoBounds.COVERAGE
             val remarkable =
-                db.treeDao().inBounds(c.south, c.west, c.north, c.east, remarkableOnly = true, limit = 1_000)
+                db.treeDao().inBounds(
+                    c.south,
+                    c.west,
+                    c.north,
+                    c.east,
+                    remarkableOnly = true,
+                    genus = null,
+                    limit = 1_000,
+                )
             assertEquals(181, remarkable.size)
             assertEquals(true, remarkable.all { it.remarkable })
         }

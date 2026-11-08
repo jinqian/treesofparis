@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.treesofparis.core.designsystem.leaf.TreeLeaf
 import com.treesofparis.core.designsystem.theme.TreesTheme
 import com.treesofparis.core.map.CameraRequest
 import com.treesofparis.core.map.LocalMapProvider
@@ -53,6 +54,7 @@ class MapScreenTest {
     private var locateClicks = 0
     private val filterChanges = mutableListOf<Boolean>()
     private var infoOpens = 0
+    private var genusClears = 0
 
     private fun show(state: MapUiState) =
         compose.setContent {
@@ -71,6 +73,7 @@ class MapScreenTest {
                         onRemarkableInfoOpen = { infoOpens++ },
                         onRemarkableInfoDismiss = {},
                         onOpenWikipedia = {},
+                        onGenusFilterClear = { genusClears++ },
                     )
                 }
             }
@@ -114,6 +117,15 @@ class MapScreenTest {
         show(base.copy(remarkableOnly = true))
         compose.onNodeWithText("Remarquables").assertIsSelected()
         compose.onNodeWithText("Seuls les arbres remarquables sont affichés").assertIsDisplayed()
+    }
+
+    @Test
+    fun genusFilter_showsAPillThatClears() {
+        show(base.copy(genusFilter = GenusFilterUi("Tilia", TreeLeaf.TILIA)))
+        compose.onNodeWithText("Seulement : Tilleul").assertIsDisplayed()
+        compose.onNodeWithText("Tous les arbres").assertIsNotSelected()
+        compose.onNodeWithContentDescription("Afficher tous les arbres").performClick()
+        assertEquals(1, genusClears)
     }
 
     @Test

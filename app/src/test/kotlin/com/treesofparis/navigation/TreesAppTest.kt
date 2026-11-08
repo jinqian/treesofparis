@@ -26,14 +26,19 @@ class TreesAppTest {
     private val app = @androidx.compose.runtime.Composable {
         TreesTheme {
             TreesApp(
-                mapContent = { key -> Text("map tree=${key.treeId}") },
+                mapContent = { key -> Text("map tree=${key.treeId} genus=${key.genus}") },
                 favoritesContent = { onTreeClick, onExploreMap ->
                     Column {
                         Button(onClick = { onTreeClick(42) }) { Text("open 42") }
                         Button(onClick = onExploreMap) { Text("explore") }
                     }
                 },
-                herbierContent = { Text("herbier screen") },
+                herbierContent = { onGenusClick ->
+                    Column {
+                        Text("herbier screen")
+                        Button(onClick = { onGenusClick("Tilia") }) { Text("tilleul") }
+                    }
+                },
                 aboutContent = { onOpenLibraries ->
                     Column {
                         Text("about screen")
@@ -57,7 +62,7 @@ class TreesAppTest {
         compose.onNodeWithText("Herbier").assertIsDisplayed()
         compose.onNodeWithText("Favoris").assertIsDisplayed()
         compose.onNodeWithText("À propos").assertIsDisplayed()
-        compose.onNodeWithText("map tree=null").assertIsDisplayed()
+        compose.onNodeWithText("map tree=null genus=null").assertIsDisplayed()
     }
 
     @Test
@@ -66,6 +71,15 @@ class TreesAppTest {
         compose.onNodeWithText("Herbier").performClick()
         compose.onNodeWithText("herbier screen").assertIsDisplayed()
         compose.onNodeWithText("Herbier").assertIsSelected()
+    }
+
+    @Test
+    fun genusFromHerbier_opensTheMapFilteredToIt() {
+        compose.setContent(app)
+        compose.onNodeWithText("Herbier").performClick()
+        compose.onNodeWithText("tilleul").performClick()
+        compose.onNodeWithText("map tree=null genus=Tilia").assertIsDisplayed()
+        compose.onNodeWithText("Carte").assertIsSelected()
     }
 
     @Test
@@ -81,7 +95,7 @@ class TreesAppTest {
         compose.setContent(app)
         compose.onNodeWithText("Favoris").performClick()
         compose.onNodeWithText("open 42").performClick()
-        compose.onNodeWithText("map tree=42").assertIsDisplayed()
+        compose.onNodeWithText("map tree=42 genus=null").assertIsDisplayed()
         compose.onNodeWithText("Carte").assertIsSelected()
     }
 
@@ -90,7 +104,7 @@ class TreesAppTest {
         compose.setContent(app)
         compose.onNodeWithText("Favoris").performClick()
         compose.onNodeWithText("explore").performClick()
-        compose.onNodeWithText("map tree=null").assertIsDisplayed()
+        compose.onNodeWithText("map tree=null genus=null").assertIsDisplayed()
         compose.onNodeWithText("Carte").assertIsSelected()
     }
 
@@ -120,7 +134,7 @@ class TreesAppTest {
         compose.onNodeWithText("À propos").performClick()
         compose.onNodeWithText("about screen").assertIsDisplayed()
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
-        compose.onNodeWithText("map tree=null").assertIsDisplayed()
+        compose.onNodeWithText("map tree=null genus=null").assertIsDisplayed()
         compose.onNodeWithText("Carte").assertIsSelected()
     }
 

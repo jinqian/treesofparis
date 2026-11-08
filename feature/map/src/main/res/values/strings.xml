@@ -19,6 +19,8 @@
     <string name="map_location_settings">Réglages</string>
     <string name="map_filter_remarkable">Remarquables</string>
     <string name="map_filter_all">Tous les arbres</string>
+    <string name="map_filter_genus">Seulement : %1$s</string>
+    <string name="map_filter_genus_clear">Afficher tous les arbres</string>
     <string name="map_filter_remarkable_caption">Seuls les arbres remarquables sont affichés</string>
     <string name="map_legend_tree">Arbre</string>
     <string name="map_remarkable_info_title">Qu’est-ce qu’un arbre remarquable ?</string>
