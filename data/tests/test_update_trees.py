@@ -1,6 +1,7 @@
 """Tests for data/scripts/update_trees.py. Run: data/.venv/bin/python -I -m pytest data/tests"""
 
 import json
+import os
 import re
 import sqlite3
 import sys
@@ -211,3 +212,63 @@ def test_next_version_changed_content_bumps_version():
 def test_content_hash_ignores_input_order(cleaned):
     rows, _ = cleaned
     assert ut.content_hash(rows) == ut.content_hash(list(reversed(rows)))
+
+
+# --- extraction metadata -------------------------------------------------------------------------------------------
+
+
+def test_extracted_at_is_the_raw_csv_download_time(tmp_path):
+    raw = tmp_path / "les-arbres.csv"
+    raw.write_text("x")
+    os.utime(raw, (1_778_088_600, 1_778_088_600))  # 2026-05-06T17:30:00Z
+    assert ut.extracted_at(raw) == "2026-05-06T17:30:00Z"
+
+
+def test_dataset_modified_at_reads_opendatasoft_metadata():
+    payload = {"metas": {"default": {"modified": "2026-11-06T09:34:19+00:00", "records_count": 220339}}}
+    assert ut.dataset_modified_at(payload) == "2026-11-06T09:34:19+00:00"
+    assert ut.dataset_modified_at({"metas": {}}) is None
+
+
+def test_build_meta_records_source_counts_and_version(cleaned):
+    _, report = cleaned
+    meta = ut.build_meta(
+        report,
+        version=3,
+        extracted="2026-11-06T16:30:00Z",
+        dataset_modified="2026-11-06T09:34:19+00:00",
+    )
+    assert meta == {
+        "dataVersion": 3,
+        "datasetModifiedAt": "2026-11-06T09:34:19+00:00",
+        "dropped": {
+            "duplicateIds": report.duplicates,
+            "invalidCoordinates": report.invalid_coordinates,
+            "outsideCoverage": report.outside_coverage,
+        },
+        "extractedAt": "2026-11-06T16:30:00Z",
+        "license": "ODbL",
+        "recordsKept": report.kept,
+        "recordsRead": report.total,
+        "source": ut.DATASET_PAGE,
+        "sourceExport": ut.EXPORT_URL,
+    }
+
+
+def test_previous_dataset_modified_at_survives_a_rebuild_without_download(tmp_path):
+    meta_file = tmp_path / "trees-db-meta.json"
+    assert ut.previous_dataset_modified_at(meta_file) is None
+    meta_file.write_text(json.dumps({"datasetModifiedAt": "2026-11-06T09:34:19+00:00"}))
+    assert ut.previous_dataset_modified_at(meta_file) == "2026-11-06T09:34:19+00:00"
+
+
+def test_meta_file_is_stable_json(tmp_path, cleaned):
+    _, report = cleaned
+    meta_file = tmp_path / "trees-db-meta.json"
+    meta = ut.build_meta(report, version=1, extracted="2026-11-06T16:30:00Z", dataset_modified=None)
+    ut.write_meta(meta_file, meta)
+    first = meta_file.read_text()
+    ut.write_meta(meta_file, meta)
+    assert meta_file.read_text() == first
+    assert first.endswith("\n")
+    assert json.loads(first)["datasetModifiedAt"] is None

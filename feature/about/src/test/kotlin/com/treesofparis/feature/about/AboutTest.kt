@@ -10,22 +10,46 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import com.treesofparis.core.designsystem.theme.TreesTheme
 import com.treesofparis.domain.model.AppInfo
+import com.treesofparis.domain.model.DatasetInfo
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.time.Instant
 
 @RunWith(RobolectricTestRunner::class)
 class AboutTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private val state = AboutUiState(versionName = "0.1.0")
+    private val state =
+        AboutUiState(
+            versionName = "0.1.0",
+            extraction = ExtractionUi(date = "6 novembre 2026", treeCount = "220\u202F339"),
+        )
 
     @Test
-    fun viewModel_exposesVersion() {
-        assertEquals("0.1.0", AboutViewModel(AppInfo("0.1.0")).uiState.versionName)
+    fun viewModel_exposesVersionAndExtraction() {
+        val dataset = DatasetInfo(extractedAt = Instant.parse("2026-11-06T16:30:03Z"), treeCount = 220_339)
+        val ui = AboutViewModel(AppInfo("0.1.0"), dataset).uiState
+        assertEquals("0.1.0", ui.versionName)
+        assertEquals(ExtractionUi(date = "6 novembre 2026", treeCount = "220\u202F339"), ui.extraction)
+    }
+
+    @Test
+    fun extraction_isTheParisDate() {
+        // 23:30 UTC on 5 November is already 6 November in Paris.
+        val late = DatasetInfo(extractedAt = Instant.parse("2026-11-05T23:30:00Z"), treeCount = 1)
+        assertEquals("6 novembre 2026", late.toExtractionUi()?.date)
+        assertNull(DatasetInfo(extractedAt = null, treeCount = 1).toExtractionUi())
+    }
+
+    @Test
+    fun aboutScreen_showsTheDataExtraction() {
+        compose.setContent { TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = {}) } }
+        compose.onNodeWithText("Extraction du 6 novembre 2026 · 220\u202F339 arbres").assertIsDisplayed()
     }
 
     @Test

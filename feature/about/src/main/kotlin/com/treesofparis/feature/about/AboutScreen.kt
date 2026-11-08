@@ -78,6 +78,10 @@ fun AboutScreen(
             section(R.string.about_section_data) {
                 InfoRow(
                     title = stringResource(R.string.about_data_credit),
+                    subtitle =
+                        state.extraction?.let {
+                            stringResource(R.string.about_data_extraction, it.date, it.treeCount)
+                        },
                     trailing = InfoRowTrailing.EXTERNAL,
                     onClick = { onOpenUrl(DATASET_URL) },
                 )

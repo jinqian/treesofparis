@@ -2,6 +2,7 @@ package com.treesofparis.core.data.di
 
 import android.content.Context
 import androidx.room.Room
+import com.treesofparis.core.data.BuildConfig
 import com.treesofparis.core.data.db.TreeDao
 import com.treesofparis.core.data.db.TreeDatabase
 import com.treesofparis.core.data.db.TreeStatisticsDao
@@ -10,6 +11,7 @@ import com.treesofparis.core.data.location.LocationRepositoryImpl
 import com.treesofparis.core.data.repository.FavoritesRepositoryImpl
 import com.treesofparis.core.data.repository.TreeRepositoryImpl
 import com.treesofparis.core.data.repository.TreeStatisticsRepositoryImpl
+import com.treesofparis.domain.model.DatasetInfo
 import com.treesofparis.domain.repository.FavoritesRepository
 import com.treesofparis.domain.repository.LocationRepository
 import com.treesofparis.domain.repository.TreeRepository
@@ -20,6 +22,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import java.time.Instant
 import javax.inject.Singleton
 
 @Module
@@ -37,6 +40,13 @@ internal abstract class DataModule {
         fun provideTreeDatabase(
             @ApplicationContext context: Context,
         ): TreeDatabase = buildTreeDatabase(context)
+
+        @Provides
+        fun provideDatasetInfo(): DatasetInfo =
+            DatasetInfo(
+                extractedAt = BuildConfig.TREES_EXTRACTED_AT.takeIf { it.isNotBlank() }?.let(Instant::parse),
+                treeCount = BuildConfig.TREES_RECORDS_KEPT,
+            )
 
         @Provides
         fun provideTreeDao(db: TreeDatabase): TreeDao = db.treeDao()
