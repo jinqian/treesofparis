@@ -11,6 +11,7 @@ library (Python 3.10+).
 ```bash
 python3 data/scripts/update_trees.py                  # download + build
 python3 data/scripts/update_trees.py --skip-download  # rebuild from data/raw/les-arbres.csv
+python3 data/scripts/update_trees.py --skip-download --no-wikipedia-lookup  # offline: cached Wikipedia titles only
 ./gradlew :core:data:testDebugUnitTest                # opens the new asset through Room
 ```
 
@@ -22,8 +23,8 @@ Wrote core/data/src/main/assets/trees.db (33.2 MB), data version 1 (unchanged)
 ```
 
 Then commit `trees.db`, `core/data/trees-db-version.txt`, `core/data/trees-db-content.sha256`,
-`core/data/trees-db-meta.json` and, if the version went up, the new Room schema JSON that the next Gradle build
-exports to `core/data/schemas/`.
+`core/data/trees-db-meta.json`, `data/wikipedia-titles.json` and, if the version went up, the new Room schema JSON
+that the next Gradle build exports to `core/data/schemas/`.
 
 A scheduled GitHub Actions workflow (`.github/workflows/update-data.yml`) does this and opens a pull request when
 the data changed.
@@ -38,6 +39,7 @@ the data changed.
 | `datasetModifiedAt` | The dataset's own « last modified » date, from the Opendatasoft metadata API (kept on `--skip-download`). |
 | `recordsRead`, `recordsKept`, `dropped` | The cleaning report: rows in the export, rows shipped, and why the others were dropped. |
 | `dataVersion` | The data version, as in `trees-db-version.txt`. |
+| `wikipediaLinks` | How many genus + species pairs have a French Wikipedia article (see below). |
 | `source`, `sourceExport`, `license` | The dataset page, the export URL used, and its licence (ODbL). |
 
 The app shows the extraction date and the number of trees in À propos (« Extraction du 6 novembre 2026 · 220 339
@@ -61,14 +63,21 @@ arbres »): `:core:data` reads the file at build time into `BuildConfig` and pro
    - Missing common name → genus → « Arbre ».
    - Development stage: « Jeune (arbre) » → « Jeune », « Jeune (arbre)Adulte » → « Jeune adulte ».
    - Cultivar quotes removed (`''Kanzan''` → `Kanzan`).
-4. **Build** `trees.db` from Room's exported schema JSON (`core/data/schemas/…TreeDatabase/<n>.json`): the same
+4. **Link to Wikipedia**: for every distinct genus + species, find its French Wikipedia article through Wikidata
+   (taxon name, property P225; `x hispanica` is looked up as `× hispanica`, forms and subspecies are dropped, `sp.`
+   means genus only). When the species has no article, the genus article is used (plant genera only: rank genus with
+   an IPNI ID), and the app says so. Answers, including « no article », are cached in `data/wikipedia-titles.json`,
+   so a monthly run only asks Wikidata about new names; a failed request is logged and retried next run, it never
+   fails the build. The links go to the `taxon_links` table (Room entity `TaxonLinkEntity`). Delete an entry from the
+   cache to look it up again.
+5. **Build** `trees.db` from Room's exported schema JSON (`core/data/schemas/…TreeDatabase/<n>.json`): the same
    `CREATE TABLE`/index statements and Room's identity hash, so Room accepts the file as is. The Room entity
    `TreeEntity` owns the schema — to add a column, change the entity, build `:core:data` so Room exports the new
    schema, update `COLUMNS` in the script, then re-run it.
-5. **Version** the data: `PRAGMA user_version` = `core/data/trees-db-version.txt`, which also becomes
-   `TreeDatabase`'s Room version through `BuildConfig.TREES_DB_VERSION`. The version goes up only when the cleaned
-   content hash (`core/data/trees-db-content.sha256`) changed. A higher version makes the app drop its old copy and
-   copy the new asset; favorites live in a separate database and are kept.
+6. **Version** the data: `PRAGMA user_version` = `core/data/trees-db-version.txt`, which also becomes
+   `TreeDatabase`'s Room version through `BuildConfig.TREES_DB_VERSION`. The version goes up only when the content
+   hash of the cleaned trees and their Wikipedia links (`core/data/trees-db-content.sha256`) changed. A higher version
+   makes the app drop its old copy and copy the new asset; favorites live in a separate database and are kept.
 
 ## Tests
 

@@ -8,7 +8,11 @@ import com.treesofparis.core.data.BuildConfig
  * Read-only tree data copied from the `trees.db` asset. Its version is the data version: a higher version makes
  * Room drop the old copy and copy the asset again (see [com.treesofparis.core.data.di.DataModule]).
  */
-@Database(entities = [TreeEntity::class], version = BuildConfig.TREES_DB_VERSION, exportSchema = true)
+@Database(
+    entities = [TreeEntity::class, TaxonLinkEntity::class],
+    version = BuildConfig.TREES_DB_VERSION,
+    exportSchema = true,
+)
 abstract class TreeDatabase : RoomDatabase() {
     abstract fun treeDao(): TreeDao
 

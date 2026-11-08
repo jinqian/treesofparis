@@ -143,7 +143,7 @@ def test_coverage_matches_kotlin_domain():
 
 @pytest.fixture
 def schema():
-    return ut.latest_schema(SCHEMA_DIR, max_version=1)
+    return ut.latest_schema(SCHEMA_DIR, max_version=10**6)  # the newest schema
 
 
 def build(tmp_path, cleaned, schema, version=1, name="trees.db"):
@@ -252,6 +252,7 @@ def test_build_meta_records_source_counts_and_version(cleaned):
         "recordsRead": report.total,
         "source": ut.DATASET_PAGE,
         "sourceExport": ut.EXPORT_URL,
+        "wikipediaLinks": 0,
     }
 
 
@@ -272,3 +273,118 @@ def test_meta_file_is_stable_json(tmp_path, cleaned):
     assert meta_file.read_text() == first
     assert first.endswith("\n")
     assert json.loads(first)["datasetModifiedAt"] is None
+
+
+# --- Wikipedia links -----------------------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("genus", "species", "expected"),
+    [
+        ("Platanus", "x hispanica", "Platanus × hispanica"),
+        ("Aesculus", "hippocastanum", "Aesculus hippocastanum"),
+        ("Gleditsia", "triacanthos f. Inermis", "Gleditsia triacanthos"),
+        ("Pinus", "nigra subsp. nigra", "Pinus nigra"),
+        ("Tilia", "sp.", None),
+        ("Ulmus", None, None),
+        ("Non spécifié", "sp.", None),
+    ],
+)
+def test_species_name_matches_wikidata_taxon_names(genus, species, expected):
+    assert ut.species_name(genus, species) == expected
+
+
+def test_genus_name_skips_placeholders():
+    assert ut.genus_name("Platanus") == "Platanus"
+    assert ut.genus_name("Non spécifié") is None
+    assert ut.genus_name(None) is None
+
+
+def test_sparql_titles_reads_french_article_titles():
+    response = {
+        "results": {
+            "bindings": [
+                {"name": {"value": "Platanus × hispanica"}, "article": {"value": "https://fr.wikipedia.org/wiki/Platane_commun"}},
+                {"name": {"value": "Gleditsia triacanthos"}, "article": {"value": "https://fr.wikipedia.org/wiki/F%C3%A9vier_d%27Am%C3%A9rique"}},
+            ]
+        }
+    }
+    assert ut.parse_titles(response) == {"Platanus × hispanica": "Platane commun", "Gleditsia triacanthos": "Févier d'Amérique"}
+
+
+def test_resolve_titles_only_asks_for_names_missing_from_the_cache():
+    asked = []
+
+    def fetch(names, genus):
+        asked.append((sorted(names), genus))
+        return {"Tilia tomentosa": "Tilleul argenté"}
+
+    cache = {"Platanus × hispanica": "Platane commun"}
+    ut.resolve_titles(["Platanus × hispanica", "Tilia tomentosa", "Tilia × euchlora"], cache, fetch, genus=False)
+    assert asked == [(["Tilia tomentosa", "Tilia × euchlora"], False)]
+    # A name without an article is cached as None, so it is not asked again next month.
+    assert cache == {"Platanus × hispanica": "Platane commun", "Tilia tomentosa": "Tilleul argenté", "Tilia × euchlora": None}
+
+
+def test_taxon_links_prefer_species_then_genus_then_nothing():
+    rows = [
+        {"genus": "Platanus", "species": "x hispanica"},
+        {"genus": "Platanus", "species": "x hispanica"},
+        {"genus": "Tilia", "species": "sp."},
+        {"genus": "Tilia", "species": "x euchlora"},
+        {"genus": "Ulmus", "species": None},
+        {"genus": "Zelkova", "species": "serrata"},
+        {"genus": None, "species": None},
+    ]
+    cache = {
+        "species": {"Platanus × hispanica": "Platane commun", "Tilia × euchlora": None, "Zelkova serrata": None},
+        "genera": {"Platanus": "Platane", "Tilia": "Tilleul", "Ulmus": "Orme", "Zelkova": None},
+    }
+    assert ut.taxon_links(rows, cache) == [
+        {"genus": "Platanus", "species": "x hispanica", "wikipedia_title": "Platane commun", "genus_only": 0},
+        {"genus": "Tilia", "species": "sp.", "wikipedia_title": "Tilleul", "genus_only": 1},
+        {"genus": "Tilia", "species": "x euchlora", "wikipedia_title": "Tilleul", "genus_only": 1},
+        {"genus": "Ulmus", "species": "", "wikipedia_title": "Orme", "genus_only": 1},
+    ]
+
+
+def test_content_hash_changes_with_the_links(cleaned):
+    rows, _ = cleaned
+    link = [{"genus": "Platanus", "species": "", "wikipedia_title": "Platane", "genus_only": 1}]
+    assert ut.content_hash(rows) != ut.content_hash(rows, link)
+    assert ut.content_hash(rows, link) == ut.content_hash(rows, link)
+
+
+def test_build_meta_counts_wikipedia_links(cleaned):
+    _, report = cleaned
+    meta = ut.build_meta(report, version=1, extracted="2026-11-06T16:30:00Z", dataset_modified=None, wikipedia_links=12)
+    assert meta["wikipediaLinks"] == 12
+
+
+def test_resolve_titles_survives_a_failed_batch_and_retries_it_next_time(capsys):
+    def failing(names, genus):
+        raise OSError("HTTP Error 504: Gateway Timeout")
+
+    cache = {}
+    ut.resolve_titles(["Tilia tomentosa"], cache, failing, genus=False)
+    assert cache == {}
+    assert "Wikidata" in capsys.readouterr().out
+
+
+def test_build_db_writes_taxon_links(tmp_path, cleaned, schema):
+    rows, _ = cleaned
+    links = [{"genus": "Platanus", "species": "x hispanica", "wikipedia_title": "Platane commun", "genus_only": 0}]
+    out = tmp_path / "trees.db"
+    ut.build_db(rows, schema, out, 2, links)
+    with sqlite3.connect(out) as db:
+        assert db.execute("SELECT genus, species, wikipedia_title, genus_only FROM taxon_links").fetchall() == [
+            ("Platanus", "x hispanica", "Platane commun", 0)
+        ]
+
+
+def test_build_db_refuses_links_without_a_taxon_links_table(tmp_path, cleaned, schema):
+    rows, _ = cleaned
+    database = dict(schema["database"])
+    database["entities"] = [e for e in database["entities"] if e["tableName"] == "trees"]
+    with pytest.raises(ut.SchemaError):
+        ut.build_db(rows, {"database": database}, tmp_path / "trees.db", 2, [{"genus": "A", "species": "", "wikipedia_title": "A", "genus_only": 1}])

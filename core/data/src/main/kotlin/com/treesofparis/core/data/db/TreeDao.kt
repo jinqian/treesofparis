@@ -33,4 +33,11 @@ interface TreeDao {
 
     @Query("SELECT * FROM trees WHERE id IN (:ids)")
     suspend fun byIds(ids: List<Long>): List<TreeEntity>
+
+    /** The Wikipedia link for a tree's genus and species ([species] empty when the tree has none). */
+    @Query("SELECT * FROM taxon_links WHERE genus = :genus AND species = :species")
+    suspend fun taxonLink(
+        genus: String,
+        species: String,
+    ): TaxonLinkEntity?
 }

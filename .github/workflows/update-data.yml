@@ -61,5 +61,6 @@ jobs:
             core/data/trees-db-version.txt
             core/data/trees-db-content.sha256
             core/data/trees-db-meta.json
+            data/wikipedia-titles.json
             core/data/schemas/**
           delete-branch: true
