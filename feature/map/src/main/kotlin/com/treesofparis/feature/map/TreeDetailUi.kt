@@ -16,6 +16,15 @@ data class TreeDetailUi(
     val isFavorite: Boolean,
     /** The genus drawing shown as the sheet's watermark. */
     val leaf: TreeLeaf = TreeLeaf.GENERIC,
+    /** The French Wikipedia article to open, or null when the species and genus have none. */
+    val wikipedia: WikipediaUi? = null,
+)
+
+/** A French Wikipedia article. [genus] is set when it is the genus's article (the species has none). */
+data class WikipediaUi(
+    val url: String,
+    val title: String,
+    val genus: String?,
 )
 
 /** A figure and its unit, shown large and small: « 16 » « m ». */

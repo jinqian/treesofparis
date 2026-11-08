@@ -54,3 +54,14 @@ fun TreeDatabase.insert(vararg trees: TreeEntity) {
         )
     }
 }
+
+/** Inserts Wikipedia links through raw SQL, like the trees. */
+fun TreeDatabase.insertLinks(vararg links: TaxonLinkEntity) {
+    val db = openHelper.writableDatabase
+    links.forEach { l ->
+        db.execSQL(
+            "INSERT INTO taxon_links (genus, species, wikipedia_title, genus_only) VALUES (?,?,?,?)",
+            arrayOf<Any?>(l.genus, l.species, l.wikipediaTitle, if (l.genusOnly) 1 else 0),
+        )
+    }
+}

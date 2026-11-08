@@ -10,6 +10,10 @@ Standard library only. Usage (from the repository root):
     python3 data/scripts/update_trees.py                 # download, clean, build
     python3 data/scripts/update_trees.py --skip-download # rebuild from data/raw/les-arbres.csv
 
+It also links each species to its French Wikipedia article, found through Wikidata (taxon name, P225), with a
+fallback to the genus article. Answers are cached in data/wikipedia-titles.json so monthly runs only look up new
+names; --no-wikipedia-lookup builds from the cache alone.
+
 Each run also writes core/data/trees-db-meta.json: when the data was extracted, from where, the dataset's own
 « last modified » date, and how many records were kept or dropped. The app shows the extraction date from it.
 """
@@ -22,9 +26,11 @@ import csv
 import hashlib
 import json
 import os
+import re
 import sqlite3
 import sys
 import tempfile
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -36,6 +42,8 @@ EXPORT_URL = (
 )
 METADATA_URL = "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/les-arbres"
 DATASET_PAGE = "https://opendata.paris.fr/explore/dataset/les-arbres/information/"
+WIKIDATA_SPARQL = "https://query.wikidata.org/sparql"
+WIKIDATA_BATCH = 80
 USER_AGENT = "treesofparis-data-update (+https://github.com/jinqian/treesofparis)"
 
 # Must match GeoBounds.COVERAGE in :core:domain (checked by the tests): south, west, north, east.
@@ -79,6 +87,9 @@ COLUMNS = (
     "lat",
     "lon",
 )
+
+
+TAXON_COLUMNS = ("genus", "species", "wikipedia_title", "genus_only")
 
 
 class SchemaError(Exception):
@@ -211,9 +222,11 @@ def clean(rows: list[dict]) -> tuple[list[dict], Report]:
     return cleaned, report
 
 
-def content_hash(rows: list[dict]) -> str:
+def content_hash(rows: list[dict], links: list[dict] | None = None) -> str:
+    """Hash of the shipped content: the trees, plus the Wikipedia links when there are any."""
     ordered = sorted(rows, key=lambda r: r["id"])
-    return hashlib.sha256(json.dumps(ordered, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    content = ordered if links is None else {"trees": ordered, "taxon_links": links}
+    return hashlib.sha256(json.dumps(content, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
 def next_version(current: int, previous_hash: str | None, new_hash: str) -> int:
@@ -221,6 +234,98 @@ def next_version(current: int, previous_hash: str | None, new_hash: str) -> int:
     if previous_hash is None or previous_hash == new_hash:
         return current
     return current + 1
+
+
+# --- Wikipedia links -----------------------------------------------------------------------------------------------
+
+_GENUS = re.compile(r"^[A-Z][a-z]+$")
+_INFRASPECIFIC = re.compile(r"\s+(?:f\.|var\.|subsp\.|ssp\.|cv\.)\s.*$")
+
+
+def genus_name(genus: str | None) -> str | None:
+    """The genus as a Wikidata taxon name, or None for placeholders such as « Non spécifié »."""
+    return genus if genus and _GENUS.match(genus) else None
+
+
+def species_name(genus: str | None, species: str | None) -> str | None:
+    """« Platanus » + « x hispanica » → « Platanus × hispanica »; forms and subspecies are dropped; « sp. » → None."""
+    if not genus_name(genus) or not species or species.strip() in ("sp.", "sp"):
+        return None
+    epithet = _INFRASPECIFIC.sub("", species.strip())
+    epithet = re.sub(r"^x\s+", "× ", epithet)
+    return f"{genus} {epithet}"
+
+
+def parse_titles(response: dict) -> dict[str, str]:
+    """Taxon name → French article title, from a SPARQL JSON response (first title alphabetically on duplicates)."""
+    titles: dict[str, list[str]] = {}
+    for binding in response.get("results", {}).get("bindings", []):
+        url = binding["article"]["value"]
+        title = urllib.parse.unquote(url.rsplit("/wiki/", 1)[1]).replace("_", " ")
+        titles.setdefault(binding["name"]["value"], []).append(title)
+    return {name: sorted(found)[0] for name, found in titles.items()}
+
+
+def fetch_titles(names: list[str], genus: bool) -> dict[str, str]:
+    """Asks Wikidata which French Wikipedia articles describe these taxon names."""
+    values = " ".join(json.dumps(name, ensure_ascii=False) for name in names)
+    # A genus name can also name an animal genus: keep plant genera only (rank genus, with an IPNI plant name ID).
+    genus_filter = "?item wdt:P105 wd:Q34740 ; wdt:P961 ?ipni ." if genus else ""
+    query = (
+        f"SELECT ?name ?article WHERE {{ VALUES ?name {{ {values} }} ?item wdt:P225 ?name . {genus_filter} "
+        "?article schema:about ?item ; schema:isPartOf <https://fr.wikipedia.org/> . }"
+    )
+    request = urllib.request.Request(
+        f"{WIKIDATA_SPARQL}?format=json&query={urllib.parse.quote(query)}",
+        headers={"User-Agent": USER_AGENT, "Accept": "application/sparql-results+json"},
+    )
+    with urllib.request.urlopen(request, timeout=120) as response:
+        return parse_titles(json.load(response))
+
+
+def resolve_titles(names, cache: dict, fetch, genus: bool) -> None:
+    """Fills [cache] with a title (or None) for every name it does not know yet, asking [fetch] in batches."""
+    missing = sorted({name for name in names if name not in cache})
+    for start in range(0, len(missing), WIKIDATA_BATCH):
+        batch = missing[start : start + WIKIDATA_BATCH]
+        try:
+            found = fetch(batch, genus)
+        except (OSError, ValueError) as error:
+            # Left out of the cache, so the next run asks again; the build goes on with what is known.
+            print(f"WARNING: Wikidata lookup failed for {len(batch)} names ({error}); they will be retried next run.")
+            continue
+        for name in batch:
+            cache[name] = found.get(name)
+
+
+def taxon_links(rows: list[dict], cache: dict) -> list[dict]:
+    """One link per distinct (genus, species) of the data: the species article, else the genus article, else none."""
+    links = []
+    pairs = sorted({(r["genus"], r["species"] or "") for r in rows if r["genus"]})
+    for genus, species in pairs:
+        species_title = cache["species"].get(species_name(genus, species) or "")
+        genus_title = cache["genera"].get(genus_name(genus) or "")
+        if species_title:
+            links.append({"genus": genus, "species": species, "wikipedia_title": species_title, "genus_only": 0})
+        elif genus_title:
+            links.append({"genus": genus, "species": species, "wikipedia_title": genus_title, "genus_only": 1})
+    return links
+
+
+def load_wikipedia_cache(path: Path) -> dict:
+    cache = json.loads(path.read_text()) if path.exists() else {}
+    return {"species": cache.get("species", {}), "genera": cache.get("genera", {})}
+
+
+def update_wikipedia_cache(rows: list[dict], cache: dict, fetch=fetch_titles) -> None:
+    resolve_titles(
+        (n for r in rows if (n := species_name(r["genus"], r["species"]))), cache["species"], fetch, genus=False
+    )
+    resolve_titles((n for r in rows if (n := genus_name(r["genus"]))), cache["genera"], fetch, genus=True)
+
+
+def write_wikipedia_cache(path: Path, cache: dict) -> None:
+    path.write_text(json.dumps(cache, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
 
 
 # --- database ------------------------------------------------------------------------------------------------------
@@ -234,7 +339,7 @@ def latest_schema(schema_dir: Path, max_version: int) -> dict:
     return json.loads((schema_dir / f"{versions[-1]}.json").read_text())
 
 
-def build_db(rows: list[dict], schema: dict, out: Path, version: int) -> None:
+def build_db(rows: list[dict], schema: dict, out: Path, version: int, links: list[dict] = ()) -> None:
     """Builds [out] atomically with exactly Room's schema, Room's identity hash and `user_version` = [version]."""
     database = schema["database"]
     entity = next((e for e in database.get("entities", []) if e["tableName"] == "trees"), None)
@@ -243,6 +348,11 @@ def build_db(rows: list[dict], schema: dict, out: Path, version: int) -> None:
     schema_columns = {field["columnName"] for field in entity["fields"]}
     if schema_columns != set(COLUMNS):
         raise SchemaError(f"Room columns {sorted(schema_columns)} differ from the script's {sorted(COLUMNS)}")
+    taxa = next((e for e in database.get("entities", []) if e["tableName"] == "taxon_links"), None)
+    if links and taxa is None:
+        raise SchemaError("Room schema has no `taxon_links` table; build :core:data first")
+    if taxa is not None and {f["columnName"] for f in taxa["fields"]} != set(TAXON_COLUMNS):
+        raise SchemaError(f"Room `taxon_links` columns differ from the script's {sorted(TAXON_COLUMNS)}")
 
     out.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp_name = tempfile.mkstemp(dir=out.parent, suffix=".db")
@@ -259,6 +369,12 @@ def build_db(rows: list[dict], schema: dict, out: Path, version: int) -> None:
                 f"INSERT INTO trees ({', '.join(COLUMNS)}) VALUES ({placeholders})",
                 ([row[c] for c in COLUMNS] for row in rows),
             )
+            if taxa is not None:
+                db.execute(taxa["createSql"].replace("${TABLE_NAME}", "taxon_links"))
+                db.executemany(
+                    f"INSERT INTO taxon_links ({', '.join(TAXON_COLUMNS)}) VALUES (?, ?, ?, ?)",
+                    ([link[c] for c in TAXON_COLUMNS] for link in links),
+                )
             db.execute(f"PRAGMA user_version = {int(version)}")
         with contextlib.closing(sqlite3.connect(tmp_name, isolation_level=None)) as db:
             db.execute("VACUUM")
@@ -304,7 +420,9 @@ def previous_dataset_modified_at(meta_file: Path) -> str | None:
     return json.loads(meta_file.read_text()).get("datasetModifiedAt")
 
 
-def build_meta(report: Report, version: int, extracted: str, dataset_modified: str | None) -> dict:
+def build_meta(
+    report: Report, version: int, extracted: str, dataset_modified: str | None, wikipedia_links: int = 0
+) -> dict:
     return {
         "dataVersion": version,
         "datasetModifiedAt": dataset_modified,
@@ -319,6 +437,7 @@ def build_meta(report: Report, version: int, extracted: str, dataset_modified: s
         "recordsRead": report.total,
         "source": DATASET_PAGE,
         "sourceExport": EXPORT_URL,
+        "wikipediaLinks": wikipedia_links,
     }
 
 
@@ -337,6 +456,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--version-file", type=Path, default=REPO / "core/data/trees-db-version.txt")
     parser.add_argument("--hash-file", type=Path, default=REPO / "core/data/trees-db-content.sha256")
     parser.add_argument("--meta-file", type=Path, default=REPO / "core/data/trees-db-meta.json")
+    parser.add_argument("--wikipedia-cache", type=Path, default=REPO / "data/wikipedia-titles.json")
+    parser.add_argument(
+        "--no-wikipedia-lookup", action="store_true", help="only use the cached Wikipedia titles, ask Wikidata nothing"
+    )
     args = parser.parse_args(argv)
 
     if not args.skip_download:
@@ -345,19 +468,28 @@ def main(argv: list[str] | None = None) -> int:
     rows, report = clean(read_rows(args.raw))
     print(report)
 
-    new_hash = content_hash(rows)
+    cache = load_wikipedia_cache(args.wikipedia_cache)
+    if not args.no_wikipedia_lookup:
+        update_wikipedia_cache(rows, cache)
+        write_wikipedia_cache(args.wikipedia_cache, cache)
+    links = taxon_links(rows, cache)
+    linked_pairs = {(link["genus"], link["species"]) for link in links}
+    linked = sum(1 for r in rows if (r["genus"], r["species"] or "") in linked_pairs)
+    print(f"Wikipedia: {len(links)} species/genus links, covering {linked} of {len(rows)} trees")
+
+    new_hash = content_hash(rows, links)
     previous_hash = args.hash_file.read_text().strip() if args.hash_file.exists() else None
     current = int(args.version_file.read_text().strip())
     version = next_version(current, previous_hash, new_hash)
 
-    build_db(rows, latest_schema(args.schema_dir, version), args.output, version)
+    build_db(rows, latest_schema(args.schema_dir, version), args.output, version, links)
     args.version_file.write_text(f"{version}\n")
     args.hash_file.write_text(f"{new_hash}\n")
 
     modified = (
         previous_dataset_modified_at(args.meta_file) if args.skip_download else dataset_modified_at(fetch_metadata())
     )
-    meta = build_meta(report, version, extracted_at(args.raw), modified)
+    meta = build_meta(report, version, extracted_at(args.raw), modified, wikipedia_links=len(links))
     write_meta(args.meta_file, meta)
     print(f"Extraction {meta['extractedAt']} (dataset modified {modified or 'unknown'}) -> {args.meta_file.name}")
 

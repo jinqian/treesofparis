@@ -8,6 +8,7 @@ composeBom = "2026.09.00"
 navigation3 = "1.2.1"
 hiltNavigation = "1.4.0"
 activity = "1.13.0"
+browser = "1.9.0"
 coreSplashscreen = "1.2.0"
 lifecycle = "2.11.0"
 coroutines = "1.11.0"
@@ -41,6 +42,7 @@ compose-material3 = { module = "androidx.compose.material3:material3" }
 
 # androidx
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity" }
+androidx-browser = { module = "androidx.browser:browser", version.ref = "browser" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }

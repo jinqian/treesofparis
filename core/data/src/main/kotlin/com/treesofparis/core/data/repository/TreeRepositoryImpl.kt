@@ -21,7 +21,11 @@ internal class TreeRepositoryImpl
                 .inBounds(bounds.south, bounds.west, bounds.north, bounds.east, remarkableOnly, limit)
                 .map { it.toDomain() }
 
-        override suspend fun getTree(id: Long): Tree? = dao.byId(id)?.toDomain()
+        override suspend fun getTree(id: Long): Tree? {
+            val tree = dao.byId(id) ?: return null
+            val link = tree.genus?.let { genus -> dao.taxonLink(genus, tree.species.orEmpty()) }
+            return tree.toDomain(wikipedia = link?.toDomain())
+        }
 
         override suspend fun getTreesByIds(ids: List<Long>): List<Tree> =
             ids.chunked(SQLITE_MAX_VARIABLES).flatMap { chunk -> dao.byIds(chunk) }.map { it.toDomain() }

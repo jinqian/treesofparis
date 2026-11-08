@@ -82,9 +82,11 @@ jobs:
       - uses: actions/checkout@v7
       - run: scripts/commit-msg-check_test.sh
 
+  # The two dependency jobs need GitHub's dependency graph, which is off for private repositories, and dependency
+  # review also needs GitHub Advanced Security there. They only run while the repository is public.
   dependency-submission:
     name: Submit Gradle dependency graph
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !github.event.repository.private
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -99,7 +101,7 @@ jobs:
 
   dependency-review:
     name: Dependency review
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && !github.event.repository.private
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

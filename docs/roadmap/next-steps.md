@@ -6,12 +6,10 @@ the open decisions and when it is done. Sizes are rough: **S** ≈ half a day, *
 | # | Task | Size | Status | Blocks a public release? |
 |---|------|------|--------|--------------------------|
 | 1 | [Map provider → MapLibre](#1-map-provider--maplibre) | L | To do (planned, parked) | Yes (OSM tile policy) |
-| 2 | [Wikipedia links for trees](#2-wikipedia-links-for-trees) | M | To do | No |
-| 3 | [Open source libraries on their own screen](#3-open-source-libraries-on-their-own-screen) | S | **Done** (2026-11-08) | No |
-| 4 | [Show which data extraction the app uses](#4-show-which-data-extraction-the-app-uses) | S–M | **Done** (2026-11-08) | No, but expected by ODbL users |
-| 5 | [Release notes](#5-release-notes) | S | **Done** (2026-11-08), two follow-ups | Yes, before the first store release |
+| 2 | [Wikipedia links for trees](#2-wikipedia-links-for-trees) | M | **Done** (2026-11-08) | No |
+| 3 | [Release notes](#3-release-notes) | S | **Done** (2026-11-08), two follow-ups | Yes, before the first store release |
 
-Next: 2, then 1 when the design work is done. Before the first store release: the follow-ups of task 5 (signing,
+Next: 1 when the design work is done. Before the first store release: the follow-ups of task 3 (signing,
 store target).
 
 ---
@@ -43,85 +41,28 @@ osmdroid removed, ADR 0005 written.
 
 ## 2. Wikipedia links for trees
 
-**Goal.** From a tree's sheet, open the French Wikipedia article of its species (or its genus when the species has no
-article), so curious users can read more without the app shipping long texts.
-
-**What the data gives us.** `genus`, `species` and `cultivar` columns (1,004 distinct genus + species pairs), with
-dataset quirks: `sp.` or empty species, hybrids written `x hispanica`, varieties such as
-`triacanthos f. Inermis`.
-
-**Approach (recommended): resolve links when the data is built, not in the app.**
-- In `data/scripts/update_trees.py`, after cleaning, look each distinct `genus species` up on Wikidata (taxon name,
-  property P225) and keep its French Wikipedia article title (`frwiki` sitelink). Fall back to the genus when the
-  species is unknown or has no French article. Cache the results in a committed JSON file
-  (`data/wikipedia-titles.json`) so monthly refreshes only look up new taxa and the CI job stays fast and stable.
-- Store the title with the tree data. The schema is owned by Room: add a `wikipedia_title` column to `TreeEntity`
-  (or a small `taxa` entity keyed by genus + species), export the schema, update `COLUMNS` in the script, rebuild.
-- Domain: `Tree.wikipediaTitle: String?`. Map feature: `TreeDetailUi.wikipediaUrl: String?`
-  (`https://fr.wikipedia.org/wiki/<title>`), built in `TreeDetailMapper`.
-- Detail sheet: a « En savoir plus sur Wikipédia » row under the figures, shown only when a link exists, opened with
-  `LocalUriHandler` (as À propos does) or a Custom Tab (`androidx.browser`, new dependency in the catalog).
-
-**Alternative.** Build the URL in the app from the Latin name (`fr.wikipedia.org/wiki/Platanus_×_hispanica`) and rely
-on Wikipedia redirects. No pipeline work, but many links will land on « page inexistante » because of the quirks above.
-
-**Work.**
-1. Script: Wikidata lookup with cache, report how many taxa resolved (species / genus / none), pytest with recorded
-   responses (no network in tests).
-2. Room column + schema export + data version bump; mapper and domain field; tests on the mapper.
-3. Sheet row + Compose test (shown with a link, hidden without); TalkBack label « Ouvrir l'article Wikipédia ».
-
-**Decisions to take.** Link only, or also a short offline extract (it would need CC BY-SA attribution and a licence
-line in À propos) · Custom Tab or the default browser · show the link for genus-level fallbacks or only exact species.
-
-**Done when.** Most trees (target: the 21 drawn genera at least) show a working link; trees without a match show no
-row; the data README documents the lookup and its cache.
-
----
-
-## 3. Open source libraries on their own screen
-
-**Status: done** — commit `feat(about): move the open source libraries to their own screen`.
+**Status: done** — commits `feat(data): link each species to its French Wikipedia article` and
+`feat(map): open the tree's French Wikipedia article from its sheet`. Design: option A of the « Fiche arbre — lien
+Wikipédia » row on the canvas.
 
 **What was built.**
-- À propos keeps a « Bibliothèques open source » row (chevron) in the Projet card; the libraries list moved to
-  `LibrariesScreen`/`LibrariesRoute` in `:feature:about`, which now owns the AboutLibraries loading (with a loading
-  state).
-- Navigation 3: `LibrariesKey` is pushed on the À propos back stack by `TreesNavigator.openLibraries()`, so the back
-  button and the system back gesture both return to À propos, which keeps its scroll position.
-- Design system: `TreesScaffold`/`ScreenHeader` take an optional `onBack` and show a « Retour » back arrow above
-  the title; `TreesIcons.Back` added.
-- Tests: scaffold back button (shown / absent), À propos row → callback, libraries list + link + back, app navigation
-  À propos → libraries → back (button and system back).
+- `update_trees.py` looks every genus + species up on Wikidata (taxon name, P225) and keeps the French article,
+  falling back to the plant genus's article. Answers, including « no article », are cached in
+  `data/wikipedia-titles.json`; failed lookups are logged and retried next run, never failing the build.
+- The links ship in a new `taxon_links` table (Room schema 2, data version 2), about one row per species: 91 % of
+  trees get their species article, 8 % their genus article, 0.6 % none.
+- `TreeRepository.getTree` returns the article; the sheet shows a « En savoir plus sur Wikipédia » card with the
+  article title (« Le genre … sur Wikipédia » for a genus fallback), opened in a Custom Tab (`androidx.browser`).
 
-**Follow-ups.** None.
+**Decisions taken.** Link only, no offline extract (no CC BY-SA text in the app) · Custom Tab, falling back to the
+default browser · generic wording plus the article title, to avoid French elision (« le platane », « l'érable »).
 
----
-
-## 4. Show which data extraction the app uses
-
-**Status: done** — commit `feat(data): record and show which dataset extraction the app ships`.
-
-**What was built.**
-- `data/scripts/update_trees.py` writes `core/data/trees-db-meta.json` on every run: `extractedAt` (download time of
-  the CSV, UTC), `datasetModifiedAt` (the dataset's « modified » date from the Opendatasoft metadata API, kept on
-  `--skip-download`; a failed fetch leaves it empty without failing the build), `recordsRead`, `recordsKept`,
-  `dropped` by reason, `dataVersion`, `source`, `sourceExport`, `license`. pytest covers each piece.
-- The monthly `update-data.yml` workflow commits the meta file with the data.
-- `:core:data` reads the file at build time into `BuildConfig` (`TREES_EXTRACTED_AT`, `TREES_RECORDS_KEPT`) and
-  provides a domain `DatasetInfo`; no Room schema change.
-- À propos shows « Extraction du 6 novembre 2026 · 220 339 arbres » under the dataset credit (date in Paris time).
-- `data/README.md` has a « Data provenance » section describing every field and the current extraction.
-
-**Current extraction.** Downloaded 2026-11-06 16:30 UTC; dataset last modified 2026-11-06 09:34 UTC (checked: the
-API's record count still matches); 220,339 records read and kept.
-
-**Decisions taken.** The app shows the extraction date and tree count only; the dataset's own date stays in the meta
-file and README. The line is in À propos only, not in Herbier (easy to add there later from `DatasetInfo`).
+**Follow-ups (optional).** Show the same link in the Herbier tab's genus rows · re-check the cached « no article »
+answers once a year (delete them from the cache to look them up again).
 
 ---
 
-## 5. Release notes
+## 3. Release notes
 
 **Status: done** — commit `docs: changelog, French release note and releasing guide`.
 
