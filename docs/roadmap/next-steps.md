@@ -7,11 +7,9 @@ the open decisions and when it is done. Sizes are rough: **S** ≈ half a day, *
 |---|------|------|--------|--------------------------|
 | 1 | [Map provider → MapLibre](#1-map-provider--maplibre) | L | To do (planned, parked) | Yes (OSM tile policy) |
 | 2 | [Wikipedia links for trees](#2-wikipedia-links-for-trees) | M | To do | No |
-| 3 | [Open source libraries on their own screen](#3-open-source-libraries-on-their-own-screen) | S | **Done** (2026-11-08) | No |
-| 4 | [Show which data extraction the app uses](#4-show-which-data-extraction-the-app-uses) | S–M | **Done** (2026-11-08) | No, but expected by ODbL users |
-| 5 | [Release notes](#5-release-notes) | S | **Done** (2026-11-08), two follow-ups | Yes, before the first store release |
+| 3 | [Release notes](#3-release-notes) | S | **Done** (2026-11-08), two follow-ups | Yes, before the first store release |
 
-Next: 2, then 1 when the design work is done. Before the first store release: the follow-ups of task 5 (signing,
+Next: 2, then 1 when the design work is done. Before the first store release: the follow-ups of task 3 (signing,
 store target).
 
 ---
@@ -79,49 +77,7 @@ row; the data README documents the lookup and its cache.
 
 ---
 
-## 3. Open source libraries on their own screen
-
-**Status: done** — commit `feat(about): move the open source libraries to their own screen`.
-
-**What was built.**
-- À propos keeps a « Bibliothèques open source » row (chevron) in the Projet card; the libraries list moved to
-  `LibrariesScreen`/`LibrariesRoute` in `:feature:about`, which now owns the AboutLibraries loading (with a loading
-  state).
-- Navigation 3: `LibrariesKey` is pushed on the À propos back stack by `TreesNavigator.openLibraries()`, so the back
-  button and the system back gesture both return to À propos, which keeps its scroll position.
-- Design system: `TreesScaffold`/`ScreenHeader` take an optional `onBack` and show a « Retour » back arrow above
-  the title; `TreesIcons.Back` added.
-- Tests: scaffold back button (shown / absent), À propos row → callback, libraries list + link + back, app navigation
-  À propos → libraries → back (button and system back).
-
-**Follow-ups.** None.
-
----
-
-## 4. Show which data extraction the app uses
-
-**Status: done** — commit `feat(data): record and show which dataset extraction the app ships`.
-
-**What was built.**
-- `data/scripts/update_trees.py` writes `core/data/trees-db-meta.json` on every run: `extractedAt` (download time of
-  the CSV, UTC), `datasetModifiedAt` (the dataset's « modified » date from the Opendatasoft metadata API, kept on
-  `--skip-download`; a failed fetch leaves it empty without failing the build), `recordsRead`, `recordsKept`,
-  `dropped` by reason, `dataVersion`, `source`, `sourceExport`, `license`. pytest covers each piece.
-- The monthly `update-data.yml` workflow commits the meta file with the data.
-- `:core:data` reads the file at build time into `BuildConfig` (`TREES_EXTRACTED_AT`, `TREES_RECORDS_KEPT`) and
-  provides a domain `DatasetInfo`; no Room schema change.
-- À propos shows « Extraction du 6 novembre 2026 · 220 339 arbres » under the dataset credit (date in Paris time).
-- `data/README.md` has a « Data provenance » section describing every field and the current extraction.
-
-**Current extraction.** Downloaded 2026-11-06 16:30 UTC; dataset last modified 2026-11-06 09:34 UTC (checked: the
-API's record count still matches); 220,339 records read and kept.
-
-**Decisions taken.** The app shows the extraction date and tree count only; the dataset's own date stays in the meta
-file and README. The line is in À propos only, not in Herbier (easy to add there later from `DatasetInfo`).
-
----
-
-## 5. Release notes
+## 3. Release notes
 
 **Status: done** — commit `docs: changelog, French release note and releasing guide`.
 
