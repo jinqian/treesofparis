@@ -22,8 +22,16 @@ fun formatPlace(raw: String): String =
         .trim()
         .lowercase(FRENCH)
         .split(" ")
-        .mapIndexed { index, word -> if (index > 0 && word in PARTICLES) word else word.titleCaseCompound() }
-        .joinToString(" ")
+        .mapIndexed { index, word ->
+            when {
+                // The dataset has no accents: a lone « A » is the preposition « à ».
+                index > 0 && word == "a" -> "à"
+
+                index > 0 && word in PARTICLES -> word
+
+                else -> word.titleCaseCompound()
+            }
+        }.joinToString(" ")
 
 private fun String.titleCaseCompound(): String =
     split("-")

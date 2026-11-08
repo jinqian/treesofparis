@@ -51,7 +51,7 @@ class HerbierUiMapperTest {
         assertEquals(TreeLeaf.PLATANUS, remarkable.leading?.leaf)
         assertEquals(44, remarkable.leading?.count)
         assertEquals("45 m", remarkable.tallest?.value)
-        assertEquals("Bois de Boulogne · Route du Lac A Bagatelle", remarkable.tallest?.place)
+        assertEquals("Bois de Boulogne · Route du Lac à Bagatelle", remarkable.tallest?.place)
         assertEquals("7,40 m", remarkable.widest?.value)
         assertEquals("Paris 19e · Parc des Buttes Chaumont", remarkable.widest?.place)
     }

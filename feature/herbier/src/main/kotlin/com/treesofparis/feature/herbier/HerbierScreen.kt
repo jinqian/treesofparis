@@ -405,7 +405,7 @@ private fun HerbierScreenPreview() {
                             RemarkableUi(
                                 count = "181",
                                 leading = LeadingGenusUi(TreeLeaf.PLATANUS, 44),
-                                tallest = RecordUi("Platane", "45 m", "Bois de Boulogne · Route du Lac A Bagatelle"),
+                                tallest = RecordUi("Platane", "45 m", "Bois de Boulogne · Route du Lac à Bagatelle"),
                                 widest = RecordUi("Platane", "7,40 m", "Paris 19e · Parc des Buttes Chaumont"),
                             ),
                         areas = listOf(AreaUi(1, "Paris 15e", "18 622")),
