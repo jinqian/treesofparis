@@ -114,4 +114,4 @@ private fun Tree.toRecord(value: String) =
  * « PARC DES BUTTES CHAUMONT / 7 RUE BOTZARIS, 19-08 » → « Parc des Buttes Chaumont »: the place, without the street
  * or the plot code.
  */
-private fun shortPlace(address: String): String = formatPlace(address.substringBefore(" / ").substringBefore(","))
+internal fun shortPlace(address: String): String = formatPlace(address.substringBefore(" / ").substringBefore(","))

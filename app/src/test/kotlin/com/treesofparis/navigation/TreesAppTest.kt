@@ -40,10 +40,11 @@ class TreesAppTest {
                         Button(onClick = { onOpenSection(HerbierSection.GENERA) }) { Text("essences") }
                     }
                 },
-                herbierSectionContent = { section, onBack, onGenusClick ->
+                herbierSectionContent = { section, onBack, onGenusClick, onTreeClick ->
                     Column {
                         Text("section $section")
                         Button(onClick = { onGenusClick("Tilia") }) { Text("tilleul") }
+                        Button(onClick = { onTreeClick(7) }) { Text("remarkable 7") }
                         Button(onClick = onBack) { Text("back") }
                     }
                 },
@@ -99,6 +100,16 @@ class TreesAppTest {
         compose.onNodeWithText("section GENERA").assertIsDisplayed()
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.onNodeWithText("herbier screen").assertIsDisplayed()
+    }
+
+    @Test
+    fun remarkableTreeFromHerbier_opensItOnTheMap() {
+        compose.setContent(app)
+        compose.onNodeWithText("Herbier").performClick()
+        compose.onNodeWithText("essences").performClick()
+        compose.onNodeWithText("remarkable 7").performClick()
+        compose.onNodeWithText("map tree=7 genus=null").assertIsDisplayed()
+        compose.onNodeWithText("Carte").assertIsSelected()
     }
 
     @Test

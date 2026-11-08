@@ -8,6 +8,8 @@ sealed interface HerbierUiState {
     data class Content(
         val herbier: HerbierUi,
         val flowering: FloweringCalendarUi,
+        /** Every remarkable tree, by area. */
+        val remarkableTrees: List<RemarkableAreaUi> = emptyList(),
     ) : HerbierUiState
 }
 
@@ -116,4 +118,18 @@ data class FloweringRowUi(
 data class NextFloweringUi(
     val monthName: String,
     val leaves: List<TreeLeaf>,
+)
+
+/** « Paris 6e » and its remarkable trees. */
+data class RemarkableAreaUi(
+    val name: String,
+    val trees: List<RemarkableTreeUi>,
+)
+
+/** One remarkable tree: tapping it shows it on the map. */
+data class RemarkableTreeUi(
+    val id: Long,
+    val name: String,
+    /** « Parc Monceau · 22 m ». */
+    val detail: String,
 )

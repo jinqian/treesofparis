@@ -84,6 +84,17 @@ class TreeDaoTest {
         }
 
     @Test
+    fun remarkable_returnsEveryRemarkableTree() =
+        runTest {
+            db.insert(
+                treeEntity(1, 48.850, 2.350),
+                treeEntity(2, 48.851, 2.351).copy(remarkable = true),
+                treeEntity(3, 48.900, 2.400).copy(remarkable = true),
+            )
+            assertEquals(setOf(2L, 3L), dao.remarkable().map { it.id }.toSet())
+        }
+
+    @Test
     fun getByIds_ignoresUnknownIds() =
         runTest {
             db.insert(treeEntity(1), treeEntity(2))

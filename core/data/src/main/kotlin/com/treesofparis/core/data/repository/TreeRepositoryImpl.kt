@@ -28,6 +28,8 @@ internal class TreeRepositoryImpl
             return tree.toDomain(wikipedia = link?.toDomain())
         }
 
+        override suspend fun getRemarkableTrees(): List<Tree> = dao.remarkable().map { it.toDomain() }
+
         override suspend fun getTreesByIds(ids: List<Long>): List<Tree> =
             ids.chunked(SQLITE_MAX_VARIABLES).flatMap { chunk -> dao.byIds(chunk) }.map { it.toDomain() }
 

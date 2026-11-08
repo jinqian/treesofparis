@@ -27,17 +27,21 @@ import com.treesofparis.core.designsystem.theme.TreesSpacing
 import com.treesofparis.core.designsystem.theme.TreesTheme
 import java.time.Month
 
-/** A level-2 Herbier screen, pushed from a card of the home. [onGenusClick] shows a genus on the map. */
+/**
+ * A level-2 Herbier screen, pushed from a card of the home. [onGenusClick] shows a genus on the map, [onTreeClick] a
+ * remarkable tree.
+ */
 @Composable
 fun HerbierSectionRoute(
     section: HerbierSection,
     onBack: () -> Unit,
     onGenusClick: (String) -> Unit,
+    onTreeClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HerbierViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    HerbierSectionScreen(section, state, onBack, onGenusClick, modifier)
+    HerbierSectionScreen(section, state, onBack, onGenusClick, modifier, onTreeClick)
 }
 
 @Composable
@@ -47,6 +51,7 @@ fun HerbierSectionScreen(
     onBack: () -> Unit,
     onGenusClick: (String) -> Unit,
     modifier: Modifier = Modifier,
+    onTreeClick: (Long) -> Unit = {},
 ) {
     val content = state as? HerbierUiState.Content
     TreesScaffold(
@@ -67,7 +72,7 @@ fun HerbierSectionScreen(
             when (section) {
                 HerbierSection.GENERA -> generaContent(content.herbier, onGenusClick)
                 HerbierSection.FLOWERING -> floweringContent(content.flowering)
-                HerbierSection.REMARKABLE -> item { RemarkableCard(content.herbier.remarkable) }
+                HerbierSection.REMARKABLE -> remarkableContent(content, onTreeClick)
                 HerbierSection.AGE_AND_AREAS -> ageAndAreasContent(content.herbier)
             }
         }
@@ -132,6 +137,17 @@ private fun LazyListScope.floweringContent(flowering: FloweringCalendarUi) {
         }
     }
     item { Note(stringResource(R.string.herbier_flowering_source)) }
+}
+
+private fun LazyListScope.remarkableContent(
+    content: HerbierUiState.Content,
+    onTreeClick: (Long) -> Unit,
+) {
+    item { RemarkableCard(content.herbier.remarkable) }
+    if (content.remarkableTrees.isNotEmpty()) item { Note(stringResource(R.string.herbier_remarkable_hint)) }
+    content.remarkableTrees.forEach { area ->
+        item(key = area.name) { RemarkableAreaGroup(area, onTreeClick) }
+    }
 }
 
 private fun LazyListScope.ageAndAreasContent(herbier: HerbierUi) {

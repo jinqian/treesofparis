@@ -37,8 +37,13 @@ class MainActivity : ComponentActivity() {
                             FavoritesRoute(onTreeClick = onTreeClick, onExploreMap = onExploreMap)
                         },
                         herbierContent = { onOpenSection -> HerbierRoute(onOpenSection = onOpenSection) },
-                        herbierSectionContent = { section, onBack, onGenusClick ->
-                            HerbierSectionRoute(section = section, onBack = onBack, onGenusClick = onGenusClick)
+                        herbierSectionContent = { section, onBack, onGenusClick, onTreeClick ->
+                            HerbierSectionRoute(
+                                section = section,
+                                onBack = onBack,
+                                onGenusClick = onGenusClick,
+                                onTreeClick = onTreeClick,
+                            )
                         },
                         aboutContent = { onOpenLibraries, onOpenFloweringSources ->
                             AboutRoute(

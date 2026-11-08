@@ -23,6 +23,7 @@ class HerbierSectionScreenTest {
     val compose = createComposeRule()
 
     private val genusClicks = mutableListOf<String>()
+    private val treeClicks = mutableListOf<Long>()
     private var backs = 0
 
     private fun show(section: HerbierSection) =
@@ -33,6 +34,7 @@ class HerbierSectionScreenTest {
                     state = content(),
                     onBack = { backs++ },
                     onGenusClick = { genusClicks += it },
+                    onTreeClick = { treeClicks += it },
                 )
             }
         }
@@ -68,6 +70,16 @@ class HerbierSectionScreenTest {
         scrollTo("Platane · 7,40 m de tour")
         compose.onNodeWithText("181 arbres remarquables, dont 44 platanes").assertExists()
         compose.onNodeWithText("Platane · 45 m").assertExists()
+    }
+
+    @Test
+    fun remarkable_listsEveryTreeByArea_andOpensItOnTheMap() {
+        show(HerbierSection.REMARKABLE)
+        scrollTo("BOIS DE BOULOGNE")
+        compose.onNodeWithText("PARIS 6E").assertExists()
+        scrollTo("Jardin du Luxembourg")
+        compose.onNodeWithText("Marronnier").performClick()
+        assertEquals(listOf(13L), treeClicks)
     }
 
     @Test

@@ -48,6 +48,8 @@ class FakeTreeRepository(
     override suspend fun getTree(id: Long) = byId[id]
 
     override suspend fun getTreesByIds(ids: List<Long>) = ids.mapNotNull { byId[it] }.shuffled()
+
+    override suspend fun getRemarkableTrees() = byId.values.filter { it.remarkable }
 }
 
 class FakeFavoritesRepository(

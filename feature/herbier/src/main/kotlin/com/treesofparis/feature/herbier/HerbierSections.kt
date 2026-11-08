@@ -40,6 +40,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.treesofparis.core.designsystem.component.LoadingState
 import com.treesofparis.core.designsystem.component.SectionHeader
+import com.treesofparis.core.designsystem.component.TreeListItem
 import com.treesofparis.core.designsystem.component.TreesCardGroup
 import com.treesofparis.core.designsystem.component.TreesDivider
 import com.treesofparis.core.designsystem.component.TreesScaffold
@@ -265,6 +266,28 @@ internal fun AreasSection(areas: List<AreaUi>) {
                     )
                 }
                 if (index < areas.lastIndex) TreesDivider()
+            }
+        }
+    }
+}
+
+/** An area's header and its remarkable trees, each with the gold badge. */
+@Composable
+internal fun RemarkableAreaGroup(
+    area: RemarkableAreaUi,
+    onTreeClick: (Long) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(TreesSpacing.s)) {
+        SectionHeader(area.name)
+        TreesCardGroup {
+            area.trees.forEachIndexed { index, tree ->
+                TreeListItem(
+                    title = tree.name,
+                    subtitle = tree.detail,
+                    onClick = { onTreeClick(tree.id) },
+                    remarkable = true,
+                )
+                if (index < area.trees.lastIndex) TreesDivider()
             }
         }
     }

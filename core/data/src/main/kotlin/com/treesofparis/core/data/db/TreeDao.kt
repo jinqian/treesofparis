@@ -33,6 +33,10 @@ interface TreeDao {
     @Query("SELECT * FROM trees WHERE id = :id")
     suspend fun byId(id: Long): TreeEntity?
 
+    /** The remarkable trees: a couple of hundred, so all of them. */
+    @Query("SELECT * FROM trees WHERE remarkable = 1")
+    suspend fun remarkable(): List<TreeEntity>
+
     @Query("SELECT * FROM trees WHERE id IN (:ids)")
     suspend fun byIds(ids: List<Long>): List<TreeEntity>
 

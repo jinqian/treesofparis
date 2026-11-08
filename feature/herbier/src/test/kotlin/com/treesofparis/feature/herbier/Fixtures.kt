@@ -4,12 +4,14 @@ import com.treesofparis.domain.model.AreaCount
 import com.treesofparis.domain.model.FloweringSeason
 import com.treesofparis.domain.model.FloweringSheet
 import com.treesofparis.domain.model.GenusCount
+import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
 import com.treesofparis.domain.model.RemarkableStatistics
 import com.treesofparis.domain.model.StageCount
 import com.treesofparis.domain.model.Tree
 import com.treesofparis.domain.model.TreeStatistics
 import com.treesofparis.domain.repository.FloweringRepository
+import com.treesofparis.domain.repository.TreeRepository
 import com.treesofparis.domain.repository.TreeStatisticsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -131,3 +133,34 @@ class FakeFloweringRepository : FloweringRepository {
 
 /** 8 November 2026 in Paris. */
 val NOVEMBER: Clock = Clock.fixed(Instant.parse("2026-11-08T10:00:00Z"), ZoneId.of("Europe/Paris"))
+
+/** Four remarkable trees in three areas. */
+val REMARKABLE_TREES =
+    listOf(
+        tree(11, heightM = 45, address = "ROUTE DU LAC A BAGATELLE, 16-10", area = "BOIS DE BOULOGNE"),
+        tree(12, heightM = 30, address = "PARC DES BUTTES CHAUMONT / 7 RUE BOTZARIS, 19-08", area = "PARIS 19E ARRDT"),
+        tree(
+            13,
+            heightM = null,
+            address = "JARDIN DU LUXEMBOURG",
+            area = "PARIS 6E ARRDT",
+        ).copy(commonName = "Marronnier"),
+        tree(14, heightM = 22, address = "PARC MONCEAU", area = "PARIS 6E ARRDT").copy(commonName = "Erable"),
+    )
+
+class FakeTreeRepository(
+    private val trees: List<Tree> = REMARKABLE_TREES,
+) : TreeRepository {
+    override suspend fun getTreesInBounds(
+        bounds: GeoBounds,
+        limit: Int,
+        remarkableOnly: Boolean,
+        genus: String?,
+    ) = emptyList<Tree>()
+
+    override suspend fun getTree(id: Long) = trees.firstOrNull { it.id == id }
+
+    override suspend fun getTreesByIds(ids: List<Long>) = trees.filter { it.id in ids }
+
+    override suspend fun getRemarkableTrees() = trees
+}

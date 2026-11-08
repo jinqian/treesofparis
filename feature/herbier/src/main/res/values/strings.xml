@@ -45,4 +45,5 @@
     <string name="herbier_flowering_discreet">Fleurs discrètes</string>
     <string name="herbier_flowering_row">%1$s : %2$s, %3$s</string>
     <string name="herbier_flowering_source">Source : les fiches espèces du Guide des Essences de Paris (Ville de Paris, Cerema, 2023), listées dans À propos.</string>
+    <string name="herbier_remarkable_hint">Tous les arbres remarquables, par arrondissement. Touchez-en un pour le voir sur la carte.</string>
 </resources>

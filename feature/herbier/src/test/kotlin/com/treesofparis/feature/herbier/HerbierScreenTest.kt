@@ -13,6 +13,7 @@ import androidx.compose.ui.test.performScrollToNode
 import com.treesofparis.core.designsystem.theme.TreesTheme
 import com.treesofparis.feature.herbier.mapper.toFloweringCalendarUi
 import com.treesofparis.feature.herbier.mapper.toHerbierUi
+import com.treesofparis.feature.herbier.mapper.toRemarkableAreasUi
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -83,4 +84,5 @@ fun content(month: Month = Month.NOVEMBER) =
     HerbierUiState.Content(
         herbier = PARIS.toHerbierUi(),
         flowering = SEASONS.toFloweringCalendarUi(month, PARIS.genera.map { it.genus }),
+        remarkableTrees = REMARKABLE_TREES.toRemarkableAreasUi(),
     )

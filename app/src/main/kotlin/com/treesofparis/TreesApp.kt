@@ -28,6 +28,7 @@ import com.treesofparis.navigation.HerbierSectionKey
 import com.treesofparis.navigation.LibrariesKey
 import com.treesofparis.navigation.MapKey
 import com.treesofparis.navigation.TopLevelDestination
+import com.treesofparis.navigation.TreesNavigationState
 import com.treesofparis.navigation.TreesNavigator
 import com.treesofparis.navigation.rememberTreesNavigationState
 
@@ -44,6 +45,7 @@ fun TreesApp(
         section: HerbierSection,
         onBack: () -> Unit,
         onGenusClick: (String) -> Unit,
+        onTreeClick: (Long) -> Unit,
     ) -> Unit,
     aboutContent: @Composable (onOpenLibraries: () -> Unit, onOpenFloweringSources: () -> Unit) -> Unit,
     librariesContent: @Composable (onBack: () -> Unit) -> Unit,
@@ -55,36 +57,7 @@ fun TreesApp(
     Scaffold(
         modifier = modifier,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        bottomBar = {
-            Column {
-                HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, tonalElevation = 0.dp) {
-                    TopLevelDestination.entries.forEach { tab ->
-                        val selected = tab == state.selected
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = { navigator.selectTab(tab) },
-                            icon = { Icon(if (selected) tab.selectedIcon else tab.icon, contentDescription = null) },
-                            label = {
-                                Text(
-                                    text = stringResource(tab.label),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                                )
-                            },
-                            colors =
-                                NavigationBarItemDefaults.colors(
-                                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                ),
-                        )
-                    }
-                }
-            }
-        },
+        bottomBar = { TreesBottomBar(state, navigator) },
     ) { padding ->
         NavDisplay(
             entries =
@@ -93,7 +66,12 @@ fun TreesApp(
                         entry<MapKey> { key -> mapContent(key) }
                         entry<HerbierKey> { herbierContent(navigator::openHerbierSection) }
                         entry<HerbierSectionKey> { key ->
-                            herbierSectionContent(key.section, navigator::goBack, navigator::openGenusOnMap)
+                            herbierSectionContent(
+                                key.section,
+                                navigator::goBack,
+                                navigator::openGenusOnMap,
+                                navigator::openTreeOnMap,
+                            )
                         }
                         entry<FavoritesKey> {
                             favoritesContent(navigator::openTreeOnMap) { navigator.selectTab(TopLevelDestination.MAP) }
@@ -106,5 +84,41 @@ fun TreesApp(
             onBack = navigator::goBack,
             modifier = Modifier.padding(padding),
         )
+    }
+}
+
+/** The four tabs, the selected one in a sage pill. */
+@Composable
+private fun TreesBottomBar(
+    state: TreesNavigationState,
+    navigator: TreesNavigator,
+) {
+    Column {
+        HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant)
+        NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerLow, tonalElevation = 0.dp) {
+            TopLevelDestination.entries.forEach { tab ->
+                val selected = tab == state.selected
+                NavigationBarItem(
+                    selected = selected,
+                    onClick = { navigator.selectTab(tab) },
+                    icon = { Icon(if (selected) tab.selectedIcon else tab.icon, contentDescription = null) },
+                    label = {
+                        Text(
+                            text = stringResource(tab.label),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                        )
+                    },
+                    colors =
+                        NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ),
+                )
+            }
+        }
     }
 }

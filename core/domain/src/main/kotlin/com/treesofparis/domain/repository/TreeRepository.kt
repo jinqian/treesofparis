@@ -14,6 +14,9 @@ interface TreeRepository {
 
     suspend fun getTree(id: Long): Tree?
 
+    /** Every remarkable tree, in no particular order. */
+    suspend fun getRemarkableTrees(): List<Tree>
+
     /** Returns the trees that exist among [ids], in no particular order. Unknown ids are ignored. */
     suspend fun getTreesByIds(ids: List<Long>): List<Tree>
 }

@@ -70,6 +70,8 @@ class FakeTreeRepository(
     override suspend fun getTree(id: Long) = trees.firstOrNull { it.id == id }
 
     override suspend fun getTreesByIds(ids: List<Long>) = trees.filter { it.id in ids }
+
+    override suspend fun getRemarkableTrees() = trees.filter { it.remarkable }
 }
 
 class FakeFavoritesRepository : FavoritesRepository {
