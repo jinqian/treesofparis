@@ -75,6 +75,9 @@ Dependabot keeps Gradle, GitHub Actions and Python dev dependencies up to date.
 Commits follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 (`feat(map): show remarkable trees`). The `commit-msg` hook checks this locally and CI checks PR titles.
 
+Commit subjects become the changelog: [`CHANGELOG.md`](CHANGELOG.md) is generated from them, and
+[`RELEASING.md`](RELEASING.md) describes versioning, release notes and tagging.
+
 ## License
 
 [MIT](LICENSE). Vendored agent skills in `.claude/skills/` are Apache 2.0 (Google LLC).

@@ -56,7 +56,7 @@ python3 data/scripts/update_trees.py    # refresh trees.db (see data/README.md)
 
 - Conventional Commits (`feat(map): ...`, `fix(data): ...`), enforced by the Lefthook `commit-msg` hook.
   Scopes: module names without prefix (`domain`, `data`, `designsystem`, `map`, `favorites`, `about`, `app`),
-  plus `build`, `ci`, `deps`.
+  plus `build`, `ci`, `deps`, `release` (`chore(release): v0.2.0`, see `RELEASING.md`).
 - TDD: write the failing test first. JUnit 4 + MockK + Turbine + coroutines-test; Robolectric for Android
   and Compose tests (`config/robolectric/robolectric.properties` pins the SDK).
 - Toolchain: JDK 25. Bytecode target 17 (Android) / 21 (JVM).
