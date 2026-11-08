@@ -77,7 +77,7 @@ data class RecordUi(
     val name: String,
     /** « 45 m » for a height, « 7,40 m » for a girth. */
     val value: String,
-    /** « Bois de Boulogne · Route du Lac A Bagatelle ». */
+    /** « Bois de Boulogne · Route du Lac à Bagatelle ». */
     val place: String,
 )
 

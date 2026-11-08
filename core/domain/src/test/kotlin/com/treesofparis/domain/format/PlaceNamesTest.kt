@@ -21,4 +21,11 @@ class PlaceNamesTest {
             formatPlace("CIMETIÈRE / AVENUE DES MERISIERS / DIV 72"),
         )
     }
+
+    @Test
+    fun formatPlace_restoresTheAccentOfALoneA() {
+        // The dataset is upper case without accents: « A » there is the preposition « à ».
+        assertEquals("Route du Lac à Bagatelle", formatPlace("ROUTE DU LAC A BAGATELLE"))
+        assertEquals("Avenue de la Porte de Vincennes", formatPlace("AVENUE DE LA PORTE DE VINCENNES"))
+    }
 }
