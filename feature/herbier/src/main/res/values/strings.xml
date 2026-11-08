@@ -3,7 +3,7 @@
     <string name="herbier_title">Herbier</string>
     <string name="herbier_totals">%1$s arbres · %2$s genres · %3$s espèces et variétés</string>
     <string name="herbier_did_you_know">Le saviez-vous ?</string>
-    <string name="herbier_headline">1 arbre sur %1$d est un %2$s.</string>
+    <string name="herbier_headline">1 arbre sur %1$d à Paris est un %2$s.</string>
     <string name="herbier_headline_detail">%1$s %2$s, devant %3$s %4$s.</string>
     <string name="herbier_headline_detail_alone">%1$s %2$s.</string>
     <string name="herbier_section_genera">Les essences</string>

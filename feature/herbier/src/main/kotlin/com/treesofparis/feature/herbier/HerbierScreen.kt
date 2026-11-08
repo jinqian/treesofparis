@@ -288,7 +288,8 @@ private fun RemarkableSection(remarkable: RemarkableUi) {
         } ?: stringResource(R.string.herbier_remarkable_count, remarkable.count)
     Column(verticalArrangement = Arrangement.spacedBy(TreesSpacing.s)) {
         SectionHeader(stringResource(R.string.herbier_section_remarkable))
-        TreesCardGroup {
+        // No inner padding: the gold header fills the card up to its rounded top edge.
+        TreesCardGroup(contentPadding = PaddingValues()) {
             Row(
                 modifier = Modifier.fillMaxWidth().background(colors.tertiaryContainer).padding(TreesSpacing.m),
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
