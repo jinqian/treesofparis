@@ -1,5 +1,6 @@
 package com.treesofparis.feature.map.mapper
 
+import com.treesofparis.core.designsystem.leaf.TreeLeaf
 import com.treesofparis.feature.map.MeasureUi
 import com.treesofparis.feature.map.tree
 import org.junit.Assert.assertEquals
@@ -28,5 +29,12 @@ class TreeDetailMapperTest {
         assertNull(detail.height)
         assertNull(detail.circumference)
         assertNull(detail.stage)
+    }
+
+    @Test
+    fun toDetailUi_picksTheGenusLeaf() {
+        assertEquals(TreeLeaf.PLATANUS, tree(1).toDetailUi(isFavorite = false).leaf)
+        assertEquals(TreeLeaf.GENERIC, tree(1).copy(genus = "Ginkgo").toDetailUi(isFavorite = false).leaf)
+        assertEquals(TreeLeaf.GENERIC, tree(1).copy(genus = null).toDetailUi(isFavorite = false).leaf)
     }
 }

@@ -1,5 +1,6 @@
 package com.treesofparis.feature.map.mapper
 
+import com.treesofparis.core.designsystem.leaf.TreeLeaf
 import com.treesofparis.domain.format.formatArea
 import com.treesofparis.domain.format.formatPlace
 import com.treesofparis.domain.model.Tree
@@ -18,6 +19,7 @@ fun Tree.toDetailUi(isFavorite: Boolean) =
         stage = stage,
         remarkable = remarkable,
         isFavorite = isFavorite,
+        leaf = TreeLeaf.forGenus(genus),
     )
 
 private fun Tree.scientificName(): String? {
