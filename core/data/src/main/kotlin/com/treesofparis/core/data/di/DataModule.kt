@@ -4,13 +4,16 @@ import android.content.Context
 import androidx.room.Room
 import com.treesofparis.core.data.db.TreeDao
 import com.treesofparis.core.data.db.TreeDatabase
+import com.treesofparis.core.data.db.TreeStatisticsDao
 import com.treesofparis.core.data.db.UserDatabase
 import com.treesofparis.core.data.location.LocationRepositoryImpl
 import com.treesofparis.core.data.repository.FavoritesRepositoryImpl
 import com.treesofparis.core.data.repository.TreeRepositoryImpl
+import com.treesofparis.core.data.repository.TreeStatisticsRepositoryImpl
 import com.treesofparis.domain.repository.FavoritesRepository
 import com.treesofparis.domain.repository.LocationRepository
 import com.treesofparis.domain.repository.TreeRepository
+import com.treesofparis.domain.repository.TreeStatisticsRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -25,6 +28,9 @@ internal abstract class DataModule {
     @Binds
     abstract fun bindTreeRepository(impl: TreeRepositoryImpl): TreeRepository
 
+    @Binds
+    abstract fun bindTreeStatisticsRepository(impl: TreeStatisticsRepositoryImpl): TreeStatisticsRepository
+
     companion object {
         @Provides
         @Singleton
@@ -34,6 +40,9 @@ internal abstract class DataModule {
 
         @Provides
         fun provideTreeDao(db: TreeDatabase): TreeDao = db.treeDao()
+
+        @Provides
+        fun provideTreeStatisticsDao(db: TreeDatabase): TreeStatisticsDao = db.treeStatisticsDao()
 
         @Provides
         @Singleton
