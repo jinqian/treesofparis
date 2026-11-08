@@ -29,6 +29,7 @@ dependencies {
     implementation(projects.core.mapOsmdroid)
     implementation(projects.feature.map)
     implementation(projects.feature.favorites)
+    implementation(projects.feature.herbier)
     implementation(projects.feature.about)
 
     implementation(libs.androidx.activity.compose)

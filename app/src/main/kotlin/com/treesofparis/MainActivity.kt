@@ -11,6 +11,7 @@ import com.treesofparis.core.map.LocalMapProvider
 import com.treesofparis.core.map.MapProvider
 import com.treesofparis.feature.about.AboutRoute
 import com.treesofparis.feature.favorites.FavoritesRoute
+import com.treesofparis.feature.herbier.HerbierRoute
 import com.treesofparis.feature.map.MapRoute
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -32,6 +33,7 @@ class MainActivity : ComponentActivity() {
                         favoritesContent = { onTreeClick, onExploreMap ->
                             FavoritesRoute(onTreeClick = onTreeClick, onExploreMap = onExploreMap)
                         },
+                        herbierContent = { HerbierRoute() },
                         aboutContent = { AboutRoute(librariesResId = R.raw.aboutlibraries) },
                     )
                 }
