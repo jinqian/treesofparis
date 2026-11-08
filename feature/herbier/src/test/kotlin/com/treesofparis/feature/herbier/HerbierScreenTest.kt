@@ -42,7 +42,7 @@ class HerbierScreenTest {
         show()
         compose.onNodeWithText("Herbier").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
         compose.onNodeWithText("220 339 arbres · 202 genres · 1 004 espèces et variétés").assertIsDisplayed()
-        compose.onNodeWithText("1 arbre sur 5 est un platane.").assertIsDisplayed()
+        compose.onNodeWithText("1 arbre sur 5 à Paris est un platane.").assertIsDisplayed()
     }
 
     @Test
