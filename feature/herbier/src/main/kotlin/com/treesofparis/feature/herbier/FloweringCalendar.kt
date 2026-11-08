@@ -194,13 +194,15 @@ private fun CalendarRow(row: FloweringRowUi) {
             Modifier
                 .fillMaxWidth()
                 .heightIn(min = 40.dp)
+                // Room above and below a name on two lines (« Cerisier, prunier »), off the dividers.
+                .padding(vertical = 6.dp)
                 .clearAndSetSemantics { contentDescription = description },
         horizontalArrangement = Arrangement.spacedBy(CELL_GAP),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             name,
-            style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+            style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, lineHeight = 18.sp),
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.width(NAME_WIDTH),
