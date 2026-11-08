@@ -21,6 +21,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
 import com.treesofparis.navigation.AboutKey
 import com.treesofparis.navigation.FavoritesKey
+import com.treesofparis.navigation.FloweringSourcesKey
 import com.treesofparis.navigation.HerbierKey
 import com.treesofparis.navigation.LibrariesKey
 import com.treesofparis.navigation.MapKey
@@ -37,8 +38,9 @@ fun TreesApp(
     mapContent: @Composable (MapKey) -> Unit,
     favoritesContent: @Composable (onTreeClick: (Long) -> Unit, onExploreMap: () -> Unit) -> Unit,
     herbierContent: @Composable (onGenusClick: (String) -> Unit) -> Unit,
-    aboutContent: @Composable (onOpenLibraries: () -> Unit) -> Unit,
+    aboutContent: @Composable (onOpenLibraries: () -> Unit, onOpenFloweringSources: () -> Unit) -> Unit,
     librariesContent: @Composable (onBack: () -> Unit) -> Unit,
+    floweringSourcesContent: @Composable (onBack: () -> Unit) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state = rememberTreesNavigationState()
@@ -86,8 +88,9 @@ fun TreesApp(
                         entry<FavoritesKey> {
                             favoritesContent(navigator::openTreeOnMap) { navigator.selectTab(TopLevelDestination.MAP) }
                         }
-                        entry<AboutKey> { aboutContent(navigator::openLibraries) }
+                        entry<AboutKey> { aboutContent(navigator::openLibraries, navigator::openFloweringSources) }
                         entry<LibrariesKey> { librariesContent(navigator::goBack) }
+                        entry<FloweringSourcesKey> { floweringSourcesContent(navigator::goBack) }
                     },
                 ),
             onBack = navigator::goBack,

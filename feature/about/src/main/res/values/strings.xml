@@ -8,6 +8,19 @@
     <string name="about_data_credit">« Les arbres », Paris Data — Ville de Paris</string>
     <string name="about_data_extraction">Extraction du %1$s · %2$s arbres</string>
     <string name="about_data_license">Licence ODbL</string>
+    <string name="about_section_flowering">Floraisons</string>
+    <string name="about_flowering_credit">« Guide des Essences de Paris » — Ville de Paris, Cerema</string>
+    <string name="about_flowering_license">Calendriers de floraison, 2023 · Licence ODbL</string>
+    <plurals name="about_flowering_sheets">
+        <item quantity="one">La fiche consultée</item>
+        <item quantity="many">Les %1$d fiches consultées</item>
+        <item quantity="other">Les %1$d fiches consultées</item>
+    </plurals>
+    <string name="about_flowering_sheets_detail">Une par espèce, avec ses mois de floraison</string>
+    <string name="flowering_sources_title">Sources des floraisons</string>
+    <string name="flowering_sources_subtitle">Guide des Essences de Paris</string>
+    <string name="flowering_sources_method">Les mois de floraison de l’Herbier sont lus sur les fiches espèces du Guide des Essences de Paris : pour chaque genre, nous réunissons ceux de ses espèces les plus plantées à Paris. Ils restent indicatifs, car une floraison avance ou recule de quelques semaines selon l’année. « Fleurs voyantes » reprend le classement « arbre à fleurs » du guide.</string>
+    <string name="flowering_sources_sheets">Fiches consultées</string>
     <string name="about_section_map">Carte</string>
     <string name="about_map_credit">© les contributeurs d’OpenStreetMap</string>
     <string name="about_map_engine">Tuiles OpenStreetMap, affichées avec osmdroid</string>

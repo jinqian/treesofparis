@@ -39,15 +39,22 @@ class TreesAppTest {
                         Button(onClick = { onGenusClick("Tilia") }) { Text("tilleul") }
                     }
                 },
-                aboutContent = { onOpenLibraries ->
+                aboutContent = { onOpenLibraries, onOpenFloweringSources ->
                     Column {
                         Text("about screen")
                         Button(onClick = onOpenLibraries) { Text("libraries") }
+                        Button(onClick = onOpenFloweringSources) { Text("flowering sources") }
                     }
                 },
                 librariesContent = { onBack ->
                     Column {
                         Text("libraries screen")
+                        Button(onClick = onBack) { Text("back") }
+                    }
+                },
+                floweringSourcesContent = { onBack ->
+                    Column {
+                        Text("flowering sources screen")
                         Button(onClick = onBack) { Text("back") }
                     }
                 },
@@ -115,6 +122,16 @@ class TreesAppTest {
         compose.onNodeWithText("libraries").performClick()
         compose.onNodeWithText("libraries screen").assertIsDisplayed()
         compose.onNodeWithText("À propos").assertIsSelected()
+        compose.onNodeWithText("back").performClick()
+        compose.onNodeWithText("about screen").assertIsDisplayed()
+    }
+
+    @Test
+    fun floweringSources_openFromAbout_andBackReturnsToAbout() {
+        compose.setContent(app)
+        compose.onNodeWithText("À propos").performClick()
+        compose.onNodeWithText("flowering sources").performClick()
+        compose.onNodeWithText("flowering sources screen").assertIsDisplayed()
         compose.onNodeWithText("back").performClick()
         compose.onNodeWithText("about screen").assertIsDisplayed()
     }

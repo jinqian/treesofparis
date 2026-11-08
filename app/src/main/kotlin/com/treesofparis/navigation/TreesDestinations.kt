@@ -31,6 +31,10 @@ data object AboutKey : NavKey
 @Serializable
 data object LibrariesKey : NavKey
 
+/** The flowering sources (the guide's species sheets), pushed on the À propos back stack. */
+@Serializable
+data object FloweringSourcesKey : NavKey
+
 /** The bottom bar tabs. Each one has its own back stack, starting at [startKey]. */
 enum class TopLevelDestination(
     @StringRes val label: Int,

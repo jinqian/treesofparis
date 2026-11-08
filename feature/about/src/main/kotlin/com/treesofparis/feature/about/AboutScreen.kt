@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -40,6 +41,8 @@ import java.util.Locale
 
 const val ABOUT_LIST_TAG = "about_list"
 private const val DATASET_URL = "https://opendata.paris.fr/explore/dataset/les-arbres/information/"
+private const val GUIDE_URL =
+    "https://opendata.paris.fr/explore/dataset/fiches-essences-du-guide-des-essences-de-paris/information/"
 private const val ODBL_URL = "https://opendatacommons.org/licenses/odbl/"
 private const val OSM_COPYRIGHT_URL = "https://www.openstreetmap.org/copyright"
 private const val SOURCE_URL = "https://github.com/jinqian/treesofparis"
@@ -49,6 +52,7 @@ private const val OFL_URL = "https://openfontlicense.org"
 @Composable
 fun AboutRoute(
     onOpenLibraries: () -> Unit,
+    onOpenFloweringSources: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AboutViewModel = hiltViewModel(),
 ) {
@@ -57,6 +61,7 @@ fun AboutRoute(
         state = viewModel.uiState,
         onOpenUrl = uriHandler::openUri,
         onOpenLibraries = onOpenLibraries,
+        onOpenFloweringSources = onOpenFloweringSources,
         modifier = modifier,
     )
 }
@@ -66,6 +71,7 @@ fun AboutScreen(
     state: AboutUiState,
     onOpenUrl: (String) -> Unit,
     onOpenLibraries: () -> Unit,
+    onOpenFloweringSources: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     TreesScaffold(title = stringResource(R.string.about_title), modifier = modifier) { padding ->
@@ -75,23 +81,7 @@ fun AboutScreen(
             verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
         ) {
             item { AppCard(state) }
-            section(R.string.about_section_data) {
-                InfoRow(
-                    title = stringResource(R.string.about_data_credit),
-                    subtitle =
-                        state.extraction?.let {
-                            stringResource(R.string.about_data_extraction, it.date, it.treeCount)
-                        },
-                    trailing = InfoRowTrailing.EXTERNAL,
-                    onClick = { onOpenUrl(DATASET_URL) },
-                )
-                TreesDivider()
-                InfoRow(
-                    title = stringResource(R.string.about_data_license),
-                    trailing = InfoRowTrailing.EXTERNAL,
-                    onClick = { onOpenUrl(ODBL_URL) },
-                )
-            }
+            dataSections(state, onOpenUrl, onOpenFloweringSources)
             section(R.string.about_section_map) {
                 InfoRow(
                     title = stringResource(R.string.about_map_credit),
@@ -122,6 +112,51 @@ fun AboutScreen(
                 )
             }
         }
+    }
+}
+
+/** The tree data and the flowering calendar, with their sources. */
+private fun LazyListScope.dataSections(
+    state: AboutUiState,
+    onOpenUrl: (String) -> Unit,
+    onOpenFloweringSources: () -> Unit,
+) {
+    section(R.string.about_section_data) {
+        InfoRow(
+            title = stringResource(R.string.about_data_credit),
+            subtitle =
+                state.extraction?.let {
+                    stringResource(R.string.about_data_extraction, it.date, it.treeCount)
+                },
+            trailing = InfoRowTrailing.EXTERNAL,
+            onClick = { onOpenUrl(DATASET_URL) },
+        )
+        TreesDivider()
+        InfoRow(
+            title = stringResource(R.string.about_data_license),
+            trailing = InfoRowTrailing.EXTERNAL,
+            onClick = { onOpenUrl(ODBL_URL) },
+        )
+    }
+    section(R.string.about_section_flowering) {
+        InfoRow(
+            title = stringResource(R.string.about_flowering_credit),
+            subtitle = stringResource(R.string.about_flowering_license),
+            trailing = InfoRowTrailing.EXTERNAL,
+            onClick = { onOpenUrl(GUIDE_URL) },
+        )
+        TreesDivider()
+        InfoRow(
+            title =
+                pluralStringResource(
+                    R.plurals.about_flowering_sheets,
+                    state.floweringSheetCount,
+                    state.floweringSheetCount,
+                ),
+            subtitle = stringResource(R.string.about_flowering_sheets_detail),
+            trailing = InfoRowTrailing.CHEVRON,
+            onClick = onOpenFloweringSources,
+        )
     }
 }
 
@@ -185,9 +220,10 @@ private fun AppCard(state: AboutUiState) {
 private fun AboutScreenPreview() {
     TreesTheme {
         AboutScreen(
-            state = AboutUiState(versionName = "0.1.0"),
+            state = AboutUiState(versionName = "0.1.0", floweringSheetCount = 27),
             onOpenUrl = {},
             onOpenLibraries = {},
+            onOpenFloweringSources = {},
         )
     }
 }

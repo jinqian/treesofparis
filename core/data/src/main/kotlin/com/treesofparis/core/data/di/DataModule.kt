@@ -9,10 +9,12 @@ import com.treesofparis.core.data.db.TreeStatisticsDao
 import com.treesofparis.core.data.db.UserDatabase
 import com.treesofparis.core.data.location.LocationRepositoryImpl
 import com.treesofparis.core.data.repository.FavoritesRepositoryImpl
+import com.treesofparis.core.data.repository.GuideFloweringRepository
 import com.treesofparis.core.data.repository.TreeRepositoryImpl
 import com.treesofparis.core.data.repository.TreeStatisticsRepositoryImpl
 import com.treesofparis.domain.model.DatasetInfo
 import com.treesofparis.domain.repository.FavoritesRepository
+import com.treesofparis.domain.repository.FloweringRepository
 import com.treesofparis.domain.repository.LocationRepository
 import com.treesofparis.domain.repository.TreeRepository
 import com.treesofparis.domain.repository.TreeStatisticsRepository
@@ -33,6 +35,9 @@ internal abstract class DataModule {
 
     @Binds
     abstract fun bindTreeStatisticsRepository(impl: TreeStatisticsRepositoryImpl): TreeStatisticsRepository
+
+    @Binds
+    abstract fun bindFloweringRepository(impl: GuideFloweringRepository): FloweringRepository
 
     companion object {
         @Provides

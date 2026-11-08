@@ -76,9 +76,14 @@ class TreesNavigator(
     }
 
     /** Shows the open source libraries on top of À propos, so back returns there. */
-    fun openLibraries() {
+    fun openLibraries() = openOnAbout(LibrariesKey)
+
+    /** Shows the flowering sources on top of À propos, so back returns there. */
+    fun openFloweringSources() = openOnAbout(FloweringSourcesKey)
+
+    private fun openOnAbout(key: NavKey) {
         state.backStacks.getValue(TopLevelDestination.ABOUT).apply {
-            if (lastOrNull() != LibrariesKey) add(LibrariesKey)
+            if (lastOrNull() != key) add(key)
         }
         state.selected = TopLevelDestination.ABOUT
     }
