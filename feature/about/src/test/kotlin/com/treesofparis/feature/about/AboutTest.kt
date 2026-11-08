@@ -3,6 +3,7 @@ package com.treesofparis.feature.about
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -29,33 +30,62 @@ class AboutTest {
 
     @Test
     fun aboutScreen_showsVersionAndCredits() {
-        compose.setContent { TreesTheme { AboutScreen(state, libraries = emptyList(), onOpenUrl = {}) } }
+        compose.setContent { TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = {}) } }
         compose.onNodeWithText("VERSION 0.1.0").assertIsDisplayed()
         compose.onNodeWithText("« Les arbres », Paris Data — Ville de Paris").assertIsDisplayed()
     }
 
     @Test
     fun aboutScreen_showsOsmAttribution() {
-        compose.setContent { TreesTheme { AboutScreen(state, libraries = emptyList(), onOpenUrl = {}) } }
+        compose.setContent { TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = {}) } }
         compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText("© les contributeurs d’OpenStreetMap"))
         compose.onNodeWithText("© les contributeurs d’OpenStreetMap").assertIsDisplayed()
     }
 
     @Test
     fun aboutScreen_creditsBundledFonts() {
-        compose.setContent { TreesTheme { AboutScreen(state, libraries = emptyList(), onOpenUrl = {}) } }
+        compose.setContent { TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = {}) } }
         compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText("Newsreader et Inter"))
         compose.onNodeWithText("SIL Open Font License 1.1").assertIsDisplayed()
     }
 
     @Test
-    fun aboutScreen_listsLibrariesAndOpensTheirPage() {
+    fun aboutScreen_opensTheLibrariesScreen() {
+        var opened = 0
+        compose.setContent { TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = { opened++ }) } }
+        compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText("Bibliothèques open source"))
+        compose.onNodeWithText("Bibliothèques open source").performClick()
+        assertEquals(1, opened)
+        compose.onNodeWithText("osmdroid").assertDoesNotExist()
+    }
+
+    @Test
+    fun librariesScreen_listsLibrariesAndOpensTheirPage() {
         var opened: String? = null
         val libs =
             listOf(LibraryUi(name = "osmdroid", detail = "6.1.20 · Apache 2.0", url = "https://github.com/osmdroid"))
-        compose.setContent { TreesTheme { AboutScreen(state, libraries = libs, onOpenUrl = { opened = it }) } }
-        compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText("osmdroid"))
+        compose.setContent {
+            TreesTheme { LibrariesScreen(libraries = libs, onOpenUrl = { opened = it }, onBack = {}) }
+        }
+        compose.onNodeWithText("Bibliothèques open source").assertIsDisplayed()
+        compose.onNodeWithTag(LIBRARIES_LIST_TAG).performScrollToNode(hasText("osmdroid"))
         compose.onNodeWithText("osmdroid").performClick()
         assertEquals("https://github.com/osmdroid", opened)
+    }
+
+    @Test
+    fun librariesScreen_backButtonGoesBack() {
+        var backs = 0
+        compose.setContent {
+            TreesTheme {
+                LibrariesScreen(
+                    libraries = emptyList(),
+                    onOpenUrl = {},
+                    onBack = { backs++ },
+                )
+            }
+        }
+        compose.onNodeWithContentDescription("Retour").performClick()
+        assertEquals(1, backs)
     }
 }

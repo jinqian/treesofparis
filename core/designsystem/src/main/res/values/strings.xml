@@ -2,6 +2,7 @@
 <resources>
     <string name="designsystem_retry">Réessayer</string>
     <string name="designsystem_loading">Chargement…</string>
+    <string name="designsystem_back">Retour</string>
     <string name="leaf_platanus">Platane</string>
     <string name="leaf_aesculus">Marronnier</string>
     <string name="leaf_tilia">Tilleul</string>

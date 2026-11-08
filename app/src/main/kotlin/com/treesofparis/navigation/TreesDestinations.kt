@@ -26,6 +26,10 @@ data object FavoritesKey : NavKey
 @Serializable
 data object AboutKey : NavKey
 
+/** The open source libraries, pushed on the À propos back stack. */
+@Serializable
+data object LibrariesKey : NavKey
+
 /** The bottom bar tabs. Each one has its own back stack, starting at [startKey]. */
 enum class TopLevelDestination(
     @StringRes val label: Int,

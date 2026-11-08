@@ -10,6 +10,7 @@ import com.treesofparis.core.designsystem.theme.TreesTheme
 import com.treesofparis.core.map.LocalMapProvider
 import com.treesofparis.core.map.MapProvider
 import com.treesofparis.feature.about.AboutRoute
+import com.treesofparis.feature.about.LibrariesRoute
 import com.treesofparis.feature.favorites.FavoritesRoute
 import com.treesofparis.feature.herbier.HerbierRoute
 import com.treesofparis.feature.map.MapRoute
@@ -34,7 +35,10 @@ class MainActivity : ComponentActivity() {
                             FavoritesRoute(onTreeClick = onTreeClick, onExploreMap = onExploreMap)
                         },
                         herbierContent = { HerbierRoute() },
-                        aboutContent = { AboutRoute(librariesResId = R.raw.aboutlibraries) },
+                        aboutContent = { onOpenLibraries -> AboutRoute(onOpenLibraries = onOpenLibraries) },
+                        librariesContent = { onBack ->
+                            LibrariesRoute(librariesResId = R.raw.aboutlibraries, onBack = onBack)
+                        },
                     )
                 }
             }

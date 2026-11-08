@@ -6,6 +6,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.treesofparis.core.designsystem.theme.HerbierPalette
@@ -135,5 +136,21 @@ class ComponentsTest {
         compose.onNodeWithText("osmdroid").assertIsDisplayed()
         compose.onNodeWithText("Licence ODbL").performClick()
         assertEquals(1, clicks)
+    }
+
+    @Test
+    fun treesScaffold_withOnBack_showsABackButton() {
+        var backs = 0
+        compose.setContent {
+            TreesTheme { TreesScaffold(title = "Bibliothèques", onBack = { backs++ }) { EmptyState(message = "Vide") } }
+        }
+        compose.onNodeWithContentDescription("Retour").performClick()
+        assertEquals(1, backs)
+    }
+
+    @Test
+    fun treesScaffold_withoutOnBack_hasNoBackButton() {
+        compose.setContent { TreesTheme { TreesScaffold(title = "Favoris") { EmptyState(message = "Vide") } } }
+        compose.onNodeWithContentDescription("Retour").assertDoesNotExist()
     }
 }

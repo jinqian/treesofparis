@@ -22,6 +22,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.treesofparis.navigation.AboutKey
 import com.treesofparis.navigation.FavoritesKey
 import com.treesofparis.navigation.HerbierKey
+import com.treesofparis.navigation.LibrariesKey
 import com.treesofparis.navigation.MapKey
 import com.treesofparis.navigation.TopLevelDestination
 import com.treesofparis.navigation.TreesNavigator
@@ -36,7 +37,8 @@ fun TreesApp(
     mapContent: @Composable (MapKey) -> Unit,
     favoritesContent: @Composable (onTreeClick: (Long) -> Unit, onExploreMap: () -> Unit) -> Unit,
     herbierContent: @Composable () -> Unit,
-    aboutContent: @Composable () -> Unit,
+    aboutContent: @Composable (onOpenLibraries: () -> Unit) -> Unit,
+    librariesContent: @Composable (onBack: () -> Unit) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val state = rememberTreesNavigationState()
@@ -84,7 +86,8 @@ fun TreesApp(
                         entry<FavoritesKey> {
                             favoritesContent(navigator::openTreeOnMap) { navigator.selectTab(TopLevelDestination.MAP) }
                         }
-                        entry<AboutKey> { aboutContent() }
+                        entry<AboutKey> { aboutContent(navigator::openLibraries) }
+                        entry<LibrariesKey> { librariesContent(navigator::goBack) }
                     },
                 ),
             onBack = navigator::goBack,
