@@ -5,7 +5,10 @@ import androidx.compose.ui.graphics.Color
 import fr.arbresdeparis.domain.model.GeoBounds
 import fr.arbresdeparis.domain.model.GeoPoint
 
-/** Where the map looks: centre and zoom level (OSM zoom scale, 0 = whole world). */
+/**
+ * Where the map looks: centre and zoom level. The zoom is the usual web-map zoom on a 256 dp world (0 = the whole
+ * world in 256 dp, each level doubles): providers convert it to their own scale (MapLibre draws 512 dp tiles).
+ */
 data class MapCamera(
     val center: GeoPoint,
     val zoom: Double,

@@ -7,7 +7,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import fr.arbresdeparis.BuildConfig
 import fr.arbresdeparis.core.map.MapProvider
-import fr.arbresdeparis.core.map.osmdroid.OsmdroidMapProvider
+import fr.arbresdeparis.core.map.maplibre.MapLibreMapProvider
 import fr.arbresdeparis.domain.model.AppInfo
 import java.time.Clock
 import java.time.ZoneId
@@ -17,7 +17,7 @@ import java.time.ZoneId
 @InstallIn(SingletonComponent::class)
 abstract class AppModule {
     @Binds
-    abstract fun bindMapProvider(impl: OsmdroidMapProvider): MapProvider
+    abstract fun bindMapProvider(impl: MapLibreMapProvider): MapProvider
 
     companion object {
         @Provides

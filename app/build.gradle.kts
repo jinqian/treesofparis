@@ -68,7 +68,7 @@ dependencies {
     implementation(projects.core.data)
     implementation(projects.core.designsystem)
     implementation(projects.core.map)
-    implementation(projects.core.mapOsmdroid)
+    implementation(projects.core.mapMaplibre)
     implementation(projects.feature.map)
     implementation(projects.feature.favorites)
     implementation(projects.feature.herbier)
