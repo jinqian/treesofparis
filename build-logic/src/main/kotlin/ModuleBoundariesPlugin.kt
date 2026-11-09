@@ -10,7 +10,7 @@ import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
 
 /** Modules that feature modules must never depend on; they are wired only in :app. */
-private val FORBIDDEN_FOR_FEATURES = setOf(":core:data", ":core:map-osmdroid", ":core:map-maplibre")
+private val FORBIDDEN_FOR_FEATURES = setOf(":core:data", ":core:map-maplibre")
 
 class ModuleBoundariesPlugin : Plugin<Project> {
     override fun apply(target: Project) {

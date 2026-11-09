@@ -13,7 +13,6 @@ UI language: **French**. Read `docs/superpowers/specs/` for the design and `docs
 | `:core:designsystem` | Android lib | `TreesTheme`, reusable components | — |
 | `:core:map` | Android lib | provider-neutral map contract (`MapProvider`, `TreeMapView`, `MapCamera`, `CameraRequest`, `MapMarker`, `MapConfig`) | `:core:domain` |
 | `:core:map-maplibre` | Android lib | MapLibre Native implementation of `MapProvider`: OpenFreeMap vector tiles, « Herbier » style (ADR 0005) | `:core:map` |
-| `:core:map-osmdroid` | Android lib | former osmdroid implementation, kept until MapLibre is accepted on device | `:core:map` |
 | `:feature:map` / `:feature:favorites` / `:feature:about` | Android lib | screen, scoped ViewModel, UI models, UI mappers | `:core:domain`, `:core:designsystem`, `:core:map` |
 | `build-logic` | included build | convention plugins (`trees.*`) | — |
 | `data/` | Python | dataset download + `trees.db` builder | — |
@@ -22,9 +21,8 @@ UI language: **French**. Read `docs/superpowers/specs/` for the design and `docs
 ## Rules (enforced)
 
 - `:core:domain` has **no Android dependencies**.
-- Features **never** depend on `:core:data`, `:core:map-maplibre` or `:core:map-osmdroid` (`checkModuleBoundaries`
-  fails the build).
-- `org.maplibre` and `org.osmdroid` imports are allowed **only** in their map module (Detekt `ForbiddenImport`).
+- Features **never** depend on `:core:data` or `:core:map-maplibre` (`checkModuleBoundaries` fails the build).
+- `org.maplibre` imports are allowed **only** in `:core:map-maplibre` (Detekt `ForbiddenImport`).
 - New modules use the convention plugins: `trees.jvm.library`, `trees.android.library`,
   `trees.android.compose`, `trees.android.hilt`, `trees.android.feature`, `trees.android.application`.
   Add versions to `gradle/libs.versions.toml`, never inline.

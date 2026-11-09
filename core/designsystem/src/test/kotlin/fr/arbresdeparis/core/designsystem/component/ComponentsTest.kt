@@ -129,11 +129,11 @@ class ComponentsTest {
                 TreesCardGroup {
                     InfoRow(title = "Licence ODbL", trailing = InfoRowTrailing.EXTERNAL, onClick = { clicks++ })
                     TreesDivider()
-                    InfoRow(title = "© OpenStreetMap", subtitle = "osmdroid")
+                    InfoRow(title = "© OpenStreetMap", subtitle = "MapLibre")
                 }
             }
         }
-        compose.onNodeWithText("osmdroid").assertIsDisplayed()
+        compose.onNodeWithText("MapLibre").assertIsDisplayed()
         compose.onNodeWithText("Licence ODbL").performClick()
         assertEquals(1, clicks)
     }

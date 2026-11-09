@@ -8,8 +8,8 @@ import fr.arbresdeparis.domain.model.GeoBounds
 import fr.arbresdeparis.domain.model.GeoPoint
 
 /**
- * A map implementation (osmdroid today). Implementations live in their own module (`:core:map-<provider>`); the app
- * provides one through [LocalMapProvider]. Features only use [TreeMapView].
+ * A map implementation (MapLibre today, see ADR 0005). Implementations live in their own module
+ * (`:core:map-<provider>`); the app provides one through [LocalMapProvider]. Features only use [TreeMapView].
  *
  * Camera contract: [initialCamera] is applied once when the map is created; [cameraRequest] is applied once per
  * distinct id; user gestures are only reported through [onCameraChange] (with the visible bounds) and never fed

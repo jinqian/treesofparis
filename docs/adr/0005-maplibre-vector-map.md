@@ -30,4 +30,4 @@ Status: accepted (2026-11-09). Supersedes the osmdroid choice of ADR 0002 (the c
 - Without network the map shows the paper background, the pins and the user's position: no crash, no blank screen.
 - `org.maplibre` imports are allowed only in `:core:map-maplibre` (Detekt `ForbiddenImport`); features never depend
   on it (`checkModuleBoundaries`).
-- `:core:map-osmdroid` stays until the new map is accepted on a device, then it is removed in its own commit.
+- `:core:map-osmdroid` and the osmdroid dependency were removed once the new map was accepted on a device.

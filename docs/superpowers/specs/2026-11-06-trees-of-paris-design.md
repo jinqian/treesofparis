@@ -31,6 +31,7 @@ Accounts, remote sync, search, offline tile packaging, tree photos, iOS, tablet-
 ## 3. Assumptions
 
 - The map library is osmdroid (raster OSM tiles, no API key). The provider must be swappable (see §6).
+  _Since 2026-11-09: MapLibre Native with OpenFreeMap vector tiles, `:core:map-maplibre` (ADR 0005)._
 - The tree data is pre-packaged in the APK as a Room database built by a Python script.
 - The dataset holds about 220k trees (2026-11: 220,339). About 195k are in Paris and the two Bois; about 25k are
   in Hauts-de-Seine, Seine-Saint-Denis and Val-de-Marne (sites managed by the city). **All of them are kept.** The

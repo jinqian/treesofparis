@@ -24,7 +24,6 @@ include(
     ":core:data",
     ":core:designsystem",
     ":core:map",
-    ":core:map-osmdroid",
     ":core:map-maplibre",
     ":feature:map",
     ":feature:favorites",
