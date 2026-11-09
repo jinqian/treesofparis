@@ -460,7 +460,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--skip-download", action="store_true", help="reuse the CSV already in --raw")
     parser.add_argument("--output", type=Path, default=REPO / "core/data/src/main/assets/trees.db")
     parser.add_argument(
-        "--schema-dir", type=Path, default=REPO / "core/data/schemas/com.treesofparis.core.data.db.TreeDatabase"
+        "--schema-dir", type=Path, default=REPO / "core/data/schemas/fr.arbresdeparis.core.data.db.TreeDatabase"
     )
     parser.add_argument("--version-file", type=Path, default=REPO / "core/data/trees-db-version.txt")
     parser.add_argument("--hash-file", type=Path, default=REPO / "core/data/trees-db-content.sha256")

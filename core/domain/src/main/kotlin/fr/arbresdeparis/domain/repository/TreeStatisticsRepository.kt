@@ -1,0 +1,12 @@
+package fr.arbresdeparis.domain.repository
+
+import fr.arbresdeparis.domain.model.GenusSummary
+import fr.arbresdeparis.domain.model.TreeStatistics
+
+interface TreeStatisticsRepository {
+    /** Figures about the whole dataset, with the [areaLimit] most wooded Paris arrondissements. */
+    suspend fun getStatistics(areaLimit: Int): TreeStatistics
+
+    /** Every genus of the dataset, most planted first; trees without a genus are left out. */
+    suspend fun getGenera(): List<GenusSummary>
+}

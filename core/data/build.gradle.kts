@@ -18,7 +18,7 @@ val treesDbMeta =
     }
 
 android {
-    namespace = "com.treesofparis.core.data"
+    namespace = "fr.arbresdeparis.core.data"
     buildFeatures.buildConfig = true
     defaultConfig {
         buildConfigField("int", "TREES_DB_VERSION", treesDbVersion.get())

@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.treesofparis.core.map.osmdroid"
+    namespace = "fr.arbresdeparis.core.map.osmdroid"
 }
 
 dependencies {

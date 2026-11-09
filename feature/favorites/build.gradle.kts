@@ -3,5 +3,5 @@ plugins {
 }
 
 android {
-    namespace = "com.treesofparis.feature.favorites"
+    namespace = "fr.arbresdeparis.feature.favorites"
 }

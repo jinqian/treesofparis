@@ -27,9 +27,10 @@ val releaseSigning: Map<String, String>? =
     }
 
 android {
-    namespace = "com.treesofparis"
+    // Packages and the application ID follow the app's domain, arbresdeparis.fr; class names stay in English.
+    namespace = "fr.arbresdeparis"
     defaultConfig {
-        applicationId = "com.treesofparis"
+        applicationId = "fr.arbresdeparis"
         versionCode = 1
         versionName = "0.1.0"
     }

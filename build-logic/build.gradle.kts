@@ -2,7 +2,7 @@ plugins {
     `kotlin-dsl`
 }
 
-group = "com.treesofparis.buildlogic"
+group = "fr.arbresdeparis.buildlogic"
 
 dependencies {
     compileOnly(libs.android.gradlePlugin)
