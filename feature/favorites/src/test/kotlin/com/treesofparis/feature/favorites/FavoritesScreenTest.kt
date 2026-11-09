@@ -1,5 +1,6 @@
 package com.treesofparis.feature.favorites
 
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -48,6 +49,37 @@ class FavoritesScreenTest {
         compose.setContent { TreesTheme { FavoritesScreen(content, onTreeClick = { clicked = it }, onRemove = {}) } }
         compose.onNodeWithText("Platane").performClick()
         assertEquals(7L, clicked)
+    }
+
+    @Test
+    fun goneTree_saysSoAndCannotBeOpened_butCanBeRemoved() {
+        var clicked: Long? = null
+        var removed: Long? = null
+        val gone = FavoriteUiModel(9, "Marronnier", "Paris 6e · Rue de Vaugirard", gone = true)
+        compose.setContent {
+            TreesTheme {
+                FavoritesScreen(
+                    FavoritesUiState.Content(listOf(gone)),
+                    onTreeClick = { clicked = it },
+                    onRemove = { removed = it },
+                )
+            }
+        }
+        compose.onNodeWithText("Retiré des données de la Ville · Paris 6e · Rue de Vaugirard").assertIsDisplayed()
+        compose.onNodeWithText("Marronnier").assertHasNoClickAction()
+        compose.onNodeWithContentDescription("Retirer Marronnier des favoris").performClick()
+        assertEquals(null, clicked)
+        assertEquals(9L, removed)
+    }
+
+    @Test
+    fun goneTreeNeverRemembered_getsAGenericName() {
+        val gone = FavoriteUiModel(9, title = null, subtitle = null, gone = true)
+        compose.setContent {
+            TreesTheme { FavoritesScreen(FavoritesUiState.Content(listOf(gone)), onTreeClick = {}, onRemove = {}) }
+        }
+        compose.onNodeWithText("Arbre retiré").assertIsDisplayed()
+        compose.onNodeWithText("Retiré des données de la Ville").assertIsDisplayed()
     }
 
     @Test

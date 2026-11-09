@@ -11,6 +11,10 @@ The project is a learning ground for a maintainable, testable Android architectu
 - A model per layer: Room entities, domain models, UI models, with mappers at each boundary.
 - Tree data ships pre-packaged (`trees.db` asset, built by `data/scripts/update_trees.py` from Room's
   exported schema). Favorites live in a separate `UserDatabase`, so a data refresh never erases them.
+- `UserDatabase` is user data (amended 2026-11-09): every schema change ships a migration, never a destructive
+  fallback (`UserDatabaseMigrationTest` upgrades each exported schema); TRUNCATE journal mode so Android's backup of
+  `user.db` holds every change; each favorite keeps a snapshot of its tree, so a tree removed by a data refresh still
+  shows in Favoris as « Retiré des données de la Ville ».
 - Data refresh: the script stamps a data version; a higher version makes Room re-copy the asset on existing
   installs.
 

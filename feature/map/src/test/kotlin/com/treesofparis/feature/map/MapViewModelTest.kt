@@ -47,7 +47,7 @@ class MapViewModelTest {
             getTreesInBounds = GetTreesInBounds(trees),
             getTree = GetTree(trees),
             observeIsFavorite = ObserveIsFavorite(favorites),
-            toggleFavorite = ToggleFavorite(favorites),
+            toggleFavorite = ToggleFavorite(favorites, trees),
             locateUser = LocateUser(location),
             getNearestTrees = GetNearestTrees(trees),
             getFloweringSeason = GetFloweringSeason(FakeFloweringRepository()),

@@ -25,6 +25,8 @@ android {
         buildConfigField("String", "TREES_EXTRACTED_AT", "\"${treesDbMeta.get()["extractedAt"] ?: ""}\"")
         buildConfigField("int", "TREES_RECORDS_KEPT", "${treesDbMeta.get()["recordsKept"] ?: 0}")
     }
+    // The exported schemas, for the user database's migration tests.
+    sourceSets["test"].assets.srcDir("$projectDir/schemas")
 }
 
 room {
@@ -36,4 +38,5 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+    testImplementation(libs.room.testing)
 }

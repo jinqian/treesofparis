@@ -188,6 +188,17 @@ def test_build_db_is_idempotent(tmp_path, cleaned, schema):
     assert out.read_bytes() == first
 
 
+def test_removed_tree_ids_lists_the_trees_gone_since_the_previous_data(tmp_path, cleaned, schema):
+    previous = build(tmp_path, cleaned, schema, name="previous.db")
+    rows = cleaned[0]
+    assert ut.removed_tree_ids(previous, rows) == []
+    assert ut.removed_tree_ids(previous, rows[1:]) == [rows[0]["id"]]
+
+
+def test_removed_tree_ids_without_previous_data_is_empty(tmp_path, cleaned):
+    assert ut.removed_tree_ids(tmp_path / "missing.db", cleaned[0]) == []
+
+
 def test_latest_schema_picks_highest_version_not_above_max(tmp_path):
     for v in (1, 2, 5):
         (tmp_path / f"{v}.json").write_text(json.dumps({"formatVersion": 1, "database": {"version": v}}))

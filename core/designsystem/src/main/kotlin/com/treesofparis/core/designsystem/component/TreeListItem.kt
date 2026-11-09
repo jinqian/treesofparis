@@ -24,16 +24,18 @@ import com.treesofparis.core.designsystem.theme.TreesSpacing
 import com.treesofparis.core.designsystem.theme.TreesTheme
 
 /**
- * A tree row: a leaf badge (gold for a [remarkable] tree), the serif [title] and a one-line [subtitle]. [trailing]
- * holds an optional action, e.g. a favorite toggle. Meant to sit inside a [TreesCardGroup].
+ * A tree row: a leaf badge (gold for a [remarkable] tree), the serif [title] and a [subtitle] on one line unless
+ * [subtitleMaxLines] allows more. [trailing] holds an optional action, e.g. a favorite toggle. A null [onClick] leaves
+ * the row inert. Meant to sit inside a [TreesCardGroup].
  */
 @Composable
 fun TreeListItem(
     title: String,
     subtitle: String,
-    onClick: () -> Unit,
+    onClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     remarkable: Boolean = false,
+    subtitleMaxLines: Int = 1,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     Row(
@@ -44,7 +46,7 @@ fun TreeListItem(
             modifier =
                 Modifier
                     .weight(1f)
-                    .clickable(onClick = onClick)
+                    .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
                     .padding(horizontal = TreesSpacing.m, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -56,7 +58,7 @@ fun TreeListItem(
                     subtitle,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
+                    maxLines = subtitleMaxLines,
                     overflow = TextOverflow.Ellipsis,
                 )
             }

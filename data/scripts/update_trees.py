@@ -339,6 +339,15 @@ def latest_schema(schema_dir: Path, max_version: int) -> dict:
     return json.loads((schema_dir / f"{versions[-1]}.json").read_text())
 
 
+def removed_tree_ids(previous_db: Path, rows: list[dict]) -> list[int]:
+    """Ids of the trees in [previous_db] that [rows] no longer has: favorites of those trees will show as removed."""
+    if not previous_db.exists():
+        return []
+    with contextlib.closing(sqlite3.connect(previous_db)) as db:
+        previous = {row[0] for row in db.execute("SELECT id FROM trees")}
+    return sorted(previous - {row["id"] for row in rows})
+
+
 def build_db(rows: list[dict], schema: dict, out: Path, version: int, links: list[dict] = ()) -> None:
     """Builds [out] atomically with exactly Room's schema, Room's identity hash and `user_version` = [version]."""
     database = schema["database"]
@@ -482,6 +491,12 @@ def main(argv: list[str] | None = None) -> int:
     current = int(args.version_file.read_text().strip())
     version = next_version(current, previous_hash, new_hash)
 
+    removed = removed_tree_ids(args.output, rows)
+    if removed:
+        print(
+            f"{len(removed)} trees of the previous data are gone (felled or replaced); "
+            "users' favorites of these trees will show as « Retiré des données de la Ville »."
+        )
     build_db(rows, latest_schema(args.schema_dir, version), args.output, version, links)
     args.version_file.write_text(f"{version}\n")
     args.hash_file.write_text(f"{new_hash}\n")

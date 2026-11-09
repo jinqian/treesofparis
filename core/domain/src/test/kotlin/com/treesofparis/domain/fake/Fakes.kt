@@ -1,5 +1,7 @@
 package com.treesofparis.domain.fake
 
+import com.treesofparis.domain.model.Favorite
+import com.treesofparis.domain.model.FavoriteSnapshot
 import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
 import com.treesofparis.domain.model.Tree
@@ -8,6 +10,7 @@ import com.treesofparis.domain.repository.LocationRepository
 import com.treesofparis.domain.repository.TreeRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
 fun tree(
@@ -57,15 +60,33 @@ class FakeTreeRepository(
 
 class FakeFavoritesRepository(
     initial: List<Long> = emptyList(),
+    snapshots: Map<Long, FavoriteSnapshot> = emptyMap(),
 ) : FavoritesRepository {
     val ids = MutableStateFlow(initial)
+    val snapshots = MutableStateFlow(snapshots)
+    var snapshotUpdates = 0
 
-    override fun observeFavoriteIds(): Flow<List<Long>> = ids
+    override fun observeFavorites(): Flow<List<Favorite>> =
+        combine(ids, snapshots) { ids, snapshots -> ids.map { Favorite(it, snapshots[it]) } }
 
     override fun observeIsFavorite(id: Long): Flow<Boolean> = ids.map { id in it }
 
-    override suspend fun toggle(id: Long) {
-        ids.value = if (id in ids.value) ids.value - id else listOf(id) + ids.value
+    override suspend fun toggle(
+        id: Long,
+        snapshot: FavoriteSnapshot?,
+    ) {
+        if (id in ids.value) {
+            ids.value -= id
+            snapshots.value -= id
+        } else {
+            ids.value = listOf(id) + ids.value
+            snapshot?.let { snapshots.value += id to it }
+        }
+    }
+
+    override suspend fun updateSnapshots(snapshots: Map<Long, FavoriteSnapshot>) {
+        snapshotUpdates++
+        this.snapshots.value += snapshots.filterKeys { it in ids.value }
     }
 }
 

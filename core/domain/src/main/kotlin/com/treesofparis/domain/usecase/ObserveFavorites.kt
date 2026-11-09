@@ -1,6 +1,6 @@
 package com.treesofparis.domain.usecase
 
-import com.treesofparis.domain.model.Tree
+import com.treesofparis.domain.model.FavoriteTree
 import com.treesofparis.domain.repository.FavoritesRepository
 import com.treesofparis.domain.repository.TreeRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.mapLatest
 import javax.inject.Inject
 
 /**
- * Favorite trees in favorite order. Favorites whose tree no longer exists (removed by a data refresh)
- * are skipped.
+ * Favorite trees in favorite order. A favorite whose tree is no longer in the data (removed by a data refresh) is kept
+ * as [FavoriteTree.Gone], with what the app remembers of it.
  */
 class ObserveFavorites
     @Inject
@@ -19,9 +19,12 @@ class ObserveFavorites
         private val trees: TreeRepository,
     ) {
         @OptIn(ExperimentalCoroutinesApi::class)
-        operator fun invoke(): Flow<List<Tree>> =
-            favorites.observeFavoriteIds().mapLatest { ids ->
-                val byId = trees.getTreesByIds(ids).associateBy { it.id }
-                ids.mapNotNull { byId[it] }
+        operator fun invoke(): Flow<List<FavoriteTree>> =
+            favorites.observeFavorites().mapLatest { favorites ->
+                val byId = trees.getTreesByIds(favorites.map { it.treeId }).associateBy { it.id }
+                favorites.map { favorite ->
+                    byId[favorite.treeId]?.let(FavoriteTree::Present)
+                        ?: FavoriteTree.Gone(favorite.treeId, favorite.snapshot)
+                }
             }
     }

@@ -2,6 +2,7 @@ package com.treesofparis.core.data.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.RoomDatabase
 import com.treesofparis.core.data.BuildConfig
 import com.treesofparis.core.data.db.TreeDao
 import com.treesofparis.core.data.db.TreeDatabase
@@ -63,7 +64,7 @@ internal abstract class DataModule {
         @Singleton
         fun provideUserDatabase(
             @ApplicationContext context: Context,
-        ): UserDatabase = Room.databaseBuilder(context, UserDatabase::class.java, UserDatabase.FILE_NAME).build()
+        ): UserDatabase = buildUserDatabase(context)
 
         @Provides
         @Singleton
@@ -90,4 +91,18 @@ internal fun buildTreeDatabase(
         .databaseBuilder(context, TreeDatabase::class.java, name)
         .createFromAsset(TreeDatabase.ASSET_PATH)
         .fallbackToDestructiveMigration(dropAllTables = true)
+        .build()
+
+/**
+ * The favorites. TRUNCATE journal mode writes every change into `user.db` itself: in Room's default WAL mode the last
+ * changes of so small a database stay in `user.db-wal`, which Android's backup (`data_extraction_rules.xml`) does
+ * not copy. No destructive fallback: a schema change without a migration must fail, never erase favorites.
+ */
+internal fun buildUserDatabase(
+    context: Context,
+    name: String = UserDatabase.FILE_NAME,
+): UserDatabase =
+    Room
+        .databaseBuilder(context, UserDatabase::class.java, name)
+        .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
         .build()
