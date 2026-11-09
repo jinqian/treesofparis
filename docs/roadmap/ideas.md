@@ -3,7 +3,8 @@
 Brainstormed on 2026-11-08. Not planned yet: pick one, then detail it in `next-steps.md` (goal, approach, work,
 decisions, done when). Sizes are rough: **S** ≈ half a day, **M** ≈ 1–2 days, **L** ≈ 3+ days.
 
-Implemented from this list: « Herbier → carte » (tap a genus in Herbier to see only those trees on the map).
+Implemented from this list: « Herbier → carte » (tap a genus in Herbier to see only those trees on the map), and a first
+step of « Près de moi »: the map's « Arbre le plus proche » button (the 5 closest trees, one card at a time).
 
 ## Explore the map
 

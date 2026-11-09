@@ -60,7 +60,7 @@ internal fun wikipediaUrl(title: String): String =
     // The Charset overload needs API 33; the encoding-name one works down to minSdk 26.
     WIKIPEDIA_FR + URLEncoder.encode(title.replace(' ', '_'), "UTF-8")
 
-private fun Tree.scientificName(): String? {
+internal fun Tree.scientificName(): String? {
     val latin = listOfNotNull(genus, species).joinToString(" ").ifBlank { return null }
     return cultivar?.let { "$latin '$it'" } ?: latin
 }
