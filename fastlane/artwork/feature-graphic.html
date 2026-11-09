@@ -1,0 +1,35 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:N;src:url(../../website/fonts/newsreader.woff2)}@font-face{font-family:NI;src:url(../../website/fonts/newsreader-italic.woff2);font-style:italic}@font-face{font-family:I;src:url(../../website/fonts/inter.woff2)}
+html,body{margin:0;width:1024px;height:500px;overflow:hidden;background:#F4F3EC}
+.wrap{position:relative;width:1024px;height:500px}
+#map{position:absolute;inset:0}
+.text{position:absolute;left:72px;top:0;height:500px;display:flex;flex-direction:column;justify-content:center;width:520px}
+.tile{width:112px;height:112px;border-radius:26px;overflow:hidden;margin-bottom:30px;box-shadow:0 6px 18px rgba(30,38,32,.18)}
+h1{font-family:N,Georgia,serif;font-weight:500;font-size:74px;line-height:1;margin:0;color:#1E2620;letter-spacing:-.5px}
+p{font-family:NI,Georgia,serif;font-style:italic;font-size:31px;margin:16px 0 0;color:#39443B}
+</style></head><body><div class="wrap">
+<svg id="map" width="1024" height="500" viewBox="0 0 1024 500"></svg>
+<div class="text"><div class="tile"><svg width="112" height="112" viewBox="0 0 108 108"><rect width="108" height="108" fill="#3F5F45"/><g transform="translate(54 56) scale(0.74) translate(-50 -40)" fill="none" stroke="#F4F3EC" stroke-linecap="round" stroke-linejoin="round"><path d="M50 52C40 50 26 54 14 46C22 44 26 36 22 26C32 30 38 26 40 16C44 22 48 22 50 10C52 22 56 22 60 16C62 26 68 30 78 26C74 36 78 44 86 46C74 54 60 50 50 52Z" stroke-width="3.4"/><path d="M50 52L30 30M50 52L50 18M50 52L70 30M50 52L22 44M50 52L78 44" stroke-width="2.2"/><path d="M50 52L50 70" stroke-width="3.4"/></g><circle cx="73" cy="70" r="4.5" fill="#C9962E"/></svg></div>
+<h1>Arbres de Paris</h1><p>Les arbres de Paris, un par un.</p></div></div>
+<script>
+const s=document.getElementById('map'),ns='http://www.w3.org/2000/svg';
+let seed=7;const r=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const add=(t,a)=>{const e=document.createElementNS(ns,t);for(const k in a)e.setAttribute(k,a[k]);s.appendChild(e);return e};
+// paper fade so the text side stays calm
+const d=add('defs',{});d.innerHTML='<linearGradient id="f" x1="0" x2="1"><stop offset="0.42" stop-color="#F4F3EC" stop-opacity="1"/><stop offset="0.66" stop-color="#F4F3EC" stop-opacity="0"/></linearGradient>';
+// a river and streets, like the Herbier basemap
+add('path',{d:'M560 120 C640 170 700 250 800 270 S960 250 1060 330',stroke:'#C9D8D6',"stroke-width":26,fill:'none',"stroke-linecap":'round'});
+add('rect',{x:700,y:330,width:150,height:110,rx:8,fill:'#E1E8DA'});
+add('rect',{x:880,y:40,width:120,height:150,rx:8,fill:'#E1E8DA'});
+const streets=[];
+for(let i=0;i<9;i++){const y=i*62-20,x1=480,x2=1040;streets.push([x1,y+r()*30,x2,y+90+r()*40])}
+for(let i=0;i<8;i++){const x=520+i*72;streets.push([x+r()*20,-10,x-90+r()*30,520])}
+for(const [a,b,c,e] of streets){add('line',{x1:a,y1:b,x2:c,y2:e,stroke:'#FFFFFF',"stroke-width":7,"stroke-linecap":'round'});
+ // trees along each street
+ const n=Math.hypot(c-a,e-b)/16|0;for(let k=1;k<n;k++){if(r()<.35)continue;const t=k/n,off=(k%2?9:-9);const dx=c-a,dy=e-b,l=Math.hypot(dx,dy);
+  const x=a+dx*t-dy/l*off,y=b+dy*t+dx/l*off;const gold=r()<.035;
+  add('circle',{cx:x,cy:y,r:gold?6:4.2,fill:gold?'#C9962E':'#3F5F45',"fill-opacity":gold?1:.78,stroke:'#F4F3EC',"stroke-width":1.4})}}
+// trees in the parks
+for(const [px,py,w,h] of [[700,330,150,110],[880,40,120,150]])for(let k=0;k<26;k++)add('circle',{cx:px+10+r()*(w-20),cy:py+10+r()*(h-20),r:4.2,fill:'#3F5F45',"fill-opacity":.78,stroke:'#F4F3EC',"stroke-width":1.4});
+add('rect',{x:0,y:0,width:1024,height:500,fill:'url(#f)'});
+</script></body></html>

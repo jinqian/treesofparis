@@ -7,6 +7,7 @@ published with the site too; it holds nothing private.
 | File | What |
 |------|------|
 | `index.html`, `styles.css` | The page. Colours are CSS variables from `HerbierPalette`, with the night palette for dark mode. |
+| `confidentialite/index.html` | Privacy policy, linked from the footer and from the Play Console (`https://arbresdeparis.fr/confidentialite/`). Update its date when it changes. |
 | `404.html` | Shown by GitHub Pages for unknown paths (absolute links, as it can be served from any path). |
 | `fonts/` | Inter and Newsreader from `:core:designsystem`, subset to Latin + French punctuation and weights 400–600, WOFF2, with their OFL licences. Self-hosted: no request to Google Fonts. |
 | `images/` | App screenshots (debug build on an emulator, demo-mode status bar), 490 × 1100 JPEG. |

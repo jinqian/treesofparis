@@ -525,3 +525,42 @@ h2 {
   margin: 0;
   color: var(--ink-soft);
 }
+
+/* Legal pages (confidentialite/) */
+.legal {
+  max-width: 44rem;
+  padding-block: 2rem 4rem;
+}
+.legal h1 {
+  margin: 0 0 1rem;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(2.25rem, 5vw, 3rem);
+  line-height: 1.1;
+}
+.legal h2 {
+  margin: 2.25rem 0 0.5rem;
+  font-size: 1.375rem;
+}
+.legal p,
+.legal li {
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+.legal ul {
+  padding-left: 1.25rem;
+}
+.legal li + li {
+  margin-top: 0.5rem;
+}
+.legal strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.legal-lead {
+  font-size: 1.125rem;
+}
+.legal-date {
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+}
