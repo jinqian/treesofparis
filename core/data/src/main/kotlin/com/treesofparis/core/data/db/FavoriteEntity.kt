@@ -5,7 +5,7 @@ import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-/** A favorite tree. [snapshot] is null until what the tree is has been recorded (favorites from version 1). */
+/** A favorite tree. [snapshot] is null until what the tree is has been recorded. */
 @Entity(tableName = "favorites")
 data class FavoriteEntity(
     @PrimaryKey @ColumnInfo(name = "tree_id") val treeId: Long,
@@ -13,7 +13,7 @@ data class FavoriteEntity(
     @Embedded(prefix = "snapshot_") val snapshot: FavoriteSnapshotEntity? = null,
 )
 
-/** What the app remembers of a favorite tree, to name it after a data refresh removed it. Added in version 2. */
+/** What the app remembers of a favorite tree, to name it after a data refresh removed it. */
 data class FavoriteSnapshotEntity(
     @ColumnInfo(name = "common_name") val commonName: String,
     val address: String,

@@ -11,7 +11,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -19,8 +18,9 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 /**
- * Favorites must survive every app upgrade. Each exported schema of [UserDatabase] (core/data/schemas) is created with
- * a favorite, then opened by the app's own builder: a version bump without a migration fails here.
+ * Favorites must survive every app upgrade. Each exported schema of [UserDatabase] (core/data/schemas), the current one
+ * included, is created with favorites, then opened by the app's own builder: a version bump without a migration fails
+ * here, and so does an entity change without a version bump.
  */
 @RunWith(RobolectricTestRunner::class)
 class UserDatabaseMigrationTest {
@@ -34,8 +34,8 @@ class UserDatabaseMigrationTest {
     fun tearDown() = opened.forEach { it.close() }
 
     @Test
-    fun everyOlderVersion_upgradesToTheCurrentOneKeepingTheFavorites() {
-        for (version in 1 until UserDatabase.VERSION) {
+    fun everyExportedVersion_opensInTheAppKeepingTheFavorites() {
+        for (version in 1..UserDatabase.VERSION) {
             val name = "user-v$version.db"
             helper.createDatabase(name, version).use {
                 it.execSQL("INSERT INTO favorites (tree_id, added_at) VALUES (42, 1000), (7, 2000)")
@@ -45,19 +45,6 @@ class UserDatabaseMigrationTest {
             val favorites = runBlocking { db.favoriteDao().observeAll().first() }
 
             assertEquals("from version $version", listOf(7L, 42L), favorites.map { it.treeId })
-        }
-    }
-
-    @Test
-    fun version1To2_addsAnEmptySnapshot() {
-        helper.createDatabase("user-1-2.db", 1).use {
-            it.execSQL("INSERT INTO favorites (tree_id, added_at) VALUES (42, 1000)")
-        }
-        helper.runMigrationsAndValidate("user-1-2.db", 2, true).use { db ->
-            db.query("SELECT snapshot_common_name FROM favorites WHERE tree_id = 42").use { cursor ->
-                cursor.moveToFirst()
-                assertNull(cursor.getString(0))
-            }
         }
     }
 

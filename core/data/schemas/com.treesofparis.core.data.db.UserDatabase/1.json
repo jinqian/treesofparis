@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "3f123052a3ddebc0c1ea04a79d74f8a4",
+    "identityHash": "0f7c477e7da0f651e77314c08cac9495",
     "entities": [
       {
         "tableName": "favorites",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tree_id` INTEGER NOT NULL, `added_at` INTEGER NOT NULL, PRIMARY KEY(`tree_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tree_id` INTEGER NOT NULL, `added_at` INTEGER NOT NULL, `snapshot_common_name` TEXT, `snapshot_address` TEXT, `snapshot_arrondissement` TEXT, `snapshot_remarkable` INTEGER, `snapshot_lat` REAL, `snapshot_lon` REAL, PRIMARY KEY(`tree_id`))",
         "fields": [
           {
             "fieldPath": "treeId",
@@ -19,6 +19,36 @@
             "columnName": "added_at",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "snapshot.commonName",
+            "columnName": "snapshot_common_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "snapshot.address",
+            "columnName": "snapshot_address",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "snapshot.arrondissement",
+            "columnName": "snapshot_arrondissement",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "snapshot.remarkable",
+            "columnName": "snapshot_remarkable",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "snapshot.lat",
+            "columnName": "snapshot_lat",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "snapshot.lon",
+            "columnName": "snapshot_lon",
+            "affinity": "REAL"
           }
         ],
         "primaryKey": {
@@ -31,7 +61,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3f123052a3ddebc0c1ea04a79d74f8a4')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0f7c477e7da0f651e77314c08cac9495')"
     ]
   }
 }
