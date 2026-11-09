@@ -4,5 +4,5 @@ plugins {
 }
 
 android {
-    namespace = "com.treesofparis.core.designsystem"
+    namespace = "fr.arbresdeparis.core.designsystem"
 }

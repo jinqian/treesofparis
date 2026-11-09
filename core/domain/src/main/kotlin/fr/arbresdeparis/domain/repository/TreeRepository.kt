@@ -1,0 +1,22 @@
+package fr.arbresdeparis.domain.repository
+
+import fr.arbresdeparis.domain.model.GeoBounds
+import fr.arbresdeparis.domain.model.Tree
+
+interface TreeRepository {
+    /** Trees inside [bounds], at most [limit]; only remarkable trees when [remarkableOnly], only [genus] when set. */
+    suspend fun getTreesInBounds(
+        bounds: GeoBounds,
+        limit: Int,
+        remarkableOnly: Boolean,
+        genus: String?,
+    ): List<Tree>
+
+    suspend fun getTree(id: Long): Tree?
+
+    /** Every remarkable tree, in no particular order. */
+    suspend fun getRemarkableTrees(): List<Tree>
+
+    /** Returns the trees that exist among [ids], in no particular order. Unknown ids are ignored. */
+    suspend fun getTreesByIds(ids: List<Long>): List<Tree>
+}

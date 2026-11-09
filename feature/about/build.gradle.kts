@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.treesofparis.feature.about"
+    namespace = "fr.arbresdeparis.feature.about"
 }
 
 dependencies {

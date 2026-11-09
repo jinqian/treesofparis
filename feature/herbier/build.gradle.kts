@@ -3,5 +3,5 @@ plugins {
 }
 
 android {
-    namespace = "com.treesofparis.feature.herbier"
+    namespace = "fr.arbresdeparis.feature.herbier"
 }
