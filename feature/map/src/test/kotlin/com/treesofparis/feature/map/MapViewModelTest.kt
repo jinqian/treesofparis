@@ -7,6 +7,7 @@ import com.treesofparis.core.map.MarkerStyle
 import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
 import com.treesofparis.domain.usecase.GetFloweringSeason
+import com.treesofparis.domain.usecase.GetNearestTrees
 import com.treesofparis.domain.usecase.GetTree
 import com.treesofparis.domain.usecase.GetTreesInBounds
 import com.treesofparis.domain.usecase.LocateUser
@@ -48,6 +49,7 @@ class MapViewModelTest {
             observeIsFavorite = ObserveIsFavorite(favorites),
             toggleFavorite = ToggleFavorite(favorites),
             locateUser = LocateUser(location),
+            getNearestTrees = GetNearestTrees(trees),
             getFloweringSeason = GetFloweringSeason(FakeFloweringRepository()),
             clock = NOVEMBER,
             savedState = saved,
@@ -215,7 +217,7 @@ class MapViewModelTest {
     fun markers_remarkableTreesHaveRemarkableStyle() =
         runTest(main.dispatcher) {
             val vm = viewModel()
-            vm.onCameraChange(MapCamera(center, zoom = 17.0), near)
+            vm.onCameraChange(MapCamera(remarkable.location, zoom = 17.0), GeoBounds.around(remarkable.location, 50.0))
             advanceUntilIdle()
             val styles =
                 vm.uiState.value.markers
@@ -478,5 +480,183 @@ class MapViewModelTest {
             advanceUntilIdle()
             assertEquals(MapCamera(GeoPoint(48.87, 2.33), zoom = 17.5), second.uiState.value.initialCamera)
             assertNotNull(second.uiState.value.selectedTree)
+        }
+
+    // « Arbre le plus proche »
+
+    /** 11 m south of the Pantin tree 9001, far from the others. */
+    private val nextToPantinTree = GeoPoint(48.9058, 2.4101)
+    private val aroundPantin = GeoBounds(48.905, 2.40, 48.91, 2.42)
+
+    private fun MapViewModel.findNearestTree() {
+        onNearestTreeRequest(granted = true)
+    }
+
+    @Test
+    fun nearestTree_framesTheClosestTreeAndHighlightsItWithoutOpeningTheSheet() =
+        runTest(main.dispatcher) {
+            location.location = nextToPantinTree
+            val vm = viewModel()
+            vm.onCameraChange(MapCamera(nextToPantinTree, zoom = 19.0), aroundPantin)
+            vm.findNearestTree()
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            val nearby = state.nearby!!
+            assertEquals(9001L, nearby.current.id)
+            assertEquals(1, nearby.rank)
+            assertEquals("11\u00A0m", nearby.current.distance)
+            assertEquals(nextToPantinTree, state.userLocation)
+            assertEquals(NEARBY_MAX_ZOOM, state.cameraRequest!!.camera.zoom, 0.0)
+            assertEquals(listOf(9001L), state.markers.filter { it.selected }.map { it.id })
+            assertNull(state.selectedTree)
+            assertFalse(state.isFindingNearest)
+        }
+
+    @Test
+    fun nearestTree_offersTheNextClosestThenWrapsAround() =
+        runTest(main.dispatcher) {
+            location.location = nextToPantinTree
+            val vm = viewModel()
+            vm.findNearestTree()
+            advanceUntilIdle()
+            val first = vm.uiState.value.cameraRequest!!
+            val count =
+                vm.uiState.value.nearby!!
+                    .trees.size
+            assertEquals(MapViewModel.NEARBY_COUNT, count)
+
+            vm.onNearbyNext()
+            assertEquals(
+                2,
+                vm.uiState.value.nearby!!
+                    .rank,
+            )
+            assertTrue(
+                vm.uiState.value.nearby!!
+                    .current.id != 9001L,
+            )
+            assertTrue(
+                "moves to the next tree",
+                vm.uiState.value.cameraRequest!!
+                    .id != first.id,
+            )
+
+            repeat(count - 1) { vm.onNearbyNext() }
+            assertEquals(
+                9001L,
+                vm.uiState.value.nearby!!
+                    .current.id,
+            )
+        }
+
+    @Test
+    fun nearestTree_openShowsItsSheet_andTheCardStaysForAfterwards() =
+        runTest(main.dispatcher) {
+            location.location = nextToPantinTree
+            val vm = viewModel()
+            vm.onCameraChange(MapCamera(nextToPantinTree, zoom = 19.0), aroundPantin)
+            vm.findNearestTree()
+            advanceUntilIdle()
+
+            vm.onNearbyOpen()
+            advanceUntilIdle()
+            assertEquals(
+                9001L,
+                vm.uiState.value.selectedTree
+                    ?.id,
+            )
+
+            vm.onDetailDismissed()
+            assertNotNull(vm.uiState.value.nearby)
+            assertEquals(
+                listOf(9001L),
+                vm.uiState.value.markers
+                    .filter { it.selected }
+                    .map { it.id },
+            )
+        }
+
+    @Test
+    fun nearestTree_dismiss_clearsTheCardAndTheHighlight() =
+        runTest(main.dispatcher) {
+            location.location = nextToPantinTree
+            val vm = viewModel()
+            vm.onCameraChange(MapCamera(nextToPantinTree, zoom = 19.0), aroundPantin)
+            vm.findNearestTree()
+            advanceUntilIdle()
+
+            vm.onNearbyDismiss()
+            assertNull(vm.uiState.value.nearby)
+            assertTrue(
+                vm.uiState.value.markers
+                    .none { it.selected },
+            )
+        }
+
+    @Test
+    fun nearestTree_followsTheRemarkableFilter() =
+        runTest(main.dispatcher) {
+            location.location = GeoPoint(48.855, 2.35) // on the cluster of ordinary trees
+            val vm = viewModel()
+            vm.onRemarkableFilterChange(true)
+            vm.findNearestTree()
+            advanceUntilIdle()
+            assertEquals(
+                listOf(9002L),
+                vm.uiState.value.nearby!!
+                    .trees
+                    .map { it.id },
+            )
+        }
+
+    @Test
+    fun nearestTree_aFilterChangeClosesTheCard() =
+        runTest(main.dispatcher) {
+            location.location = nextToPantinTree
+            val vm = viewModel()
+            vm.findNearestTree()
+            advanceUntilIdle()
+            vm.onRemarkableFilterChange(true)
+            assertNull(vm.uiState.value.nearby)
+        }
+
+    @Test
+    fun nearestTree_noTreeAround_saysSo() =
+        runTest(main.dispatcher) {
+            location.location = GeoPoint(48.7423, 2.3600) // Thiais, more than 10 km from every test tree
+            val vm = viewModel()
+            vm.findNearestTree()
+            advanceUntilIdle()
+            assertNull(vm.uiState.value.nearby)
+            assertEquals(MapMessage.NO_TREE_NEARBY, vm.uiState.value.message)
+        }
+
+    @Test
+    fun nearestTree_outsideCoverageOrDenied_explainsWhy() =
+        runTest(main.dispatcher) {
+            location.location = GeoPoint(45.764, 4.8357) // Lyon
+            val vm = viewModel()
+            vm.findNearestTree()
+            advanceUntilIdle()
+            assertEquals(MapMessage.OUT_OF_AREA, vm.uiState.value.message)
+
+            vm.onMessageShown()
+            vm.onNearestTreeRequest(granted = false)
+            assertEquals(MapMessage.PERMISSION_DENIED, vm.uiState.value.message)
+            assertNull(vm.uiState.value.nearby)
+        }
+
+    @Test
+    fun nearestTree_showsProgressWhileWaitingForAFix() =
+        runTest(main.dispatcher) {
+            location.location = nextToPantinTree
+            location.delayMs = 1_000
+            val vm = viewModel()
+            vm.findNearestTree()
+            runCurrent()
+            assertTrue(vm.uiState.value.isFindingNearest)
+            advanceUntilIdle()
+            assertFalse(vm.uiState.value.isFindingNearest)
         }
 }

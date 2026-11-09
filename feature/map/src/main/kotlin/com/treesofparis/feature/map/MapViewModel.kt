@@ -13,6 +13,7 @@ import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
 import com.treesofparis.domain.model.UserLocation
 import com.treesofparis.domain.usecase.GetFloweringSeason
+import com.treesofparis.domain.usecase.GetNearestTrees
 import com.treesofparis.domain.usecase.GetTree
 import com.treesofparis.domain.usecase.GetTreesInBounds
 import com.treesofparis.domain.usecase.LocateUser
@@ -20,6 +21,7 @@ import com.treesofparis.domain.usecase.ObserveIsFavorite
 import com.treesofparis.domain.usecase.ToggleFavorite
 import com.treesofparis.feature.map.mapper.toDetailUi
 import com.treesofparis.feature.map.mapper.toFloweringUi
+import com.treesofparis.feature.map.mapper.toNearbyUi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -46,6 +48,7 @@ class MapViewModel
         private val observeIsFavorite: ObserveIsFavorite,
         private val toggleFavorite: ToggleFavorite,
         private val locateUser: LocateUser,
+        private val getNearestTrees: GetNearestTrees,
         private val getFloweringSeason: GetFloweringSeason,
         private val clock: Clock,
         private val savedState: SavedStateHandle,
@@ -68,6 +71,12 @@ class MapViewModel
 
         private val selectedId: Long? get() = savedState[KEY_SELECTED]
 
+        /** The marker drawn as selected: the tree whose sheet is open, else the nearby tree on show. */
+        private val highlightedId: Long? get() =
+            selectedId ?: state.value.nearby
+                ?.current
+                ?.id
+
         init {
             observeCameraChanges()
             selectedId?.let(::select)
@@ -88,7 +97,8 @@ class MapViewModel
         fun onDetailDismissed() {
             selectionJob?.cancel()
             savedState.remove<Long>(KEY_SELECTED)
-            state.update { it.copy(selectedTree = null, markers = it.markers.withSelection(null)) }
+            state.update { it.copy(selectedTree = null) }
+            state.update { it.copy(markers = it.markers.withSelection(highlightedId)) }
         }
 
         fun onFavoriteToggle() {
@@ -134,6 +144,66 @@ class MapViewModel
         }
 
         /**
+         * « Arbre le plus proche », once the location permission is answered: frames the closest tree (of the active
+         * filter) and the user, and highlights it; the card then offers its sheet and the next closest trees.
+         */
+        fun onNearestTreeRequest(granted: Boolean) {
+            if (!granted) {
+                state.update { it.copy(message = MapMessage.PERMISSION_DENIED) }
+                return
+            }
+            if (state.value.isFindingNearest) return
+            viewModelScope.launch {
+                state.update { it.copy(isFindingNearest = true) }
+                when (val location = locateUser()) {
+                    is UserLocation.InArea -> showNearestTrees(location.point)
+                    is UserLocation.OutOfArea -> state.update { it.copy(message = MapMessage.OUT_OF_AREA) }
+                    UserLocation.Unavailable -> state.update { it.copy(message = MapMessage.LOCATION_UNAVAILABLE) }
+                }
+                state.update { it.copy(isFindingNearest = false) }
+            }
+        }
+
+        private suspend fun showNearestTrees(from: GeoPoint) {
+            val found = getNearestTrees(from, NEARBY_COUNT, remarkableOnly.value, genus.value).map { it.toNearbyUi() }
+            if (found.isEmpty()) {
+                state.update { it.copy(userLocation = from, message = MapMessage.NO_TREE_NEARBY) }
+                return
+            }
+            showNearby(NearbyTreesUi(from, found), userLocation = from)
+        }
+
+        /** Shows the next closest tree, back to the closest after the last one. */
+        fun onNearbyNext() {
+            val nearby = state.value.nearby ?: return
+            showNearby(nearby.copy(index = (nearby.index + 1) % nearby.trees.size))
+        }
+
+        /** Opens the sheet of the nearby tree on show. */
+        fun onNearbyOpen() {
+            state.value.nearby?.let { select(it.current.id) }
+        }
+
+        fun onNearbyDismiss() {
+            state.update { it.copy(nearby = null) }
+            state.update { it.copy(markers = it.markers.withSelection(highlightedId)) }
+        }
+
+        private fun showNearby(
+            nearby: NearbyTreesUi,
+            userLocation: GeoPoint = nearby.from,
+        ) {
+            state.update {
+                it.copy(
+                    nearby = nearby,
+                    userLocation = userLocation,
+                    cameraRequest = request(nearbyCamera(nearby.from, nearby.current.location)),
+                )
+            }
+            state.update { it.copy(markers = it.markers.withSelection(highlightedId)) }
+        }
+
+        /**
          * Shows only remarkable trees (at every zoom level) when [enabled], or all trees. Choosing a filter also closes
          * the « Qu'est-ce qu'un arbre remarquable ? » sheet, which offers that choice.
          */
@@ -161,10 +231,11 @@ class MapViewModel
 
         fun onGenusFilterClear() = setGenus(null)
 
+        /** Every filter change goes through here; it also ends a nearby search, whose trees may now be hidden. */
         private fun setGenus(value: String?) {
             savedState[KEY_GENUS] = value
             genus.value = value
-            state.update { it.copy(genusFilter = value?.toGenusFilter()) }
+            state.update { it.copy(genusFilter = value?.toGenusFilter(), nearby = null) }
         }
 
         private fun String.toGenusFilter() = GenusFilterUi(genus = this, leaf = TreeLeaf.forGenus(this))
@@ -219,7 +290,7 @@ class MapViewModel
                 state.update { it.copy(markers = emptyList(), showZoomHint = true) }
                 return
             }
-            val selected = selectedId
+            val selected = highlightedId
             val markers =
                 getTreesInBounds(bounds, MAX_MARKERS, onlyRemarkable, onlyGenus).map {
                     MapMarker(
@@ -253,7 +324,9 @@ class MapViewModel
         private fun request(
             center: GeoPoint,
             zoom: Double,
-        ) = CameraRequest(id = ++nextRequestId, MapCamera(center, zoom))
+        ) = request(MapCamera(center, zoom))
+
+        private fun request(camera: MapCamera) = CameraRequest(id = ++nextRequestId, camera)
 
         private fun savedCamera(): MapCamera? {
             val lat = savedState.get<Double>(KEY_LAT)
@@ -271,6 +344,9 @@ class MapViewModel
             const val CAMERA_DEBOUNCE_MS = 300L
             const val USER_ZOOM = 17.0
             const val TREE_ZOOM = 18.0
+
+            /** How many of the closest trees « Suivant » goes through. */
+            const val NEARBY_COUNT = 5
             val DEFAULT_CAMERA = MapCamera(GeoPoint.PARIS_CENTER, zoom = MIN_TREE_ZOOM)
 
             /** OSM tiles stop at zoom 19; osmdroid upscales them up to [MapConfig.maxZoom] for street-level detail. */

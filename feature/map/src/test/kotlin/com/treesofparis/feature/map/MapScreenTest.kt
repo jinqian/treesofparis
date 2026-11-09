@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
@@ -55,6 +56,10 @@ class MapScreenTest {
     private val filterChanges = mutableListOf<Boolean>()
     private var infoOpens = 0
     private var genusClears = 0
+    private var nearestClicks = 0
+    private var nearbyNexts = 0
+    private var nearbyOpens = 0
+    private var nearbyDismisses = 0
 
     private fun show(state: MapUiState) =
         compose.setContent {
@@ -74,6 +79,10 @@ class MapScreenTest {
                         onRemarkableInfoDismiss = {},
                         onOpenWikipedia = {},
                         onGenusFilterClear = { genusClears++ },
+                        onFindNearestTree = { nearestClicks++ },
+                        onNearbyNext = { nearbyNexts++ },
+                        onNearbyOpen = { nearbyOpens++ },
+                        onNearbyDismiss = { nearbyDismisses++ },
                     )
                 }
             }
@@ -160,5 +169,67 @@ class MapScreenTest {
         show(base.copy(message = MapMessage.PERMISSION_DENIED))
         compose.onNodeWithText("Réglages").performClick()
         compose.waitUntil(timeoutMillis = 5_000) { settingsOpened == 1 }
+    }
+
+    private val nearby =
+        NearbyTreesUi(
+            from = GeoPoint.PARIS_CENTER,
+            trees =
+                listOf(
+                    NearbyTreeUi(
+                        1,
+                        "Platane",
+                        "Platanus x hispanica",
+                        "5\u00A0m",
+                        GeoPoint.PARIS_CENTER,
+                        TreeLeaf.GENERIC,
+                    ),
+                    NearbyTreeUi(
+                        2,
+                        "Tilleul argenté",
+                        "Tilia tomentosa",
+                        "7\u00A0m",
+                        GeoPoint.PARIS_CENTER,
+                        TreeLeaf.TILIA,
+                    ),
+                ),
+        )
+
+    @Test
+    fun nearestTreeButton_findsTheNearestTree() {
+        show(base)
+        compose.onNodeWithText("Arbre le plus proche").performClick()
+        assertEquals(1, nearestClicks)
+    }
+
+    @Test
+    fun nearestTreeButton_whileSearching_showsProgress() {
+        show(base.copy(isFindingNearest = true))
+        compose.onNodeWithContentDescription("Recherche de l’arbre le plus proche…").assertIsDisplayed()
+    }
+
+    @Test
+    fun nearbyCard_showsTheTreeAndItsDistance_inPlaceOfTheButton() {
+        show(base.copy(nearby = nearby))
+        compose.onNodeWithText("Platane").assertIsDisplayed()
+        compose.onNodeWithText("Platanus x hispanica").assertIsDisplayed()
+        compose.onNodeWithText("Le plus proche · à 5\u00A0m").assertIsDisplayed()
+        compose.onNodeWithText("Arbre le plus proche").assertDoesNotExist()
+    }
+
+    @Test
+    fun nearbyCard_secondTree_saysItsRank() {
+        show(base.copy(nearby = nearby.copy(index = 1)))
+        compose.onNodeWithText("Tilleul argenté").assertIsDisplayed()
+        compose.onNodeWithText("2ᵉ plus proche · à 7\u00A0m").assertIsDisplayed()
+    }
+
+    @Test
+    fun nearbyCard_actions() {
+        show(base.copy(nearby = nearby))
+        compose.onNodeWithText("Voir la fiche").performClick()
+        compose.onNodeWithText("Suivant").performClick()
+        compose.onNodeWithContentDescription("Fermer").assertHasClickAction().performClick()
+        assertEquals(listOf(1, 1, 1), listOf(nearbyOpens, nearbyNexts, nearbyDismisses))
     }
 }

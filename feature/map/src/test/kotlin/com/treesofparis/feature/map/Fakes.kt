@@ -64,7 +64,10 @@ class FakeTreeRepository(
             .filter {
                 bounds.contains(it.location) && (!remarkableOnly || it.remarkable) &&
                     (genus == null || it.genus == genus)
-            }.take(limit)
+            }
+            // Like the DAO: when there are more than [limit], the ones closest to the box centre win.
+            .sortedBy { it.location.distanceTo(bounds.center) }
+            .take(limit)
     }
 
     override suspend fun getTree(id: Long) = trees.firstOrNull { it.id == id }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -60,22 +61,18 @@ fun MapRoute(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    // Whether the pending permission request came from the "Me localiser" button (feedback) or from launch (silent).
-    var userInitiatedRequest by remember { mutableStateOf(false) }
+    // What to do with the answer of the pending permission request: centre silently (launch), centre with feedback
+    // (« Me localiser ») or find the nearest tree.
+    var onPermissionResult by remember { mutableStateOf<(Boolean) -> Unit>({}) }
     val permissionLauncher =
         rememberLauncherForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions(),
-        ) { results ->
-            viewModel.onLocationPermissionResult(
-                granted = results.values.any { it },
-                userInitiated = userInitiatedRequest,
-            )
-        }
-    val locate = { userInitiated: Boolean ->
+        ) { results -> onPermissionResult(results.values.any { it }) }
+    val withLocationPermission = { action: (Boolean) -> Unit ->
         if (context.hasLocationPermission()) {
-            viewModel.onLocationPermissionResult(granted = true, userInitiated = userInitiated)
+            action(true)
         } else {
-            userInitiatedRequest = userInitiated
+            onPermissionResult = action
             permissionLauncher.launch(LOCATION_PERMISSIONS)
         }
     }
@@ -83,7 +80,7 @@ fun MapRoute(
     LaunchedEffect(Unit) {
         if (!askedForLocation) {
             askedForLocation = true
-            locate(false)
+            withLocationPermission { viewModel.onLocationPermissionResult(it, userInitiated = false) }
         }
     }
     LaunchedEffect(treeId) { treeId?.let(viewModel::onOpenTree) }
@@ -95,7 +92,7 @@ fun MapRoute(
         onMarkerClick = viewModel::onMarkerClick,
         onDetailDismiss = viewModel::onDetailDismissed,
         onFavoriteToggle = viewModel::onFavoriteToggle,
-        onLocateMe = { locate(true) },
+        onLocateMe = { withLocationPermission { viewModel.onLocationPermissionResult(it, userInitiated = true) } },
         onMessageDismiss = viewModel::onMessageShown,
         onOpenSettings = { context.openAppSettings() },
         onRemarkableFilterChange = viewModel::onRemarkableFilterChange,
@@ -103,6 +100,10 @@ fun MapRoute(
         onRemarkableInfoDismiss = viewModel::onRemarkableInfoDismiss,
         onOpenWikipedia = { url -> context.openInCustomTab(url) },
         onGenusFilterClear = viewModel::onGenusFilterClear,
+        onFindNearestTree = { withLocationPermission(viewModel::onNearestTreeRequest) },
+        onNearbyNext = viewModel::onNearbyNext,
+        onNearbyOpen = viewModel::onNearbyOpen,
+        onNearbyDismiss = viewModel::onNearbyDismiss,
         modifier = modifier,
     )
 }
@@ -122,6 +123,10 @@ fun MapScreen(
     onRemarkableInfoDismiss: () -> Unit,
     onOpenWikipedia: (String) -> Unit,
     onGenusFilterClear: () -> Unit,
+    onFindNearestTree: () -> Unit,
+    onNearbyNext: () -> Unit,
+    onNearbyOpen: () -> Unit,
+    onNearbyDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -145,10 +150,14 @@ fun MapScreen(
             onGenusFilterClear = onGenusFilterClear,
             modifier = Modifier.align(Alignment.TopStart),
         )
-        LocateButton(
-            isLocating = state.isLocating,
-            onClick = onLocateMe,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(TreesSpacing.m),
+        LocationControls(
+            state = state,
+            onLocateMe = onLocateMe,
+            onFindNearestTree = onFindNearestTree,
+            onNearbyNext = onNearbyNext,
+            onNearbyOpen = onNearbyOpen,
+            onNearbyDismiss = onNearbyDismiss,
+            modifier = Modifier.align(Alignment.BottomEnd),
         )
         SnackbarHost(
             hostState = snackbarHostState,
@@ -170,6 +179,38 @@ fun MapScreen(
                     onClose = onRemarkableInfoDismiss,
                 )
             }
+        }
+    }
+}
+
+/** « Arbre le plus proche » over « Me localiser »; the nearby tree's card takes the button's place under them. */
+@Composable
+private fun LocationControls(
+    state: MapUiState,
+    onLocateMe: () -> Unit,
+    onFindNearestTree: () -> Unit,
+    onNearbyNext: () -> Unit,
+    onNearbyOpen: () -> Unit,
+    onNearbyDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.padding(TreesSpacing.m),
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
+    ) {
+        if (state.nearby == null) {
+            NearestTreeButton(isSearching = state.isFindingNearest, onClick = onFindNearestTree)
+        }
+        LocateButton(isLocating = state.isLocating, onClick = onLocateMe)
+        state.nearby?.let {
+            NearbyTreeCard(
+                nearby = it,
+                onOpen = onNearbyOpen,
+                onNext = onNearbyNext,
+                onDismiss = onNearbyDismiss,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
@@ -292,6 +333,7 @@ private val MapMessage.textRes: Int
             MapMessage.OUT_OF_AREA -> R.string.map_location_outside
             MapMessage.LOCATION_UNAVAILABLE -> R.string.map_location_unavailable
             MapMessage.PERMISSION_DENIED -> R.string.map_location_denied
+            MapMessage.NO_TREE_NEARBY -> R.string.map_nearest_none
         }
 
 @Composable
