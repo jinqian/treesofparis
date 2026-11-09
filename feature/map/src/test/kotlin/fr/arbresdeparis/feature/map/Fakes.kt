@@ -1,5 +1,7 @@
 package fr.arbresdeparis.feature.map
 
+import fr.arbresdeparis.domain.model.AppInfo
+import fr.arbresdeparis.domain.model.DatasetInfo
 import fr.arbresdeparis.domain.model.Favorite
 import fr.arbresdeparis.domain.model.FavoriteSnapshot
 import fr.arbresdeparis.domain.model.FloweringSheet
@@ -149,3 +151,9 @@ class FakeStatisticsRepository : TreeStatisticsRepository {
             GenusSummary("Ginkgo", "Arbre aux quarante écus", treeCount = 1_154, remarkableCount = 0),
         )
 }
+
+val APP_INFO =
+    AppInfo(versionName = "0.1.0", contactEmail = "arbresdeparis@gmail.com", websiteUrl = "https://arbresdeparis.fr")
+
+/** Extracted on 6 November 2026 in Paris. */
+val DATASET_INFO = DatasetInfo(extractedAt = Instant.parse("2026-11-06T16:30:03Z"), treeCount = 220_339)

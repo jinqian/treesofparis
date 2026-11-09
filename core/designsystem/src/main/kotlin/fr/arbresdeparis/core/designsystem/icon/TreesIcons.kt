@@ -35,6 +35,16 @@ object TreesIcons {
     val Book: ImageVector =
         line("Book", "M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5z", "M12 6.5v13")
     val Error: ImageVector = line("Error", "M12 4 2.5 20h19z", "M12 10v4M12 17h.01")
+    val Mail: ImageVector =
+        line("Mail", "M5 5h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z", "M4 7l8 6 8-6")
+    val Website: ImageVector =
+        line(
+            "Website",
+            circle(12f, 12f, 9f),
+            "M3 12h18",
+            "M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z",
+        )
+    val Flag: ImageVector = line("Flag", "M5 21V4", "M5 4h11l-2 4 2 4H5")
 }
 
 private const val HEART = "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"

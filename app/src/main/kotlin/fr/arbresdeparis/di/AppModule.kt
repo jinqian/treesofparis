@@ -21,7 +21,12 @@ abstract class AppModule {
 
     companion object {
         @Provides
-        fun provideAppInfo(): AppInfo = AppInfo(versionName = BuildConfig.VERSION_NAME)
+        fun provideAppInfo(): AppInfo =
+            AppInfo(
+                versionName = BuildConfig.VERSION_NAME,
+                contactEmail = "arbresdeparis@gmail.com",
+                websiteUrl = "https://arbresdeparis.fr",
+            )
 
         /** « This month » is the month in Paris, wherever the phone is set. */
         @Provides

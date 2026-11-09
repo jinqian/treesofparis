@@ -1,10 +1,13 @@
 package fr.arbresdeparis.feature.map
 
 import fr.arbresdeparis.core.designsystem.leaf.TreeLeaf
+import fr.arbresdeparis.domain.model.GeoPoint
 
 /** What the detail sheet shows. Null fields are unknown in the dataset; the UI shows a placeholder. */
 data class TreeDetailUi(
     val id: Long,
+    /** Where the tree stands; « Signaler une erreur » gives it in the email. */
+    val location: GeoPoint,
     val name: String,
     val scientificName: String?,
     val area: String,

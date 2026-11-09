@@ -53,9 +53,32 @@ class MapViewModelTest {
             getNearestTrees = GetNearestTrees(trees),
             getFloweringSeason = GetFloweringSeason(FakeFloweringRepository()),
             getGenera = GetGenera(FakeStatisticsRepository()),
+            appInfo = APP_INFO,
+            datasetInfo = DATASET_INFO,
             clock = NOVEMBER,
             savedState = saved,
         )
+
+    @Test
+    fun reportContact_isTheContactAddressWithTheAppVersionAndDataDate() {
+        assertEquals(
+            ReportContactUi("arbresdeparis@gmail.com", "0.1.0", "6 novembre 2026"),
+            viewModel().uiState.value.reportContact,
+        )
+    }
+
+    @Test
+    fun selectedTree_knowsWhereItStands() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            vm.onMarkerClick(9001)
+            advanceUntilIdle()
+            assertEquals(
+                GeoPoint(48.9059, 2.4101),
+                vm.uiState.value.selectedTree
+                    ?.location,
+            )
+        }
 
     @Test
     fun mapConfig_allowsStreetLevelZoom() {

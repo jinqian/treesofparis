@@ -18,6 +18,8 @@ class AboutViewModel
         val uiState =
             AboutUiState(
                 versionName = appInfo.versionName,
+                contactEmail = appInfo.contactEmail,
+                websiteUrl = appInfo.websiteUrl,
                 extraction = datasetInfo.toExtractionUi(),
                 floweringSheetCount = getFloweringSources().size,
             )
