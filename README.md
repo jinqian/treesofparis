@@ -2,17 +2,31 @@
 
 [![CI](https://github.com/jinqian/treesofparis/actions/workflows/ci.yml/badge.svg)](https://github.com/jinqian/treesofparis/actions/workflows/ci.yml)
 
-An Android app to explore the trees of Paris on an OpenStreetMap map.
+**Arbres de Paris**, an Android app to explore the trees of Paris on a map: [arbresdeparis.fr](https://arbresdeparis.fr).
 
-- **Carte**: the trees around you, in Paris and in the sites the City of Paris manages nearby (cemeteries of Pantin, Thiais, Ivry…). Tap a tree to see its details and add it to your favorites.
-- **Favoris**: the trees you saved (stored only on your device).
-- **À propos**: about the app, its data and the open-source projects it uses.
+- **Carte**: the 220,339 trees the City of Paris manages, in Paris and in its sites nearby (cemeteries of Pantin,
+  Thiais, Ivry…), on a calm « Herbier » map, light or dark. Show only the remarkable trees or one genus
+  (« Toutes les essences »), find the tree closest to you, and tap a tree for its sheet: height, girth, flowering
+  calendar, Wikipédia, favorite, and « Signaler une erreur ».
+- **Herbier**: the most planted genera with their leaf drawings, flowering through the year, the remarkable trees,
+  ages and arrondissements.
+- **Favoris**: the trees you saved, stored only on your device (and in Android's backup).
+- **À propos**: contact, data sources and credits, the open-source projects the app uses.
 
-Tree data: [Paris Open Data, « Les arbres »](https://opendata.paris.fr/explore/dataset/les-arbres/information/)
-(ODbL). Flowering months: the species sheets of the
-[« Guide des Essences de Paris »](https://opendata.paris.fr/explore/dataset/fiches-essences-du-guide-des-essences-de-paris/information/)
-(Ville de Paris, Cerema, 2023, ODbL), listed in `GuideFloweringRepository` and in the app under À propos.
-Map: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, rendered with osmdroid.
+## Credits
+
+- **Trees:** [Paris Open Data, « Les arbres »](https://opendata.paris.fr/explore/dataset/les-arbres/information/)
+  (Ville de Paris, ODbL).
+- **Flowering months:** the species sheets of the
+  [« Guide des Essences de Paris »](https://opendata.paris.fr/explore/dataset/fiches-essences-du-guide-des-essences-de-paris/information/)
+  (Ville de Paris, Cerema, 2023, ODbL), listed in `GuideFloweringRepository` and in the app under À propos.
+- **Map:** vector tiles from [OpenFreeMap](https://openfreemap.org), in the
+  [OpenMapTiles](https://www.openmaptiles.org/) schema, with data © [OpenStreetMap](https://www.openstreetmap.org/copyright)
+  contributors (ODbL); drawn with [MapLibre Native](https://maplibre.org) in our own « Herbier » style (ADR 0005).
+- **Encyclopedia links:** [Wikipédia](https://fr.wikipedia.org), titles found through [Wikidata](https://www.wikidata.org).
+- **Fonts:** [Newsreader](https://github.com/productiontype/Newsreader) and [Inter](https://github.com/rsms/inter)
+  (SIL Open Font License 1.1).
+- The other open-source libraries are listed in the app (À propos → Bibliothèques open source).
 
 This is a playground project for AI-assisted ("vibe") coding. `CLAUDE.md` describes the architecture and
 rules for agents and humans alike.
@@ -44,6 +58,7 @@ Open the project in Android Studio and run the `app` configuration on an emulato
 | Static analysis + format check | `./gradlew detekt spotlessCheck checkModuleBoundaries` |
 | Auto-format | `./gradlew spotlessApply` |
 | Data script tests | `python3 -I -m pytest data/tests` |
+| Preview the website | `python3 -m http.server --directory website 8000` |
 | Refresh tree data | see [`data/README.md`](data/README.md) |
 
 ## Project layout
@@ -54,11 +69,12 @@ core/domain/            pure Kotlin: models, repository interfaces, use cases
 core/data/              Room databases, repositories
 core/designsystem/      theme and reusable components
 core/map/               provider-neutral map contract
-core/map-osmdroid/      osmdroid implementation of the map contract
-feature/{map,favorites,about}/
+core/map-maplibre/      MapLibre implementation: OpenFreeMap vector tiles, « Herbier » map style
+feature/{map,herbier,favorites,about}/
 build-logic/            Gradle convention plugins
 data/                   dataset update script
-docs/                   spec, plan, architecture decision records
+website/                arbresdeparis.fr, published with GitHub Pages
+docs/                   spec, plans, architecture decision records, roadmap
 ```
 
 ## Continuous integration
@@ -70,6 +86,7 @@ GitHub Actions (`.github/workflows/`):
 | `ci.yml` | pull requests, pushes to `main` | Spotless, Detekt, module boundaries, unit tests, Android lint, debug APK, data script tests, dependency review |
 | `pr-title.yml` | pull requests | PR title follows Conventional Commits (it becomes the squash commit message) |
 | `update-data.yml` | monthly, or manually | Rebuilds `trees.db` from Paris Open Data and opens a PR when the data changed |
+| `pages.yml` | pushes to `main` that touch `website/`, or manually | Publishes the website to GitHub Pages (see [`website/README.md`](website/README.md)) |
 
 Dependabot keeps Gradle, GitHub Actions and Python dev dependencies up to date.
 

@@ -46,6 +46,8 @@ private const val GUIDE_URL =
     "https://opendata.paris.fr/explore/dataset/fiches-essences-du-guide-des-essences-de-paris/information/"
 private const val ODBL_URL = "https://opendatacommons.org/licenses/odbl/"
 private const val OSM_COPYRIGHT_URL = "https://www.openstreetmap.org/copyright"
+private const val OPENMAPTILES_URL = "https://www.openmaptiles.org/"
+private const val OPENFREEMAP_URL = "https://openfreemap.org"
 private const val SOURCE_URL = "https://github.com/jinqian/treesofparis"
 private const val OFL_URL = "https://openfontlicense.org"
 
@@ -104,14 +106,7 @@ fun AboutScreen(
                 )
             }
             dataSections(state, onOpenUrl, onOpenFloweringSources)
-            section(R.string.about_section_map) {
-                InfoRow(
-                    title = stringResource(R.string.about_map_credit),
-                    subtitle = stringResource(R.string.about_map_engine),
-                    trailing = InfoRowTrailing.EXTERNAL,
-                    onClick = { onOpenUrl(OSM_COPYRIGHT_URL) },
-                )
-            }
+            mapSection(onOpenUrl)
             section(R.string.about_section_project) {
                 InfoRow(
                     title = stringResource(R.string.about_project_source),
@@ -178,6 +173,32 @@ private fun LazyListScope.dataSections(
             subtitle = stringResource(R.string.about_flowering_sheets_detail),
             trailing = InfoRowTrailing.CHEVRON,
             onClick = onOpenFloweringSources,
+        )
+    }
+}
+
+/** The map's credits: the OpenStreetMap data, the OpenMapTiles schema and the OpenFreeMap tiles. */
+private fun LazyListScope.mapSection(onOpenUrl: (String) -> Unit) {
+    section(R.string.about_section_map) {
+        InfoRow(
+            title = stringResource(R.string.about_map_credit),
+            subtitle = stringResource(R.string.about_map_data),
+            trailing = InfoRowTrailing.EXTERNAL,
+            onClick = { onOpenUrl(OSM_COPYRIGHT_URL) },
+        )
+        TreesDivider()
+        InfoRow(
+            title = stringResource(R.string.about_map_tiles),
+            subtitle = stringResource(R.string.about_map_tiles_detail),
+            trailing = InfoRowTrailing.EXTERNAL,
+            onClick = { onOpenUrl(OPENMAPTILES_URL) },
+        )
+        TreesDivider()
+        InfoRow(
+            title = stringResource(R.string.about_map_host),
+            subtitle = stringResource(R.string.about_map_host_detail),
+            trailing = InfoRowTrailing.EXTERNAL,
+            onClick = { onOpenUrl(OPENFREEMAP_URL) },
         )
     }
 }
