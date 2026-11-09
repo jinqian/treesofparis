@@ -8,15 +8,28 @@ import com.treesofparis.domain.model.RemarkableStatistics
 import com.treesofparis.domain.model.StageCount
 import com.treesofparis.domain.model.TreeStatistics
 import com.treesofparis.domain.repository.TreeStatisticsRepository
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
+import javax.inject.Singleton
 
-/** Aggregates over the pre-packaged tree database. The data is read-only, so the figures never go stale. */
+/**
+ * Aggregates over the pre-packaged tree database. The data is read-only, so the figures never go stale: they are
+ * computed once per [areaLimit] and kept, as every Herbier screen asks for them.
+ */
+@Singleton
 internal class TreeStatisticsRepositoryImpl
     @Inject
     constructor(
         private val dao: TreeStatisticsDao,
     ) : TreeStatisticsRepository {
-        override suspend fun getStatistics(areaLimit: Int): TreeStatistics {
+        private val mutex = Mutex()
+        private val cache = mutableMapOf<Int, TreeStatistics>()
+
+        override suspend fun getStatistics(areaLimit: Int): TreeStatistics =
+            mutex.withLock { cache.getOrPut(areaLimit) { compute(areaLimit) } }
+
+        private suspend fun compute(areaLimit: Int): TreeStatistics {
             val genera = dao.countByGenus().map { GenusCount(it.genus, it.count) }
             return TreeStatistics(
                 total = dao.count(),

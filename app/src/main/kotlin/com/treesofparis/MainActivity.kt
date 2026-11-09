@@ -10,9 +10,11 @@ import com.treesofparis.core.designsystem.theme.TreesTheme
 import com.treesofparis.core.map.LocalMapProvider
 import com.treesofparis.core.map.MapProvider
 import com.treesofparis.feature.about.AboutRoute
+import com.treesofparis.feature.about.FloweringSourcesRoute
 import com.treesofparis.feature.about.LibrariesRoute
 import com.treesofparis.feature.favorites.FavoritesRoute
 import com.treesofparis.feature.herbier.HerbierRoute
+import com.treesofparis.feature.herbier.HerbierSectionRoute
 import com.treesofparis.feature.map.MapRoute
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -34,11 +36,25 @@ class MainActivity : ComponentActivity() {
                         favoritesContent = { onTreeClick, onExploreMap ->
                             FavoritesRoute(onTreeClick = onTreeClick, onExploreMap = onExploreMap)
                         },
-                        herbierContent = { onGenusClick -> HerbierRoute(onGenusClick = onGenusClick) },
-                        aboutContent = { onOpenLibraries -> AboutRoute(onOpenLibraries = onOpenLibraries) },
+                        herbierContent = { onOpenSection -> HerbierRoute(onOpenSection = onOpenSection) },
+                        herbierSectionContent = { section, onBack, onGenusClick, onTreeClick ->
+                            HerbierSectionRoute(
+                                section = section,
+                                onBack = onBack,
+                                onGenusClick = onGenusClick,
+                                onTreeClick = onTreeClick,
+                            )
+                        },
+                        aboutContent = { onOpenLibraries, onOpenFloweringSources ->
+                            AboutRoute(
+                                onOpenLibraries = onOpenLibraries,
+                                onOpenFloweringSources = onOpenFloweringSources,
+                            )
+                        },
                         librariesContent = { onBack ->
                             LibrariesRoute(librariesResId = R.raw.aboutlibraries, onBack = onBack)
                         },
+                        floweringSourcesContent = { onBack -> FloweringSourcesRoute(onBack = onBack) },
                     )
                 }
             }

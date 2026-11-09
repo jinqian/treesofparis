@@ -6,6 +6,7 @@ import com.treesofparis.core.map.MapCamera
 import com.treesofparis.core.map.MarkerStyle
 import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
+import com.treesofparis.domain.usecase.GetFloweringSeason
 import com.treesofparis.domain.usecase.GetTree
 import com.treesofparis.domain.usecase.GetTreesInBounds
 import com.treesofparis.domain.usecase.LocateUser
@@ -47,6 +48,8 @@ class MapViewModelTest {
             observeIsFavorite = ObserveIsFavorite(favorites),
             toggleFavorite = ToggleFavorite(favorites),
             locateUser = LocateUser(location),
+            getFloweringSeason = GetFloweringSeason(FakeFloweringRepository()),
+            clock = NOVEMBER,
             savedState = saved,
         )
 
@@ -376,6 +379,26 @@ class MapViewModelTest {
                 vm.uiState.value.markers
                     .filter { it.selected }
                     .map { it.id },
+            )
+        }
+
+    @Test
+    fun selectedTree_showsItsGenusFlowering_fromTheParisMonth() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            vm.onMarkerClick(lime.id)
+            advanceUntilIdle()
+            val flowering =
+                vm.uiState.value.selectedTree
+                    ?.flowering
+            assertEquals("mai – juin", flowering?.range)
+            assertEquals(11, flowering?.currentMonth)
+            assertEquals(6, flowering?.monthsUntilFlowering)
+            vm.onMarkerClick(remarkable.id)
+            advanceUntilIdle()
+            assertNull(
+                vm.uiState.value.selectedTree
+                    ?.flowering,
             )
         }
 

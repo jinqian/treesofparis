@@ -74,6 +74,15 @@ class TreeStatisticsRepositoryTest {
     fun tearDown() = db.close()
 
     @Test
+    fun computesTheFiguresOnce() =
+        runTest {
+            val first = repository.getStatistics(areaLimit = 3)
+            db.insert(treeEntity(9, genus = "Tilia"))
+            // The shipped data never changes, so later screens reuse the first figures.
+            assertEquals(first, repository.getStatistics(areaLimit = 3))
+        }
+
+    @Test
     fun countsTreesGeneraAndTaxa() =
         runTest {
             val stats = repository.getStatistics(areaLimit = 3)

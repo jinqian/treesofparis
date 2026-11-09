@@ -11,6 +11,9 @@ import androidx.compose.ui.test.performScrollToNode
 import com.treesofparis.core.designsystem.theme.TreesTheme
 import com.treesofparis.domain.model.AppInfo
 import com.treesofparis.domain.model.DatasetInfo
+import com.treesofparis.domain.model.FloweringSheet
+import com.treesofparis.domain.repository.FloweringRepository
+import com.treesofparis.domain.usecase.GetFloweringSources
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Rule
@@ -18,6 +21,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.time.Instant
+import java.time.Month
+
+private object OneSheet : FloweringRepository {
+    override fun sheets() =
+        listOf(FloweringSheet("Tilia", "Tilia tomentosa", "Tilleul argenté", setOf(Month.JUNE), false, "https://x"))
+}
 
 @RunWith(RobolectricTestRunner::class)
 class AboutTest {
@@ -28,13 +37,15 @@ class AboutTest {
         AboutUiState(
             versionName = "0.1.0",
             extraction = ExtractionUi(date = "6 novembre 2026", treeCount = "220\u202F339"),
+            floweringSheetCount = 27,
         )
 
     @Test
     fun viewModel_exposesVersionAndExtraction() {
         val dataset = DatasetInfo(extractedAt = Instant.parse("2026-11-06T16:30:03Z"), treeCount = 220_339)
-        val ui = AboutViewModel(AppInfo("0.1.0"), dataset).uiState
+        val ui = AboutViewModel(AppInfo("0.1.0"), dataset, GetFloweringSources(OneSheet)).uiState
         assertEquals("0.1.0", ui.versionName)
+        assertEquals(1, ui.floweringSheetCount)
         assertEquals(ExtractionUi(date = "6 novembre 2026", treeCount = "220\u202F339"), ui.extraction)
     }
 
@@ -48,35 +59,80 @@ class AboutTest {
 
     @Test
     fun aboutScreen_showsTheDataExtraction() {
-        compose.setContent { TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = {}) } }
+        compose.setContent {
+            TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = {}, onOpenFloweringSources = {}) }
+        }
         compose.onNodeWithText("Extraction du 6 novembre 2026 · 220\u202F339 arbres").assertIsDisplayed()
     }
 
     @Test
     fun aboutScreen_showsVersionAndCredits() {
-        compose.setContent { TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = {}) } }
+        compose.setContent {
+            TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = {}, onOpenFloweringSources = {}) }
+        }
         compose.onNodeWithText("VERSION 0.1.0").assertIsDisplayed()
         compose.onNodeWithText("« Les arbres », Paris Data — Ville de Paris").assertIsDisplayed()
     }
 
     @Test
     fun aboutScreen_showsOsmAttribution() {
-        compose.setContent { TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = {}) } }
+        compose.setContent {
+            TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = {}, onOpenFloweringSources = {}) }
+        }
         compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText("© les contributeurs d’OpenStreetMap"))
         compose.onNodeWithText("© les contributeurs d’OpenStreetMap").assertIsDisplayed()
     }
 
     @Test
     fun aboutScreen_creditsBundledFonts() {
-        compose.setContent { TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = {}) } }
+        compose.setContent {
+            TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = {}, onOpenFloweringSources = {}) }
+        }
         compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText("Newsreader et Inter"))
         compose.onNodeWithText("SIL Open Font License 1.1").assertIsDisplayed()
     }
 
     @Test
+    fun aboutScreen_creditsTheGuideAndOpensItsSheets() {
+        val urls = mutableListOf<String>()
+        var opened = 0
+        compose.setContent {
+            TreesTheme {
+                AboutScreen(
+                    state,
+                    onOpenUrl = { urls += it },
+                    onOpenLibraries = {},
+                    onOpenFloweringSources = { opened++ },
+                )
+            }
+        }
+        val guide = "« Guide des Essences de Paris » — Ville de Paris, Cerema"
+        compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText(guide))
+        compose.onNodeWithText(guide).performClick()
+        assertEquals(
+            listOf(
+                "https://opendata.paris.fr/explore/dataset/fiches-essences-du-guide-des-essences-de-paris/information/",
+            ),
+            urls,
+        )
+        compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText("Les 27 fiches consultées"))
+        compose.onNodeWithText("Les 27 fiches consultées").performClick()
+        assertEquals(1, opened)
+    }
+
+    @Test
     fun aboutScreen_opensTheLibrariesScreen() {
         var opened = 0
-        compose.setContent { TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = { opened++ }) } }
+        compose.setContent {
+            TreesTheme {
+                AboutScreen(
+                    state,
+                    onOpenUrl = {},
+                    onOpenLibraries = { opened++ },
+                    onOpenFloweringSources = {},
+                )
+            }
+        }
         compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText("Bibliothèques open source"))
         compose.onNodeWithText("Bibliothèques open source").performClick()
         assertEquals(1, opened)

@@ -11,28 +11,30 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import com.treesofparis.core.designsystem.theme.TreesTheme
+import com.treesofparis.feature.herbier.mapper.toFloweringCalendarUi
 import com.treesofparis.feature.herbier.mapper.toHerbierUi
+import com.treesofparis.feature.herbier.mapper.toRemarkableAreasUi
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.time.Month
 
+/** Level 1 of the Herbier: the headline, the season and four cards. */
 @RunWith(RobolectricTestRunner::class)
 class HerbierScreenTest {
     @get:Rule
     val compose = createComposeRule()
 
-    private var showAllClicks = 0
-    private val genusClicks = mutableListOf<String>()
+    private val opened = mutableListOf<HerbierSection>()
 
-    private fun show(showAll: Boolean = false) =
+    private fun show(month: Month = Month.NOVEMBER) =
         compose.setContent {
             TreesTheme {
                 HerbierScreen(
-                    state = HerbierUiState.Content(PARIS.toHerbierUi(), showAllGenera = showAll),
-                    onShowAllGenera = { showAllClicks++ },
-                    onGenusClick = { genusClicks += it },
+                    state = content(month),
+                    onOpenSection = { opened += it },
                 )
             }
         }
@@ -43,50 +45,44 @@ class HerbierScreenTest {
     fun titleTotalsAndHeadline() {
         show()
         compose.onNodeWithText("Herbier").assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
-        compose.onNodeWithText("220 339 arbres · 202 genres · 1 004 espèces et variétés").assertIsDisplayed()
+        compose.onNodeWithText("220\u202F339 arbres · 202 genres · 1\u202F004 espèces et variétés").assertIsDisplayed()
         compose.onNodeWithText("1 arbre sur 5 à Paris est un platane.").assertIsDisplayed()
     }
 
     @Test
-    fun genera_showTenThenOfferTheRest() {
+    fun seasonCard_inNovember_waitsForFebruary() {
         show()
-        scrollTo("Voir les 12 essences dessinées")
-        // Pin is the 10th drawn genus in the fixture; Poirier, the 11th, waits for « Voir les… ».
-        compose.onNodeWithText("Pin").assertExists()
-        compose.onNodeWithText("Poirier").assertDoesNotExist()
-        compose.onNodeWithText("Voir les 12 essences dessinées").performClick()
-        assertEquals(1, showAllClicks)
+        scrollTo("Les arbres se reposent.")
+        compose.onNodeWithText("EN FLEUR EN NOVEMBRE").assertIsDisplayed()
+        compose.onNodeWithText("Prochaines floraisons dès février : noisetier et orme.").assertIsDisplayed()
+        compose.onNodeWithText("Les arbres se reposent.").performClick()
+        assertEquals(listOf(HerbierSection.FLOWERING), opened)
     }
 
     @Test
-    fun genera_allShownOnceExpanded() {
-        show(showAll = true)
-        scrollTo("Hêtre")
-        compose.onNodeWithText("Hêtre").assertIsDisplayed()
-        compose.onNodeWithText("Voir les 12 essences dessinées").assertDoesNotExist()
+    fun seasonCard_inMay_namesWhatFlowers() {
+        show(Month.MAY)
+        scrollTo("3 essences en fleur")
+        compose.onNodeWithText("Platane · Marronnier · Tilleul").assertIsDisplayed()
     }
 
     @Test
-    fun genusRow_opensItOnTheMap() {
+    fun exploreCards_openTheirSection() {
         show()
-        scrollTo("Tilleul")
-        compose.onNodeWithText("Tilleul").performClick()
-        assertEquals(listOf("Tilia"), genusClicks)
-    }
-
-    @Test
-    fun remarkableAndRecords() {
-        show()
-        scrollTo("Platane · 7,40 m de tour")
-        compose.onNodeWithText("181 arbres remarquables, dont 44 platanes").assertIsDisplayed()
-        compose.onNodeWithText("Platane · 45 m").assertIsDisplayed()
-        compose.onNodeWithText("Paris 19e · Parc des Buttes Chaumont").assertExists()
-    }
-
-    @Test
-    fun mostWoodedArrondissements() {
-        show()
-        scrollTo("Paris 16e")
-        compose.onNodeWithText("Paris 15e").assertIsDisplayed()
+        scrollTo("Âge et quartiers")
+        compose.onNodeWithText("12 essences dessinées, 74\u202F% des arbres").assertExists()
+        compose.onNodeWithText("Le plus haut mesure 45 m").assertExists()
+        compose.onNodeWithText("Les essences").performClick()
+        compose.onNodeWithText("Floraisons").performClick()
+        compose.onNodeWithText("Remarquables").performClick()
+        compose.onNodeWithText("Âge et quartiers").performClick()
+        assertEquals(HerbierSection.entries, opened)
     }
 }
+
+fun content(month: Month = Month.NOVEMBER) =
+    HerbierUiState.Content(
+        herbier = PARIS.toHerbierUi(),
+        flowering = SEASONS.toFloweringCalendarUi(month, PARIS.genera.map { it.genus }),
+        remarkableTrees = REMARKABLE_TREES.toRemarkableAreasUi(),
+    )

@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -54,7 +56,7 @@ fun TreeDetailContent(
     modifier: Modifier = Modifier,
     onOpenWikipedia: (String) -> Unit = {},
 ) {
-    Box(modifier = modifier.fillMaxWidth()) {
+    Box(modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
         LeafDrawing(
             leaf = detail.leaf,
             color = MaterialTheme.colorScheme.outlineVariant,
@@ -73,6 +75,7 @@ fun TreeDetailContent(
             Header(detail, onFavoriteToggle)
             Location(detail)
             Stats(detail)
+            detail.flowering?.let { FloweringSection(it) }
             detail.wikipedia?.let { WikipediaRow(it, onOpenWikipedia) }
             Text(
                 text = stringResource(R.string.map_detail_source),

@@ -1,6 +1,7 @@
 package com.treesofparis.feature.map.mapper
 
 import com.treesofparis.core.designsystem.leaf.TreeLeaf
+import com.treesofparis.domain.model.FloweringSeason
 import com.treesofparis.domain.model.WikipediaArticle
 import com.treesofparis.feature.map.MeasureUi
 import com.treesofparis.feature.map.WikipediaUi
@@ -8,6 +9,7 @@ import com.treesofparis.feature.map.tree
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import java.time.Month
 
 class TreeDetailMapperTest {
     @Test
@@ -31,6 +33,24 @@ class TreeDetailMapperTest {
         assertNull(detail.height)
         assertNull(detail.circumference)
         assertNull(detail.stage)
+    }
+
+    @Test
+    fun flowering_marksTheMonthsAndCountsTheWait() {
+        val cherry = FloweringSeason("Prunus", setOf(Month.MARCH, Month.APRIL), showyFlowers = true)
+        val ui = cherry.toFloweringUi(now = Month.NOVEMBER)
+        assertEquals(
+            listOf(3, 4),
+            ui.months
+                .withIndex()
+                .filter { it.value }
+                .map { it.index + 1 },
+        )
+        assertEquals("mars – avril", ui.range)
+        assertEquals(true, ui.showyFlowers)
+        assertEquals(11, ui.currentMonth)
+        assertEquals(4, ui.monthsUntilFlowering)
+        assertEquals(0, cherry.toFloweringUi(now = Month.APRIL).monthsUntilFlowering)
     }
 
     @Test

@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
 import com.treesofparis.R
 import com.treesofparis.core.designsystem.icon.TreesIcons
+import com.treesofparis.feature.herbier.HerbierSection
 import kotlinx.serialization.Serializable
 
 /**
@@ -21,6 +22,12 @@ data class MapKey(
 @Serializable
 data object HerbierKey : NavKey
 
+/** A level-2 Herbier screen, pushed on the Herbier back stack. */
+@Serializable
+data class HerbierSectionKey(
+    val section: HerbierSection,
+) : NavKey
+
 @Serializable
 data object FavoritesKey : NavKey
 
@@ -30,6 +37,10 @@ data object AboutKey : NavKey
 /** The open source libraries, pushed on the À propos back stack. */
 @Serializable
 data object LibrariesKey : NavKey
+
+/** The flowering sources (the guide's species sheets), pushed on the À propos back stack. */
+@Serializable
+data object FloweringSourcesKey : NavKey
 
 /** The bottom bar tabs. Each one has its own back stack, starting at [startKey]. */
 enum class TopLevelDestination(

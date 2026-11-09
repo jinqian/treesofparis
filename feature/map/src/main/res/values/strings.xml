@@ -32,4 +32,10 @@
     <string name="map_wikipedia_site">%1$s · fr.wikipedia.org</string>
     <string name="map_wikipedia_open">Ouvrir l’article Wikipédia</string>
     <string name="map_detail_source">Source : « Les arbres », Paris Data</string>
+    <string name="map_flowering_title">Floraison</string>
+    <string name="map_flowering_showy">%1$s · fleurs voyantes</string>
+    <string name="map_flowering_discreet">%1$s · fleurs discrètes</string>
+    <string name="map_flowering_now">En fleur ce mois-ci.</string>
+    <string name="map_flowering_next_month">Nous sommes en %1$s : prochaine floraison le mois prochain.</string>
+    <string name="map_flowering_next">Nous sommes en %1$s : prochaine floraison dans %2$d mois.</string>
 </resources>

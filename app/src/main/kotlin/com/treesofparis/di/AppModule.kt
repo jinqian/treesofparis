@@ -9,6 +9,8 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import java.time.Clock
+import java.time.ZoneId
 
 /** App-level wiring: the one place that picks the map implementation. */
 @Module
@@ -20,5 +22,9 @@ abstract class AppModule {
     companion object {
         @Provides
         fun provideAppInfo(): AppInfo = AppInfo(versionName = BuildConfig.VERSION_NAME)
+
+        /** « This month » is the month in Paris, wherever the phone is set. */
+        @Provides
+        fun provideClock(): Clock = Clock.system(ZoneId.of("Europe/Paris"))
     }
 }

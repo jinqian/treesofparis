@@ -2,35 +2,42 @@ package com.treesofparis.feature.herbier
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.treesofparis.domain.usecase.GetFloweringSeasons
+import com.treesofparis.domain.usecase.GetRemarkableTrees
 import com.treesofparis.domain.usecase.GetTreeStatistics
+import com.treesofparis.feature.herbier.mapper.toFloweringCalendarUi
 import com.treesofparis.feature.herbier.mapper.toHerbierUi
+import com.treesofparis.feature.herbier.mapper.toRemarkableAreasUi
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
+import java.time.Clock
+import java.time.LocalDate
 import javax.inject.Inject
 
+/** Shared by the Herbier home and its level-2 screens: each entry has its own, the figures are cached below. */
 @HiltViewModel
 class HerbierViewModel
     @Inject
     constructor(
         getTreeStatistics: GetTreeStatistics,
+        getFloweringSeasons: GetFloweringSeasons,
+        getRemarkableTrees: GetRemarkableTrees,
+        clock: Clock,
     ) : ViewModel() {
-        private val showAllGenera = MutableStateFlow(false)
-
-        // The data ships with the app and never changes, so the figures are computed once per screen.
-        private val herbier = flow { emit(getTreeStatistics().toHerbierUi()) }
-
         val uiState: StateFlow<HerbierUiState> =
-            combine(herbier, showAllGenera) { content, showAll -> HerbierUiState.Content(content, showAll) }
-                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), HerbierUiState.Loading)
-
-        fun onShowAllGenera() {
-            showAllGenera.value = true
-        }
+            flow {
+                val statistics = getTreeStatistics()
+                val calendar =
+                    getFloweringSeasons().toFloweringCalendarUi(
+                        now = LocalDate.now(clock).month,
+                        plantingOrder = statistics.genera.map { it.genus },
+                    )
+                val remarkable = getRemarkableTrees().toRemarkableAreasUi()
+                emit(HerbierUiState.Content(statistics.toHerbierUi(), calendar, remarkable))
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), HerbierUiState.Loading)
 
         private companion object {
             const val STOP_TIMEOUT_MS = 5_000L

@@ -25,6 +25,7 @@ object HerbierPalette {
     val GoldWash = Color(0xFFF3E7CC)
     val GoldDeep = Color(0xFF5E3F07)
     val TreePin = Color(0xFF4F7556)
+    val Lichen = Color(0xFFA9BBA5)
     val UserBlue = Color(0xFF4A7FA8)
     val Error = Color(0xFFB3261E)
 
@@ -47,6 +48,7 @@ object HerbierPalette {
     val NightGoldPale = Color(0xFFF3E0B0)
     val NightGoldDeep = Color(0xFF3A2800)
     val NightTreePin = Color(0xFF7FA286)
+    val NightLichen = Color(0xFF4C5F4F)
     val NightUserBlue = Color(0xFF7FB0D6)
     val NightError = Color(0xFFF2B8B5)
 }

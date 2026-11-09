@@ -9,7 +9,10 @@ An Android app to explore the trees of Paris on an OpenStreetMap map.
 - **À propos**: about the app, its data and the open-source projects it uses.
 
 Tree data: [Paris Open Data, « Les arbres »](https://opendata.paris.fr/explore/dataset/les-arbres/information/)
-(ODbL). Map: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, rendered with osmdroid.
+(ODbL). Flowering months: the species sheets of the
+[« Guide des Essences de Paris »](https://opendata.paris.fr/explore/dataset/fiches-essences-du-guide-des-essences-de-paris/information/)
+(Ville de Paris, Cerema, 2023, ODbL), listed in `GuideFloweringRepository` and in the app under À propos.
+Map: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, rendered with osmdroid.
 
 This is a playground project for AI-assisted ("vibe") coding. `CLAUDE.md` describes the architecture and
 rules for agents and humans alike.

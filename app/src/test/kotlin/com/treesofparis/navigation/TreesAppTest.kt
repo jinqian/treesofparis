@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.treesofparis.TreesApp
 import com.treesofparis.core.designsystem.theme.TreesTheme
+import com.treesofparis.feature.herbier.HerbierSection
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,21 +34,36 @@ class TreesAppTest {
                         Button(onClick = onExploreMap) { Text("explore") }
                     }
                 },
-                herbierContent = { onGenusClick ->
+                herbierContent = { onOpenSection ->
                     Column {
                         Text("herbier screen")
-                        Button(onClick = { onGenusClick("Tilia") }) { Text("tilleul") }
+                        Button(onClick = { onOpenSection(HerbierSection.GENERA) }) { Text("essences") }
                     }
                 },
-                aboutContent = { onOpenLibraries ->
+                herbierSectionContent = { section, onBack, onGenusClick, onTreeClick ->
+                    Column {
+                        Text("section $section")
+                        Button(onClick = { onGenusClick("Tilia") }) { Text("tilleul") }
+                        Button(onClick = { onTreeClick(7) }) { Text("remarkable 7") }
+                        Button(onClick = onBack) { Text("back") }
+                    }
+                },
+                aboutContent = { onOpenLibraries, onOpenFloweringSources ->
                     Column {
                         Text("about screen")
                         Button(onClick = onOpenLibraries) { Text("libraries") }
+                        Button(onClick = onOpenFloweringSources) { Text("flowering sources") }
                     }
                 },
                 librariesContent = { onBack ->
                     Column {
                         Text("libraries screen")
+                        Button(onClick = onBack) { Text("back") }
+                    }
+                },
+                floweringSourcesContent = { onBack ->
+                    Column {
+                        Text("flowering sources screen")
                         Button(onClick = onBack) { Text("back") }
                     }
                 },
@@ -74,9 +90,33 @@ class TreesAppTest {
     }
 
     @Test
+    fun herbierSection_pushedOnTheHerbierStack_andBackReturnsHome() {
+        compose.setContent(app)
+        compose.onNodeWithText("Herbier").performClick()
+        compose.onNodeWithText("essences").performClick()
+        compose.onNodeWithText("section GENERA").assertIsDisplayed()
+        compose.onNodeWithText("Carte").performClick()
+        compose.onNodeWithText("Herbier").performClick()
+        compose.onNodeWithText("section GENERA").assertIsDisplayed()
+        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.onNodeWithText("herbier screen").assertIsDisplayed()
+    }
+
+    @Test
+    fun remarkableTreeFromHerbier_opensItOnTheMap() {
+        compose.setContent(app)
+        compose.onNodeWithText("Herbier").performClick()
+        compose.onNodeWithText("essences").performClick()
+        compose.onNodeWithText("remarkable 7").performClick()
+        compose.onNodeWithText("map tree=7 genus=null").assertIsDisplayed()
+        compose.onNodeWithText("Carte").assertIsSelected()
+    }
+
+    @Test
     fun genusFromHerbier_opensTheMapFilteredToIt() {
         compose.setContent(app)
         compose.onNodeWithText("Herbier").performClick()
+        compose.onNodeWithText("essences").performClick()
         compose.onNodeWithText("tilleul").performClick()
         compose.onNodeWithText("map tree=null genus=Tilia").assertIsDisplayed()
         compose.onNodeWithText("Carte").assertIsSelected()
@@ -115,6 +155,16 @@ class TreesAppTest {
         compose.onNodeWithText("libraries").performClick()
         compose.onNodeWithText("libraries screen").assertIsDisplayed()
         compose.onNodeWithText("À propos").assertIsSelected()
+        compose.onNodeWithText("back").performClick()
+        compose.onNodeWithText("about screen").assertIsDisplayed()
+    }
+
+    @Test
+    fun floweringSources_openFromAbout_andBackReturnsToAbout() {
+        compose.setContent(app)
+        compose.onNodeWithText("À propos").performClick()
+        compose.onNodeWithText("flowering sources").performClick()
+        compose.onNodeWithText("flowering sources screen").assertIsDisplayed()
         compose.onNodeWithText("back").performClick()
         compose.onNodeWithText("about screen").assertIsDisplayed()
     }

@@ -4,6 +4,9 @@ import java.util.Locale
 
 private val FRENCH = Locale.FRENCH
 private val PARTICLES = setOf("de", "du", "des", "la", "le", "les", "et", "sur", "sous", "au", "aux", "en", "à")
+
+/** « Henri IV », « Jean XXIII »: words of I, V and X only. No French place word is spelt that way. */
+private val ROMAN_NUMERAL = Regex("^[ivx]{2,}$")
 private val ARRONDISSEMENT = Regex("""^PARIS (\d{1,2})(?:ER|E) ARRDT$""")
 
 /**
@@ -28,6 +31,8 @@ fun formatPlace(raw: String): String =
                 index > 0 && word == "a" -> "à"
 
                 index > 0 && word in PARTICLES -> word
+
+                index > 0 && ROMAN_NUMERAL.matches(word) -> word.uppercase(FRENCH)
 
                 else -> word.titleCaseCompound()
             }

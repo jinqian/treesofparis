@@ -2,6 +2,7 @@ package com.treesofparis.feature.herbier
 
 import com.treesofparis.core.designsystem.leaf.TreeLeaf
 import com.treesofparis.feature.herbier.mapper.toHerbierUi
+import com.treesofparis.feature.herbier.mapper.toRemarkableAreasUi
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -35,6 +36,8 @@ class HerbierUiMapperTest {
         assertEquals("19,3 %", ui.genera.first().share)
         assertEquals(1f, ui.genera.first().fraction)
         assertEquals(24_795f / 42_591f, ui.genera[1].fraction, 1e-4f)
+        // The drawn genera hold 162 053 of the 220 339 trees.
+        assertEquals("74\u202F%", ui.drawnShare)
     }
 
     @Test
@@ -54,6 +57,24 @@ class HerbierUiMapperTest {
         assertEquals("Bois de Boulogne · Route du Lac à Bagatelle", remarkable.tallest?.place)
         assertEquals("7,40 m", remarkable.widest?.value)
         assertEquals("Paris 19e · Parc des Buttes Chaumont", remarkable.widest?.place)
+    }
+
+    @Test
+    fun remarkableTrees_byArrondissementThenOtherPlaces_withPlaceAndHeight() {
+        val areas = REMARKABLE_TREES.toRemarkableAreasUi()
+        assertEquals(listOf("Paris 6e", "Paris 19e", "Bois de Boulogne"), areas.map { it.name })
+        // Within an area, by name: Érable before Marronnier.
+        assertEquals(listOf(14L, 13L), areas.first().trees.map { it.id })
+        assertEquals(
+            "Parc Monceau · 22 m",
+            areas
+                .first()
+                .trees
+                .first()
+                .detail,
+        )
+        assertEquals("Jardin du Luxembourg", areas.first().trees[1].detail)
+        assertEquals("Parc des Buttes Chaumont · 30 m", areas[1].trees.single().detail)
     }
 
     @Test

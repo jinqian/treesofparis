@@ -13,6 +13,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import com.treesofparis.feature.herbier.HerbierSection
 
 /**
  * Navigation state: one back stack per tab (saved across configuration changes and process death) and the
@@ -75,10 +76,24 @@ class TreesNavigator(
         state.selected = TopLevelDestination.MAP
     }
 
+    /** Opens a level-2 Herbier screen on top of the Herbier home. */
+    fun openHerbierSection(section: HerbierSection) {
+        state.backStacks.getValue(TopLevelDestination.HERBIER).apply {
+            val key = HerbierSectionKey(section)
+            if (lastOrNull() != key) add(key)
+        }
+        state.selected = TopLevelDestination.HERBIER
+    }
+
     /** Shows the open source libraries on top of À propos, so back returns there. */
-    fun openLibraries() {
+    fun openLibraries() = openOnAbout(LibrariesKey)
+
+    /** Shows the flowering sources on top of À propos, so back returns there. */
+    fun openFloweringSources() = openOnAbout(FloweringSourcesKey)
+
+    private fun openOnAbout(key: NavKey) {
         state.backStacks.getValue(TopLevelDestination.ABOUT).apply {
-            if (lastOrNull() != LibrariesKey) add(LibrariesKey)
+            if (lastOrNull() != key) add(key)
         }
         state.selected = TopLevelDestination.ABOUT
     }

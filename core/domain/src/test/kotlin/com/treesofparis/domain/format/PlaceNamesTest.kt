@@ -14,6 +14,13 @@ class PlaceNamesTest {
     }
 
     @Test
+    fun formatPlace_keepsRomanNumeralsUpperCase() {
+        assertEquals("Square Jean XXIII", formatPlace("SQUARE JEAN XXIII"))
+        assertEquals("Square Barye / 2 Boulevard Henri IV", formatPlace("SQUARE BARYE / 2 BOULEVARD HENRI IV"))
+        assertEquals("Rue Vivienne", formatPlace("RUE VIVIENNE"))
+    }
+
+    @Test
     fun formatPlace_titleCasesWithFrenchParticles() {
         assertEquals("Quai de la Seine", formatPlace("QUAI DE LA SEINE"))
         assertEquals(

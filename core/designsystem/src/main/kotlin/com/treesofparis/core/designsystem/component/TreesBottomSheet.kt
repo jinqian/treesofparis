@@ -10,8 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 /**
- * The app's modal bottom sheet (tree details): paper surface, 28 dp top corners, a soft scrim. Partially expanded
- * first, so the map stays visible.
+ * The app's modal bottom sheet (tree details): paper surface, 28 dp top corners, a soft scrim. It opens at the height
+ * of its content, so nothing is cut off and the map stays visible above it; content taller than the screen scrolls.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,7 +22,7 @@ fun TreesBottomSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         modifier = modifier,
         shape = BottomSheetDefaults.ExpandedShape,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
