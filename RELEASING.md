@@ -89,7 +89,7 @@ adb install -r /tmp/release-test.apk
 ```
 
 Check at least: the map and pins, a tree sheet and its Wikipedia link, Herbier, adding a favourite, À propos →
-libraries, and that the app comes back on the same tab after `adb shell am kill com.treesofparis` in the background.
+libraries, and that the app comes back on the same tab after `adb shell am kill fr.arbresdeparis` in the background.
 
 **Size (0.1.0, 2026-11-08).** Release APK 12.6 MB (21.0 MB before R8): code 1.2 MB, `trees.db` 10.0 MB, fonts
 1.0 MB, resources 0.2 MB (compressed sizes). App Bundle 14.8 MB; Play serves per-device APKs close to the APK size.
