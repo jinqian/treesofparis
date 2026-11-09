@@ -162,6 +162,34 @@ class AboutTest {
     }
 
     @Test
+    fun aboutScreen_creditsTheMapDataTilesAndHost() {
+        val urls = mutableListOf<String>()
+        compose.setContent {
+            TreesTheme {
+                AboutScreen(
+                    state,
+                    onOpenUrl = { urls += it },
+                    onWriteToUs = {},
+                    onOpenLibraries = {},
+                    onOpenFloweringSources = {},
+                )
+            }
+        }
+        listOf("© les contributeurs d’OpenStreetMap", "© OpenMapTiles", "OpenFreeMap").forEach {
+            compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText(it))
+            compose.onNodeWithText(it).performClick()
+        }
+        assertEquals(
+            listOf(
+                "https://www.openstreetmap.org/copyright",
+                "https://www.openmaptiles.org/",
+                "https://openfreemap.org",
+            ),
+            urls,
+        )
+    }
+
+    @Test
     fun aboutScreen_creditsBundledFonts() {
         compose.setContent {
             TreesTheme {
@@ -224,21 +252,21 @@ class AboutTest {
         compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText("Bibliothèques open source"))
         compose.onNodeWithText("Bibliothèques open source").performClick()
         assertEquals(1, opened)
-        compose.onNodeWithText("osmdroid").assertDoesNotExist()
+        compose.onNodeWithText("MapLibre Native").assertDoesNotExist()
     }
 
     @Test
     fun librariesScreen_listsLibrariesAndOpensTheirPage() {
         var opened: String? = null
         val libs =
-            listOf(LibraryUi(name = "osmdroid", detail = "6.1.20 · Apache 2.0", url = "https://github.com/osmdroid"))
+            listOf(LibraryUi(name = "MapLibre Native", detail = "13.7.1 · BSD 2-Clause", url = "https://maplibre.org"))
         compose.setContent {
             TreesTheme { LibrariesScreen(libraries = libs, onOpenUrl = { opened = it }, onBack = {}) }
         }
         compose.onNodeWithText("Bibliothèques open source").assertIsDisplayed()
-        compose.onNodeWithTag(LIBRARIES_LIST_TAG).performScrollToNode(hasText("osmdroid"))
-        compose.onNodeWithText("osmdroid").performClick()
-        assertEquals("https://github.com/osmdroid", opened)
+        compose.onNodeWithTag(LIBRARIES_LIST_TAG).performScrollToNode(hasText("MapLibre Native"))
+        compose.onNodeWithText("MapLibre Native").performClick()
+        assertEquals("https://maplibre.org", opened)
     }
 
     @Test

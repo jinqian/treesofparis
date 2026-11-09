@@ -8,10 +8,10 @@ style:
     maxLineLength: 120
   ForbiddenImport:
     active: true
-    excludes: ['**/core/map-osmdroid/**']
+    excludes: ['**/core/map-maplibre/**']
     forbiddenImports:
-      - value: 'org.osmdroid.*'
-        reason: 'Map provider APIs are only allowed in :core:map-osmdroid (see CLAUDE.md).'
+      - value: 'org.maplibre.*'
+        reason: 'Map provider APIs are only allowed in :core:map-maplibre (see CLAUDE.md).'
 complexity:
   TooManyFunctions:
     # ViewModels expose one public function per UI event; count only those.

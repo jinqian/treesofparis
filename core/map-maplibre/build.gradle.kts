@@ -4,11 +4,12 @@ plugins {
 }
 
 android {
-    namespace = "fr.arbresdeparis.core.map.osmdroid"
+    namespace = "fr.arbresdeparis.core.map.maplibre"
 }
 
 dependencies {
     api(projects.core.map)
-    implementation(libs.osmdroid)
+    implementation(libs.maplibre.android)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.lifecycle.runtime.compose)
 }

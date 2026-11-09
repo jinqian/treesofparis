@@ -1,4 +1,4 @@
-package fr.arbresdeparis.core.map.osmdroid
+package fr.arbresdeparis.core.map.maplibre
 
 import fr.arbresdeparis.core.map.CameraRequest
 import fr.arbresdeparis.core.map.MapCamera

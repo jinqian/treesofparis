@@ -1,6 +1,7 @@
 # 2. Provider-neutral map contract
 
-Status: accepted (2026-11-06)
+Status: accepted (2026-11-06). The contract stands; its osmdroid implementation was replaced by MapLibre
+(ADR 0005), so `:core:map-maplibre` now plays the role described for `:core:map-osmdroid` below.
 
 ## Context
 The MVP uses osmdroid (OpenStreetMap raster tiles, no API key). The map provider may change later

@@ -30,7 +30,11 @@
     <string name="flowering_sources_sheets">Fiches consultées</string>
     <string name="about_section_map">Carte</string>
     <string name="about_map_credit">© les contributeurs d’OpenStreetMap</string>
-    <string name="about_map_engine">Tuiles OpenStreetMap, affichées avec osmdroid</string>
+    <string name="about_map_data">Données cartographiques · licence ODbL</string>
+    <string name="about_map_tiles">© OpenMapTiles</string>
+    <string name="about_map_tiles_detail">Schéma des tuiles vectorielles</string>
+    <string name="about_map_host">OpenFreeMap</string>
+    <string name="about_map_host_detail">Tuiles vectorielles gratuites, affichées avec MapLibre</string>
     <string name="about_section_project">Projet</string>
     <string name="about_project_source">Code source</string>
     <string name="about_section_fonts">Polices</string>

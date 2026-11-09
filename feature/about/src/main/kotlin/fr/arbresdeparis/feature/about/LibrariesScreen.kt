@@ -108,7 +108,7 @@ private fun LibrariesScreenPreview() {
             libraries =
                 listOf(
                     LibraryUi("AboutLibraries", "13.1.0 · Apache License 2.0", null),
-                    LibraryUi("osmdroid", "6.1.20 · Apache License 2.0", null),
+                    LibraryUi("MapLibre Native", "13.7.1 · BSD 2-Clause", null),
                 ),
             onOpenUrl = {},
             onBack = {},
