@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Debug build only: a terracotta icon instead of moss, so it stands apart from the release build. -->
+    <color name="ic_launcher_background">#9A4A2B</color>
+    <color name="icon_debug_ink">#1E2620</color>
+</resources>
