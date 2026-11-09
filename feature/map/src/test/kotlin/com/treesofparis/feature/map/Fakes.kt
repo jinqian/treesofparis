@@ -3,13 +3,16 @@ package com.treesofparis.feature.map
 import com.treesofparis.domain.model.Favorite
 import com.treesofparis.domain.model.FavoriteSnapshot
 import com.treesofparis.domain.model.FloweringSheet
+import com.treesofparis.domain.model.GenusSummary
 import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
 import com.treesofparis.domain.model.Tree
+import com.treesofparis.domain.model.TreeStatistics
 import com.treesofparis.domain.repository.FavoritesRepository
 import com.treesofparis.domain.repository.FloweringRepository
 import com.treesofparis.domain.repository.LocationRepository
 import com.treesofparis.domain.repository.TreeRepository
+import com.treesofparis.domain.repository.TreeStatisticsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -134,3 +137,15 @@ class FakeFloweringRepository : FloweringRepository {
 
 /** 8 November 2026 in Paris. */
 val NOVEMBER: Clock = Clock.fixed(Instant.parse("2026-11-08T10:00:00Z"), ZoneId.of("Europe/Paris"))
+
+/** Genera as the data layer sums them: plane trees (one remarkable), limes, and Ginkgo, which has no drawing. */
+class FakeStatisticsRepository : TreeStatisticsRepository {
+    override suspend fun getStatistics(areaLimit: Int): TreeStatistics = error("not used by the map")
+
+    override suspend fun getGenera() =
+        listOf(
+            GenusSummary("Platanus", "Platane", treeCount = 3_001, remarkableCount = 1),
+            GenusSummary("Tilia", "Tilleul", treeCount = 1, remarkableCount = 0),
+            GenusSummary("Ginkgo", "Arbre aux quarante écus", treeCount = 1_154, remarkableCount = 0),
+        )
+}

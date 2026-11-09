@@ -17,3 +17,11 @@ internal data class AreaCountRow(
     @ColumnInfo(name = "arrondissement") val area: String,
     val count: Int,
 )
+
+/** Trees of one genus that carry one French name, and how many of them are remarkable. */
+internal data class GenusNameCountRow(
+    val genus: String,
+    @ColumnInfo(name = "common_name") val commonName: String,
+    val count: Int,
+    @ColumnInfo(name = "remarkable_count") val remarkableCount: Int,
+)

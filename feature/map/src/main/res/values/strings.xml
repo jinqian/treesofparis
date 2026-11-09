@@ -46,4 +46,19 @@
     <string name="map_nearest_next">Suivant</string>
     <string name="map_nearest_close">Fermer</string>
     <string name="map_nearest_none">Aucun arbre trouvé autour de vous.</string>
+    <string name="map_genus_all">Toutes les essences</string>
+    <string name="map_genus_change">changer d’essence</string>
+    <string name="map_genus_title">Essences</string>
+    <string name="map_genus_subtitle">Montrer seulement les arbres d’une essence.</string>
+    <string name="map_genus_subtitle_remarkable">Parmi les arbres remarquables.</string>
+    <string name="map_genus_search">Rechercher une essence</string>
+    <string name="map_genus_search_hint">Ginkgo, magnolia, Quercus…</string>
+    <string name="map_genus_drawn">Les plus plantées</string>
+    <string name="map_genus_others">Autres essences · %1$d</string>
+    <string name="map_genus_none">Aucune essence ne correspond à « %1$s ».</string>
+    <plurals name="map_genus_trees">
+        <item quantity="one">%1$s arbre</item>
+        <item quantity="many">%1$s arbres</item>
+        <item quantity="other">%1$s arbres</item>
+    </plurals>
 </resources>

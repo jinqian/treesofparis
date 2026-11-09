@@ -1,9 +1,11 @@
 package com.treesofparis.core.data.repository
 
+import com.treesofparis.core.data.db.GenusNameCountRow
 import com.treesofparis.core.data.db.TreeStatisticsDao
 import com.treesofparis.core.data.mapper.toDomain
 import com.treesofparis.domain.model.AreaCount
 import com.treesofparis.domain.model.GenusCount
+import com.treesofparis.domain.model.GenusSummary
 import com.treesofparis.domain.model.RemarkableStatistics
 import com.treesofparis.domain.model.StageCount
 import com.treesofparis.domain.model.TreeStatistics
@@ -25,9 +27,13 @@ internal class TreeStatisticsRepositoryImpl
     ) : TreeStatisticsRepository {
         private val mutex = Mutex()
         private val cache = mutableMapOf<Int, TreeStatistics>()
+        private var genera: List<GenusSummary>? = null
 
         override suspend fun getStatistics(areaLimit: Int): TreeStatistics =
             mutex.withLock { cache.getOrPut(areaLimit) { compute(areaLimit) } }
+
+        override suspend fun getGenera(): List<GenusSummary> =
+            mutex.withLock { genera ?: summarizeGenera(dao.countByGenusAndName()).also { genera = it } }
 
         private suspend fun compute(areaLimit: Int): TreeStatistics {
             val genera = dao.countByGenus().map { GenusCount(it.genus, it.count) }
@@ -48,3 +54,19 @@ internal class TreeStatisticsRepositoryImpl
             )
         }
     }
+
+/** One summary per genus, named by the French name most of its trees carry; most planted first, then by name. */
+private fun summarizeGenera(rows: List<GenusNameCountRow>): List<GenusSummary> =
+    rows
+        .groupBy { it.genus }
+        .map { (genus, names) ->
+            GenusSummary(
+                genus = genus,
+                commonName =
+                    names
+                        .maxWith(compareBy<GenusNameCountRow> { it.count }.thenByDescending { it.commonName })
+                        .commonName,
+                treeCount = names.sumOf { it.count },
+                remarkableCount = names.sumOf { it.remarkableCount },
+            )
+        }.sortedWith(compareByDescending<GenusSummary> { it.treeCount }.thenBy { it.genus })

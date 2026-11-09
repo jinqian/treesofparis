@@ -8,6 +8,7 @@ import com.treesofparis.core.data.db.insert
 import com.treesofparis.core.data.db.treeEntity
 import com.treesofparis.domain.model.AreaCount
 import com.treesofparis.domain.model.GenusCount
+import com.treesofparis.domain.model.GenusSummary
 import com.treesofparis.domain.model.StageCount
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -46,6 +47,7 @@ class TreeStatisticsRepositoryTest {
             ),
             treeEntity(
                 3,
+                commonName = "Platane d'Orient",
                 genus = "Platanus",
                 species = "orientalis",
                 stage = "Mature",
@@ -63,9 +65,24 @@ class TreeStatisticsRepositoryTest {
                 circumferenceCm = 740,
                 arrondissement = "PARIS 19E ARRDT",
             ),
-            treeEntity(5, genus = "Tilia", species = "cordata", stage = "Jeune", arrondissement = "PARIS 19E ARRDT"),
-            treeEntity(6, genus = "Tilia", species = "cordata", stage = "Jeune", heightM = 112),
-            treeEntity(7, genus = "Quercus", species = "robur", stage = "Adulte", remarkable = true, heightM = 20),
+            treeEntity(
+                5,
+                commonName = "Tilleul",
+                genus = "Tilia",
+                species = "cordata",
+                stage = "Jeune",
+                arrondissement = "PARIS 19E ARRDT",
+            ),
+            treeEntity(6, commonName = "Tilleul", genus = "Tilia", species = "cordata", stage = "Jeune", heightM = 112),
+            treeEntity(
+                7,
+                commonName = "Chêne",
+                genus = "Quercus",
+                species = "robur",
+                stage = "Adulte",
+                remarkable = true,
+                heightM = 20,
+            ),
             treeEntity(8, genus = null),
         )
     }
@@ -134,6 +151,20 @@ class TreeStatisticsRepositoryTest {
                 repository.getStatistics(areaLimit = 5).mostWoodedAreas,
             )
             assertEquals(1, repository.getStatistics(areaLimit = 1).mostWoodedAreas.size)
+        }
+
+    @Test
+    fun genera_mostPlantedFirst_namedByTheirMostCommonFrenchName_withRemarkableCounts() =
+        runTest {
+            assertEquals(
+                listOf(
+                    // 3 « Platane », 1 « Platane d'Orient »: the majority names the genus.
+                    GenusSummary("Platanus", "Platane", treeCount = 4, remarkableCount = 2),
+                    GenusSummary("Tilia", "Tilleul", treeCount = 2, remarkableCount = 0),
+                    GenusSummary("Quercus", "Chêne", treeCount = 1, remarkableCount = 1),
+                ),
+                repository.getGenera(),
+            )
         }
 
     @Test

@@ -13,6 +13,7 @@ import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
 import com.treesofparis.domain.model.UserLocation
 import com.treesofparis.domain.usecase.GetFloweringSeason
+import com.treesofparis.domain.usecase.GetGenera
 import com.treesofparis.domain.usecase.GetNearestTrees
 import com.treesofparis.domain.usecase.GetTree
 import com.treesofparis.domain.usecase.GetTreesInBounds
@@ -21,6 +22,7 @@ import com.treesofparis.domain.usecase.ObserveIsFavorite
 import com.treesofparis.domain.usecase.ToggleFavorite
 import com.treesofparis.feature.map.mapper.toDetailUi
 import com.treesofparis.feature.map.mapper.toFloweringUi
+import com.treesofparis.feature.map.mapper.toGenusPicker
 import com.treesofparis.feature.map.mapper.toNearbyUi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
@@ -50,6 +52,7 @@ class MapViewModel
         private val locateUser: LocateUser,
         private val getNearestTrees: GetNearestTrees,
         private val getFloweringSeason: GetFloweringSeason,
+        private val getGenera: GetGenera,
         private val clock: Clock,
         private val savedState: SavedStateHandle,
     ) : ViewModel() {
@@ -78,6 +81,7 @@ class MapViewModel
                 ?.id
 
         init {
+            genus.value?.let(::nameGenus)
             observeCameraChanges()
             selectedId?.let(::select)
         }
@@ -204,41 +208,87 @@ class MapViewModel
         }
 
         /**
-         * Shows only remarkable trees (at every zoom level) when [enabled], or all trees. Choosing a filter also closes
-         * the « Qu'est-ce qu'un arbre remarquable ? » sheet, which offers that choice.
+         * Shows only remarkable trees (at every zoom level) when [enabled], or all trees. It combines with the genus
+         * filter (the remarkable plane trees), unless that genus has no remarkable tree: then the genus filter goes.
+         * Choosing also closes the « Qu'est-ce qu'un arbre remarquable ? » sheet, which offers that choice, and ends
+         * a nearby search, whose trees may now be hidden.
          */
         fun onRemarkableFilterChange(enabled: Boolean) {
-            setGenus(null)
-            savedState[KEY_REMARKABLE] = enabled
-            remarkableOnly.value = enabled
-            state.update { it.copy(remarkableOnly = enabled, showRemarkableInfo = false) }
+            setRemarkable(enabled)
+            state.update { it.copy(showRemarkableInfo = false, nearby = null) }
+            val current = genus.value ?: return
+            if (!enabled) return
+            viewModelScope.launch {
+                val hasRemarkable = getGenera(remarkableOnly = true).any { it.genus == current }
+                if (!hasRemarkable && genus.value == current) setGenus(null)
+            }
         }
 
-        /** Shows only the trees of [genus] (a dataset genus, e.g. « Tilia »), at every zoom level. */
-        fun onGenusFilter(genus: String) {
-            savedState[KEY_REMARKABLE] = false
-            remarkableOnly.value = false
-            state.update { it.copy(remarkableOnly = false) }
-            setGenus(genus)
-        }
-
-        /** A genus asked for by navigation (from Herbier): applied once, not again when the screen is recreated. */
+        /**
+         * A genus asked for by navigation (from Herbier): all its trees, so the remarkable filter goes. Applied once,
+         * not again when the screen is recreated.
+         */
         fun onGenusFilterRequest(genus: String) {
             if (savedState.get<Boolean>(KEY_GENUS_REQUEST_APPLIED) == true) return
             savedState[KEY_GENUS_REQUEST_APPLIED] = true
-            onGenusFilter(genus)
+            setRemarkable(false)
+            setGenus(genus)
         }
 
         fun onGenusFilterClear() = setGenus(null)
 
-        /** Every filter change goes through here; it also ends a nearby search, whose trees may now be hidden. */
-        private fun setGenus(value: String?) {
-            savedState[KEY_GENUS] = value
-            genus.value = value
-            state.update { it.copy(genusFilter = value?.toGenusFilter(), nearby = null) }
+        /** Opens the « Essences » sheet, listing the genera for the current remarkable filter. */
+        fun onGenusPickerOpen() {
+            viewModelScope.launch {
+                val onlyRemarkable = remarkableOnly.value
+                val picker = getGenera(onlyRemarkable).toGenusPicker(genus.value, onlyRemarkable)
+                state.update { it.copy(genusPicker = picker) }
+            }
         }
 
-        private fun String.toGenusFilter() = GenusFilterUi(genus = this, leaf = TreeLeaf.forGenus(this))
+        fun onGenusPickerDismiss() {
+            state.update { it.copy(genusPicker = null) }
+        }
+
+        /** Shows only the trees of [genus] (a dataset genus, e.g. « Tilia »), at every zoom level, with its name. */
+        fun onGenusPick(choice: GenusChoiceUi) {
+            setGenus(choice.genus, choice.commonName)
+            onGenusPickerDismiss()
+        }
+
+        private fun setRemarkable(enabled: Boolean) {
+            savedState[KEY_REMARKABLE] = enabled
+            remarkableOnly.value = enabled
+            state.update { it.copy(remarkableOnly = enabled) }
+        }
+
+        /** Every genus change goes through here; it also ends a nearby search, whose trees may now be hidden. */
+        private fun setGenus(
+            value: String?,
+            commonName: String? = null,
+        ) {
+            savedState[KEY_GENUS] = value
+            genus.value = value
+            state.update { it.copy(genusFilter = value?.toGenusFilter(commonName), nearby = null) }
+            if (value != null && commonName == null) nameGenus(value)
+        }
+
+        /** Fills in the French name of the filtered genus (from Herbier or a restored state), for the pill. */
+        private fun nameGenus(value: String) {
+            viewModelScope.launch {
+                val name =
+                    getGenera(remarkableOnly = false).firstOrNull { it.genus == value }?.commonName ?: return@launch
+                state.update { current ->
+                    current.genusFilter
+                        ?.takeIf { it.genus == value }
+                        ?.let { current.copy(genusFilter = it.copy(commonName = name)) }
+                        ?: current
+                }
+            }
+        }
+
+        private fun String.toGenusFilter(commonName: String? = null) =
+            GenusFilterUi(genus = this, leaf = TreeLeaf.forGenus(this), commonName = commonName)
 
         fun onRemarkableInfoOpen() {
             state.update { it.copy(showRemarkableInfo = true) }

@@ -1,6 +1,7 @@
 package com.treesofparis.domain.usecase
 
 import com.treesofparis.domain.model.GenusCount
+import com.treesofparis.domain.model.GenusSummary
 import com.treesofparis.domain.model.RemarkableStatistics
 import com.treesofparis.domain.model.TreeStatistics
 import com.treesofparis.domain.repository.TreeStatisticsRepository
@@ -24,6 +25,8 @@ class GetTreeStatisticsTest {
                 mostWoodedAreas = emptyList(),
             )
         }
+
+        override suspend fun getGenera() = emptyList<GenusSummary>()
     }
 
     @Test

@@ -3,6 +3,7 @@ package com.treesofparis.feature.map
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,7 +51,6 @@ import com.treesofparis.core.designsystem.theme.TreesTheme
 @Composable
 internal fun RemarkableFilterBar(
     remarkableOnly: Boolean,
-    genusFilterActive: Boolean,
     onRemarkableFilterChange: (Boolean) -> Unit,
     onInfoClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -76,7 +76,7 @@ internal fun RemarkableFilterBar(
             Segment(
                 label = stringResource(R.string.map_filter_all),
                 dotColor = TreesTheme.colors.treePin,
-                selected = !remarkableOnly && !genusFilterActive,
+                selected = !remarkableOnly,
                 onClick = { onRemarkableFilterChange(false) },
                 modifier = Modifier.weight(1f),
             )
@@ -222,29 +222,39 @@ private fun LegendRow(
     }
 }
 
-/** « Seulement : Tilleul » with the genus leaf and a button to show every tree again. */
+/**
+ * « Seulement : Tilleul » with the genus leaf: tapping the name opens the « Essences » sheet to choose another one, the
+ * cross shows every tree again.
+ */
 @Composable
 internal fun GenusFilterPill(
     filter: GenusFilterUi,
+    onOpen: () -> Unit,
     onClear: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
-    val name = if (filter.leaf == TreeLeaf.GENERIC) filter.genus else stringResource(filter.leaf.label)
+    val name =
+        if (filter.leaf == TreeLeaf.GENERIC) filter.commonName ?: filter.genus else stringResource(filter.leaf.label)
     Surface(
-        modifier = modifier,
+        modifier = modifier.testTag(GENUS_PILL_TAG).height(GENUS_PILL_HEIGHT),
         shape = CircleShape,
         color = colors.surfaceContainerLow,
         border = BorderStroke(1.dp, colors.outlineVariant),
         shadowElevation = 2.dp,
     ) {
-        Row(
-            modifier = Modifier.padding(start = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            LeafDrawing(filter.leaf, Modifier.size(22.dp), strokeWidth = 1.3.dp)
-            Text(stringResource(R.string.map_filter_genus, name), style = MaterialTheme.typography.labelLarge)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier =
+                    Modifier
+                        .clickable(onClickLabel = stringResource(R.string.map_genus_change), onClick = onOpen)
+                        .padding(start = 12.dp, top = 10.dp, bottom = 10.dp, end = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                LeafDrawing(filter.leaf, Modifier.size(22.dp), strokeWidth = 1.3.dp)
+                Text(stringResource(R.string.map_filter_genus, name), style = MaterialTheme.typography.labelLarge)
+            }
             IconButton(onClick = onClear) {
                 Icon(
                     TreesIcons.Close,
@@ -284,13 +294,11 @@ private fun RemarkableFilterBarPreview() {
         Column(Modifier.padding(TreesSpacing.m), verticalArrangement = Arrangement.spacedBy(TreesSpacing.m)) {
             RemarkableFilterBar(
                 remarkableOnly = false,
-                genusFilterActive = false,
                 onRemarkableFilterChange = {},
                 onInfoClick = {},
             )
             RemarkableFilterBar(
                 remarkableOnly = true,
-                genusFilterActive = false,
                 onRemarkableFilterChange = {},
                 onInfoClick = {},
             )

@@ -3,16 +3,23 @@ package com.treesofparis.feature.map
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
 import com.treesofparis.core.designsystem.leaf.TreeLeaf
 import com.treesofparis.core.designsystem.theme.TreesTheme
 import com.treesofparis.core.map.CameraRequest
@@ -56,6 +63,8 @@ class MapScreenTest {
     private val filterChanges = mutableListOf<Boolean>()
     private var infoOpens = 0
     private var genusClears = 0
+    private var genusPickerOpens = 0
+    private val genusPicks = mutableListOf<String>()
     private var nearestClicks = 0
     private var nearbyNexts = 0
     private var nearbyOpens = 0
@@ -79,6 +88,9 @@ class MapScreenTest {
                         onRemarkableInfoDismiss = {},
                         onOpenWikipedia = {},
                         onGenusFilterClear = { genusClears++ },
+                        onGenusPickerOpen = { genusPickerOpens++ },
+                        onGenusPick = { genusPicks += it.genus },
+                        onGenusPickerDismiss = {},
                         onFindNearestTree = { nearestClicks++ },
                         onNearbyNext = { nearbyNexts++ },
                         onNearbyOpen = { nearbyOpens++ },
@@ -129,12 +141,84 @@ class MapScreenTest {
     }
 
     @Test
-    fun genusFilter_showsAPillThatClears() {
+    fun genusFilter_showsAPillThatReopensTheSheetOrClears() {
         show(base.copy(genusFilter = GenusFilterUi("Tilia", TreeLeaf.TILIA)))
-        compose.onNodeWithText("Seulement : Tilleul").assertIsDisplayed()
-        compose.onNodeWithText("Tous les arbres").assertIsNotSelected()
+        compose.onNodeWithText("Toutes les essences").assertDoesNotExist()
+        // The genus filter combines with the segments: « Tous les arbres » stays chosen.
+        compose.onNodeWithText("Tous les arbres").assertIsSelected()
+        compose.onNodeWithText("Seulement : Tilleul").performClick()
         compose.onNodeWithContentDescription("Afficher tous les arbres").performClick()
+        assertEquals(1, genusPickerOpens)
         assertEquals(1, genusClears)
+    }
+
+    @Test
+    fun genusFilter_undrawnGenus_isNamedInFrench() {
+        show(base.copy(genusFilter = GenusFilterUi("Ginkgo", TreeLeaf.GENERIC, "Arbre aux quarante écus")))
+        compose.onNodeWithText("Seulement : Arbre aux quarante écus").assertIsDisplayed()
+    }
+
+    @Test
+    fun genusPills_haveTheSameHeightWithOrWithoutAGenus() {
+        var genusFilter by mutableStateOf<GenusFilterUi?>(null)
+        compose.setContent {
+            CompositionLocalProvider(LocalMapProvider provides StubMap) {
+                TreesTheme {
+                    Box {
+                        if (genusFilter == null) {
+                            GenusFilterButton(onClick = {})
+                        } else {
+                            GenusFilterPill(genusFilter!!, onOpen = {}, onClear = {})
+                        }
+                    }
+                }
+            }
+        }
+        compose.onNodeWithTag(GENUS_PILL_TAG).assertHeightIsEqualTo(GENUS_PILL_HEIGHT)
+        genusFilter = GenusFilterUi("Tilia", TreeLeaf.TILIA)
+        compose.onNodeWithTag(GENUS_PILL_TAG).assertHeightIsEqualTo(GENUS_PILL_HEIGHT)
+    }
+
+    @Test
+    fun noGenusFilter_offersAllGenera() {
+        show(base)
+        compose.onNodeWithText("Toutes les essences").performClick()
+        assertEquals(1, genusPickerOpens)
+    }
+
+    private val picker =
+        GenusPickerUi(
+            drawn =
+                listOf(
+                    GenusChoiceUi("Platanus", "Platane", TreeLeaf.PLATANUS, 42_591, "42 591", selected = false),
+                    GenusChoiceUi("Acer", "Erable", TreeLeaf.ACER, 21_157, "21 157", selected = true),
+                ),
+            others =
+                listOf(
+                    GenusChoiceUi("Ginkgo", "Arbre aux quarante écus", TreeLeaf.GENERIC, 1_154, "1 154", false),
+                ),
+            remarkableOnly = false,
+        )
+
+    @Test
+    fun genusPicker_listsDrawnAndOtherGenera_withCounts() {
+        show(base.copy(genusPicker = picker))
+        compose.onNodeWithText("Essences").assertIsDisplayed()
+        compose.onNodeWithText("Platane").assertIsDisplayed()
+        compose.onNodeWithText("42 591 arbres").assertIsDisplayed()
+        compose.onNodeWithText("Érable", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithText("Platane").performClick()
+        assertEquals(listOf("Platanus"), genusPicks)
+    }
+
+    @Test
+    fun genusPicker_searchNarrowsTheList_andSaysWhenNothingMatches() {
+        show(base.copy(genusPicker = picker))
+        compose.onNodeWithText("Rechercher une essence").performTextInput("gink")
+        compose.onNodeWithText("Platane").assertDoesNotExist()
+        compose.onNodeWithText("Arbre aux quarante écus").assertIsDisplayed()
+        compose.onNodeWithText("Rechercher une essence").performTextReplacement("chêne")
+        compose.onNodeWithText("Aucune essence ne correspond à « chêne ».").assertIsDisplayed()
     }
 
     @Test
