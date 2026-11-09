@@ -16,6 +16,7 @@ UI language: **French**. Read `docs/superpowers/specs/` for the design and `docs
 | `:feature:map` / `:feature:favorites` / `:feature:about` | Android lib | screen, scoped ViewModel, UI models, UI mappers | `:core:domain`, `:core:designsystem`, `:core:map` |
 | `build-logic` | included build | convention plugins (`trees.*`) | — |
 | `data/` | Python | dataset download + `trees.db` builder | — |
+| `website/` | static site | arbresdeparis.fr landing page, deployed to GitHub Pages (see `website/README.md`) | — |
 
 ## Rules (enforced)
 
@@ -50,13 +51,14 @@ UI language: **French**. Read `docs/superpowers/specs/` for the design and `docs
 ./gradlew check                         # everything CI runs on Kotlin code
 python3 -I -m pytest data/tests         # data script tests
 python3 data/scripts/update_trees.py    # refresh trees.db (see data/README.md)
+python3 -m http.server --directory website 8000   # preview the website
 ```
 
 ## Workflow
 
 - Conventional Commits (`feat(map): ...`, `fix(data): ...`), enforced by the Lefthook `commit-msg` hook.
   Scopes: module names without prefix (`domain`, `data`, `designsystem`, `map`, `favorites`, `about`, `app`),
-  plus `build`, `ci`, `deps`, `release` (`chore(release): v0.2.0`, see `RELEASING.md`).
+  plus `website`, `build`, `ci`, `deps`, `release` (`chore(release): v0.2.0`, see `RELEASING.md`).
 - TDD: write the failing test first. JUnit 4 + MockK + Turbine + coroutines-test; Robolectric for Android
   and Compose tests (`config/robolectric/robolectric.properties` pins the SDK).
 - Toolchain: JDK 25. Bytecode target 17 (Android) / 21 (JVM).
