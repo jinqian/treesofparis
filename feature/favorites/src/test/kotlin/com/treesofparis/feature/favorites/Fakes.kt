@@ -1,5 +1,7 @@
 package com.treesofparis.feature.favorites
 
+import com.treesofparis.domain.model.Favorite
+import com.treesofparis.domain.model.FavoriteSnapshot
 import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
 import com.treesofparis.domain.model.Tree
@@ -58,13 +60,18 @@ class FakeFavoritesRepository(
 ) : FavoritesRepository {
     val ids = MutableStateFlow(initial)
 
-    override fun observeFavoriteIds(): Flow<List<Long>> = ids
+    override fun observeFavorites(): Flow<List<Favorite>> = ids.map { ids -> ids.map { Favorite(it, null) } }
 
     override fun observeIsFavorite(id: Long): Flow<Boolean> = ids.map { id in it }
 
-    override suspend fun toggle(id: Long) {
+    override suspend fun toggle(
+        id: Long,
+        snapshot: FavoriteSnapshot?,
+    ) {
         ids.value = if (id in ids.value) ids.value - id else listOf(id) + ids.value
     }
+
+    override suspend fun updateSnapshots(snapshots: Map<Long, FavoriteSnapshot>) = Unit
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)

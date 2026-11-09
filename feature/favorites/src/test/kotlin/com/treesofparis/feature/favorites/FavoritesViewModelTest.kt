@@ -18,7 +18,7 @@ class FavoritesViewModelTest {
     private val trees = FakeTreeRepository(listOf(tree(1, "Platane"), tree(2, "Tilleul", "PARIS 1ER ARRDT")))
 
     private fun viewModel(favorites: FakeFavoritesRepository) =
-        FavoritesViewModel(ObserveFavorites(favorites, trees), ToggleFavorite(favorites))
+        FavoritesViewModel(ObserveFavorites(favorites, trees), ToggleFavorite(favorites, trees))
 
     @Test
     fun startsLoading() {
@@ -47,6 +47,17 @@ class FavoritesViewModelTest {
                     ),
                     content.items,
                 )
+            }
+        }
+
+    @Test
+    fun aTreeRemovedFromTheData_staysListedAsGone() =
+        runTest(main.dispatcher) {
+            viewModel(FakeFavoritesRepository(listOf(99, 1))).uiState.test {
+                skipItems(1)
+                val content = awaitItem() as FavoritesUiState.Content
+                assertEquals(listOf(99L, 1L), content.items.map { it.id })
+                assertEquals(listOf(true, false), content.items.map { it.gone })
             }
         }
 

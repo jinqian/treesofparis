@@ -9,5 +9,8 @@
         <item quantity="many">%d arbres</item>
         <item quantity="other">%d arbres</item>
     </plurals>
+    <string name="favorites_gone_title">Arbre retiré</string>
+    <string name="favorites_gone">Retiré des données de la Ville</string>
+    <string name="favorites_gone_place">Retiré des données de la Ville · %1$s</string>
     <string name="favorites_remove">Retirer %1$s des favoris</string>
 </resources>
