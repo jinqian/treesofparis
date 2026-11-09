@@ -1,0 +1,33 @@
+Platanes, tilleuls, marronniers, ginkgos : Arbres de Paris montre les 220 339 arbres gérés par la Ville de Paris sur une carte, un par un. Ouvrez l’application et découvrez l’arbre juste à côté de vous.
+
+LA CARTE
+• Tous les arbres des rues, squares, parcs et cimetières de Paris, sur un fond de carte sobre aux couleurs d’un herbier, clair ou sombre.
+• Les arbres remarquables, distingués par la Ville pour leur âge, leur taille ou leur histoire, en doré.
+• Un filtre par essence : n’affichez que les ginkgos, les magnolias ou les chênes.
+• « Arbre le plus proche » : trouvez en un geste l’arbre le plus proche de vous, puis le suivant.
+
+LA FICHE DE L’ARBRE
+• Son nom en français et en latin, sa hauteur, sa circonférence et son stade de développement.
+• La feuille de son genre, dessinée au trait.
+• Sa période de floraison et un lien vers Wikipédia.
+• Un arbre abattu, mal placé ou mal nommé ? Signalez-le en un message.
+
+L’HERBIER
+• Les essences les plus plantées à Paris, l’âge des arbres et les records : le plus haut, le plus large.
+• Touchez une essence pour la retrouver sur la carte.
+
+VOS FAVORIS
+• Gardez les arbres qui vous plaisent et retrouvez-les en un geste.
+
+RESPECTUEUSE DE VOTRE VIE PRIVÉE
+• Pas de compte, pas de publicité, pas de suivi.
+• Les arbres sont dans l’application : la fiche s’ouvre même sans réseau. Seul le fond de carte se télécharge.
+• Votre position sert seulement à centrer la carte et à trouver l’arbre le plus proche. Elle n’est ni enregistrée ni partagée.
+
+LES DONNÉES
+Les arbres viennent du jeu de données « Les arbres » de Paris Data, publié par la Ville de Paris sous licence ODbL. La carte utilise les données © OpenStreetMap et © OpenMapTiles, servies par OpenFreeMap.
+
+Arbres de Paris est une application indépendante. Elle n’est pas affiliée à la Ville de Paris et n’en est pas une publication officielle.
+
+Une question, une idée ? Écrivez-nous : arbresdeparis@gmail.com
+Site web : https://arbresdeparis.fr
