@@ -37,6 +37,10 @@ voir les arbres » hint with clustering · self-host tiles before release or not
 **Done when.** The plan's acceptance task passes: screenshots light/dark match the canvas, attribution visible,
 osmdroid removed, ADR 0005 written.
 
+**Status (2026-11-09).** Done: `:core:map-maplibre` with OpenFreeMap and the Herbier style, osmdroid removed,
+ADR 0005, pins sized by zoom, trees shown from zoom 15.5 (up to 3,000). Left: clustering instead of the zoom hint
+(optional), self-hosted PMTiles and offline use (plan Task 7).
+
 ---
 
 ## 2. Wikipedia links for trees

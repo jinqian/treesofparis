@@ -399,9 +399,14 @@ class MapViewModel
         private fun List<MapMarker>.withSelection(id: Long?) = map { it.copy(selected = it.id == id) }
 
         companion object {
-            /** Below this zoom a phone screen covers too many trees to show them usefully. */
-            const val MIN_TREE_ZOOM = 16.0
-            const val MAX_MARKERS = 1500
+            /**
+             * Below this zoom a phone screen covers too many trees to show them usefully. At 15.5 a phone shows about
+             * 870 × 1,560 m: 2,300 to 2,700 trees in the densest areas (Hôtel de Ville, Marais, Champs-Élysées).
+             */
+            const val MIN_TREE_ZOOM = 15.5
+
+            /** At most this many pins, the closest to the centre: room for the densest views at [MIN_TREE_ZOOM]. */
+            const val MAX_MARKERS = 3000
             const val CAMERA_DEBOUNCE_MS = 300L
             const val USER_ZOOM = 17.0
             const val TREE_ZOOM = 18.0
