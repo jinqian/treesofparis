@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.domain.model.FloweringSeason
 import fr.arbresdeparis.domain.model.WikipediaArticle
@@ -129,5 +130,16 @@ class TreeDetailContentTest {
         compose.setContent { TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}) } }
         compose.onNodeWithText("En savoir plus sur Wikipédia").assertDoesNotExist()
         compose.onNodeWithText("sur Wikipédia", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun reportRow_opensTheErrorReport() {
+        var reports = 0
+        val detail = tree(1).toDetailUi(isFavorite = false)
+        compose.setContent {
+            TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}, onReportError = { reports++ }) }
+        }
+        compose.onNodeWithText("Signaler une erreur sur cet arbre").performScrollTo().performClick()
+        assertEquals(1, reports)
     }
 }

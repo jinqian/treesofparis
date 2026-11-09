@@ -87,6 +87,7 @@ class MapScreenTest {
                         onRemarkableInfoOpen = { infoOpens++ },
                         onRemarkableInfoDismiss = {},
                         onOpenWikipedia = {},
+                        onReportError = {},
                         onGenusFilterClear = { genusClears++ },
                         onGenusPickerOpen = { genusPickerOpens++ },
                         onGenusPick = { genusPicks += it.genus },

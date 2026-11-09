@@ -46,6 +46,7 @@ import fr.arbresdeparis.core.designsystem.leaf.TreeLeaf
 import fr.arbresdeparis.core.designsystem.theme.ScientificNameStyle
 import fr.arbresdeparis.core.designsystem.theme.TreesSpacing
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
+import fr.arbresdeparis.domain.model.GeoPoint
 import java.util.Locale
 
 /** The body of the tree detail bottom sheet, laid out like a herbarium label. */
@@ -55,6 +56,7 @@ fun TreeDetailContent(
     onFavoriteToggle: () -> Unit,
     modifier: Modifier = Modifier,
     onOpenWikipedia: (String) -> Unit = {},
+    onReportError: () -> Unit = {},
 ) {
     Box(modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
         LeafDrawing(
@@ -77,6 +79,7 @@ fun TreeDetailContent(
             Stats(detail)
             detail.flowering?.let { FloweringSection(it) }
             detail.wikipedia?.let { WikipediaRow(it, onOpenWikipedia) }
+            ReportRow(onReportError)
             Text(
                 text = stringResource(R.string.map_detail_source),
                 style = MaterialTheme.typography.labelSmall,
@@ -197,6 +200,42 @@ private fun Stats(detail: TreeDetailUi) {
     }
 }
 
+/**
+ * « Signaler une erreur sur cet arbre »: a quiet row at the end of the sheet, after a hairline, that opens a prepared
+ * email. The tree is in front of the user when they notice a mistake in the data.
+ */
+@Composable
+private fun ReportRow(onReport: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Column {
+        TreesDivider()
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp)
+                    .clickable(role = Role.Button, onClick = onReport),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(TreesIcons.Flag, contentDescription = null, tint = colors.primary, modifier = Modifier.size(20.dp))
+            Text(
+                text = stringResource(R.string.map_report_open),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = colors.primary,
+                modifier = Modifier.weight(1f),
+            )
+            Icon(
+                TreesIcons.ChevronRight,
+                contentDescription = null,
+                tint = colors.onSurfaceVariant,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+    }
+}
+
 /** Option A of the design: a soft card under the figures that opens the article outside the app. */
 @Composable
 private fun WikipediaRow(
@@ -308,6 +347,7 @@ private fun TreeDetailContentPreview() {
                 detail =
                     TreeDetailUi(
                         id = 1,
+                        location = GeoPoint.PARIS_CENTER,
                         name = "Platane",
                         scientificName = "Platanus x hispanica",
                         area = "Paris 19e",

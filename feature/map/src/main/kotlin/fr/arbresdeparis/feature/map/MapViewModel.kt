@@ -10,6 +10,9 @@ import fr.arbresdeparis.core.map.MapCamera
 import fr.arbresdeparis.core.map.MapConfig
 import fr.arbresdeparis.core.map.MapMarker
 import fr.arbresdeparis.core.map.MarkerStyle
+import fr.arbresdeparis.domain.format.formatParisDate
+import fr.arbresdeparis.domain.model.AppInfo
+import fr.arbresdeparis.domain.model.DatasetInfo
 import fr.arbresdeparis.domain.model.GeoBounds
 import fr.arbresdeparis.domain.model.GeoPoint
 import fr.arbresdeparis.domain.model.UserLocation
@@ -53,6 +56,8 @@ class MapViewModel
         private val getNearestTrees: GetNearestTrees,
         private val getFloweringSeason: GetFloweringSeason,
         private val getGenera: GetGenera,
+        appInfo: AppInfo,
+        datasetInfo: DatasetInfo,
         private val clock: Clock,
         private val savedState: SavedStateHandle,
     ) : ViewModel() {
@@ -62,6 +67,12 @@ class MapViewModel
                     initialCamera = savedCamera() ?: DEFAULT_CAMERA,
                     remarkableOnly = savedState[KEY_REMARKABLE] ?: false,
                     genusFilter = savedState.get<String>(KEY_GENUS)?.toGenusFilter(),
+                    reportContact =
+                        ReportContactUi(
+                            email = appInfo.contactEmail,
+                            appVersion = appInfo.versionName,
+                            dataDate = datasetInfo.extractedAt?.let(::formatParisDate),
+                        ),
                 ),
             )
         val uiState: StateFlow<MapUiState> = state.asStateFlow()

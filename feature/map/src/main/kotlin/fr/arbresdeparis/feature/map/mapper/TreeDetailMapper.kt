@@ -19,6 +19,7 @@ fun Tree.toDetailUi(
     flowering: FloweringUi? = null,
 ) = TreeDetailUi(
     id = id,
+    location = location,
     name = commonName,
     scientificName = scientificName(),
     area = formatArea(arrondissement),

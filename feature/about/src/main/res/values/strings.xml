@@ -4,6 +4,13 @@
     <string name="about_app_name">Arbres de Paris</string>
     <string name="about_description">Explorez sur une carte les arbres gérés par la Ville de Paris, dans Paris comme dans ses cimetières et parcs voisins.</string>
     <string name="about_version">Version %1$s</string>
+    <string name="about_section_contact">Contact</string>
+    <string name="about_contact_write">Nous écrire</string>
+    <string name="about_contact_write_detail">Une question, une idée, une erreur</string>
+    <string name="about_contact_website">Site web</string>
+    <string name="about_contact_subject">Arbres de Paris</string>
+    <string name="about_contact_body">Bonjour,\n\n\n\n—\nArbres de Paris %1$s · Android %2$s</string>
+    <string name="about_contact_no_app">Aucune messagerie installée : écrivez-nous à %1$s</string>
     <string name="about_section_data">Données</string>
     <string name="about_data_credit">« Les arbres », Paris Data — Ville de Paris</string>
     <string name="about_data_extraction">Extraction du %1$s · %2$s arbres</string>

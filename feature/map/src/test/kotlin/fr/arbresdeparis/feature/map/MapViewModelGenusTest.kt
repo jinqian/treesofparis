@@ -54,6 +54,8 @@ class MapViewModelGenusTest {
             getNearestTrees = GetNearestTrees(trees),
             getFloweringSeason = GetFloweringSeason(FakeFloweringRepository()),
             getGenera = GetGenera(FakeStatisticsRepository()),
+            appInfo = APP_INFO,
+            datasetInfo = DATASET_INFO,
             clock = NOVEMBER,
             savedState = saved,
         )

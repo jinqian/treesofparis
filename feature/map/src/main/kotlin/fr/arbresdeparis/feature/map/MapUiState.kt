@@ -24,6 +24,16 @@ data class MapUiState(
     /** The trees closest to the user after « Arbre le plus proche », or null. */
     val nearby: NearbyTreesUi? = null,
     val isFindingNearest: Boolean = false,
+    /** Who error reports go to, and the versions they are signed with. */
+    val reportContact: ReportContactUi = ReportContactUi(),
+)
+
+/** « Signaler une erreur »: the address to write to, the app version and the date of the data the app ships. */
+data class ReportContactUi(
+    val email: String = "",
+    val appVersion: String = "",
+    /** « 6 novembre 2026 », or null when the extraction date is unknown. */
+    val dataDate: String? = null,
 )
 
 /** The trees closest to the user ([from]), closest first, shown one at a time: « Suivant » moves to the next. */

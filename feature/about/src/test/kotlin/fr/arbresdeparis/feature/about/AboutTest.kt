@@ -1,5 +1,7 @@
 package fr.arbresdeparis.feature.about
 
+import android.app.Application
+import android.content.Intent
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -8,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.test.core.app.ApplicationProvider
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.domain.model.AppInfo
 import fr.arbresdeparis.domain.model.DatasetInfo
@@ -16,10 +19,12 @@ import fr.arbresdeparis.domain.repository.FloweringRepository
 import fr.arbresdeparis.domain.usecase.GetFloweringSources
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import java.time.Instant
 import java.time.Month
 
@@ -33,9 +38,13 @@ class AboutTest {
     @get:Rule
     val compose = createComposeRule()
 
+    private val appInfo = AppInfo("0.1.0", "arbresdeparis@gmail.com", "https://arbresdeparis.fr")
+
     private val state =
         AboutUiState(
             versionName = "0.1.0",
+            contactEmail = "arbresdeparis@gmail.com",
+            websiteUrl = "https://arbresdeparis.fr",
             extraction = ExtractionUi(date = "6 novembre 2026", treeCount = "220\u202F339"),
             floweringSheetCount = 27,
         )
@@ -43,8 +52,10 @@ class AboutTest {
     @Test
     fun viewModel_exposesVersionAndExtraction() {
         val dataset = DatasetInfo(extractedAt = Instant.parse("2026-11-06T16:30:03Z"), treeCount = 220_339)
-        val ui = AboutViewModel(AppInfo("0.1.0"), dataset, GetFloweringSources(OneSheet)).uiState
+        val ui = AboutViewModel(appInfo, dataset, GetFloweringSources(OneSheet)).uiState
         assertEquals("0.1.0", ui.versionName)
+        assertEquals("arbresdeparis@gmail.com", ui.contactEmail)
+        assertEquals("arbresdeparis.fr", ui.websiteLabel)
         assertEquals(1, ui.floweringSheetCount)
         assertEquals(ExtractionUi(date = "6 novembre 2026", treeCount = "220\u202F339"), ui.extraction)
     }
@@ -58,26 +69,93 @@ class AboutTest {
     }
 
     @Test
+    fun aboutScreen_contact_writesToUsAndOpensTheWebsite() {
+        val urls = mutableListOf<String>()
+        var writes = 0
+        compose.setContent {
+            TreesTheme {
+                AboutScreen(
+                    state,
+                    onOpenUrl = { urls += it },
+                    onWriteToUs = { writes++ },
+                    onOpenLibraries = {},
+                    onOpenFloweringSources = {},
+                )
+            }
+        }
+        compose.onNodeWithText("CONTACT").assertIsDisplayed()
+        compose.onNodeWithText("Nous écrire").performClick()
+        compose.onNodeWithText("arbresdeparis.fr").performClick()
+        assertEquals(1, writes)
+        assertEquals(listOf("https://arbresdeparis.fr"), urls)
+    }
+
+    @Test
+    fun writeToUs_opensTheEmailAppSignedWithTheVersion() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        app.writeToUs("arbresdeparis@gmail.com", "0.1.0")
+
+        val intent = shadowOf(app).nextStartedActivity
+        assertEquals(Intent.ACTION_SENDTO, intent.action)
+        assertEquals("Arbres de Paris", intent.getStringExtra(Intent.EXTRA_SUBJECT))
+        val body = intent.getStringExtra(Intent.EXTRA_TEXT)!!
+        assertTrue(body, body.startsWith("Bonjour,"))
+        assertTrue(body, body.contains("Arbres de Paris 0.1.0 · Android "))
+    }
+
+    @Test
     fun aboutScreen_showsTheDataExtraction() {
         compose.setContent {
-            TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = {}, onOpenFloweringSources = {}) }
+            TreesTheme {
+                AboutScreen(
+                    state,
+                    onOpenUrl = {},
+                    onWriteToUs = {},
+                    onOpenLibraries = {},
+                    onOpenFloweringSources = {},
+                )
+            }
         }
+        compose
+            .onNodeWithTag(
+                ABOUT_LIST_TAG,
+            ).performScrollToNode(hasText("Extraction du 6 novembre 2026 · 220\u202F339 arbres"))
         compose.onNodeWithText("Extraction du 6 novembre 2026 · 220\u202F339 arbres").assertIsDisplayed()
     }
 
     @Test
     fun aboutScreen_showsVersionAndCredits() {
         compose.setContent {
-            TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = {}, onOpenFloweringSources = {}) }
+            TreesTheme {
+                AboutScreen(
+                    state,
+                    onOpenUrl = {},
+                    onWriteToUs = {},
+                    onOpenLibraries = {},
+                    onOpenFloweringSources = {},
+                )
+            }
         }
         compose.onNodeWithText("VERSION 0.1.0").assertIsDisplayed()
+        compose
+            .onNodeWithTag(
+                ABOUT_LIST_TAG,
+            ).performScrollToNode(hasText("« Les arbres », Paris Data — Ville de Paris"))
         compose.onNodeWithText("« Les arbres », Paris Data — Ville de Paris").assertIsDisplayed()
     }
 
     @Test
     fun aboutScreen_showsOsmAttribution() {
         compose.setContent {
-            TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = {}, onOpenFloweringSources = {}) }
+            TreesTheme {
+                AboutScreen(
+                    state,
+                    onOpenUrl = {},
+                    onWriteToUs = {},
+                    onOpenLibraries = {},
+                    onOpenFloweringSources = {},
+                )
+            }
         }
         compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText("© les contributeurs d’OpenStreetMap"))
         compose.onNodeWithText("© les contributeurs d’OpenStreetMap").assertIsDisplayed()
@@ -86,7 +164,15 @@ class AboutTest {
     @Test
     fun aboutScreen_creditsBundledFonts() {
         compose.setContent {
-            TreesTheme { AboutScreen(state, onOpenUrl = {}, onOpenLibraries = {}, onOpenFloweringSources = {}) }
+            TreesTheme {
+                AboutScreen(
+                    state,
+                    onOpenUrl = {},
+                    onWriteToUs = {},
+                    onOpenLibraries = {},
+                    onOpenFloweringSources = {},
+                )
+            }
         }
         compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText("Newsreader et Inter"))
         compose.onNodeWithText("SIL Open Font License 1.1").assertIsDisplayed()
@@ -101,6 +187,7 @@ class AboutTest {
                 AboutScreen(
                     state,
                     onOpenUrl = { urls += it },
+                    onWriteToUs = {},
                     onOpenLibraries = {},
                     onOpenFloweringSources = { opened++ },
                 )
@@ -128,6 +215,7 @@ class AboutTest {
                 AboutScreen(
                     state,
                     onOpenUrl = {},
+                    onWriteToUs = {},
                     onOpenLibraries = { opened++ },
                     onOpenFloweringSources = {},
                 )

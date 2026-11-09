@@ -99,6 +99,7 @@ fun MapRoute(
         onRemarkableInfoOpen = viewModel::onRemarkableInfoOpen,
         onRemarkableInfoDismiss = viewModel::onRemarkableInfoDismiss,
         onOpenWikipedia = { url -> context.openInCustomTab(url) },
+        onReportError = { tree -> context.reportTreeError(tree, state.reportContact) },
         onGenusFilterClear = viewModel::onGenusFilterClear,
         onGenusPickerOpen = viewModel::onGenusPickerOpen,
         onGenusPick = viewModel::onGenusPick,
@@ -125,6 +126,7 @@ fun MapScreen(
     onRemarkableInfoOpen: () -> Unit,
     onRemarkableInfoDismiss: () -> Unit,
     onOpenWikipedia: (String) -> Unit,
+    onReportError: (TreeDetailUi) -> Unit,
     onGenusFilterClear: () -> Unit,
     onGenusPickerOpen: () -> Unit,
     onGenusPick: (GenusChoiceUi) -> Unit,
@@ -170,15 +172,7 @@ fun MapScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = TreesSpacing.xl * 2),
         )
-        state.selectedTree?.let { detail ->
-            TreesBottomSheet(onDismiss = onDetailDismiss) {
-                TreeDetailContent(
-                    detail = detail,
-                    onFavoriteToggle = onFavoriteToggle,
-                    onOpenWikipedia = onOpenWikipedia,
-                )
-            }
-        }
+        TreeSheet(state.selectedTree, onDetailDismiss, onFavoriteToggle, onOpenWikipedia, onReportError)
         state.genusPicker?.let { picker ->
             TreesBottomSheet(onDismiss = onGenusPickerDismiss) {
                 GenusPickerContent(picker = picker, onPick = onGenusPick)
@@ -192,6 +186,26 @@ fun MapScreen(
                 )
             }
         }
+    }
+}
+
+/** The open tree's sheet: its details, favorite, Wikipédia link and « Signaler une erreur ». */
+@Composable
+private fun TreeSheet(
+    detail: TreeDetailUi?,
+    onDismiss: () -> Unit,
+    onFavoriteToggle: () -> Unit,
+    onOpenWikipedia: (String) -> Unit,
+    onReportError: (TreeDetailUi) -> Unit,
+) {
+    if (detail == null) return
+    TreesBottomSheet(onDismiss = onDismiss) {
+        TreeDetailContent(
+            detail = detail,
+            onFavoriteToggle = onFavoriteToggle,
+            onOpenWikipedia = onOpenWikipedia,
+            onReportError = { onReportError(detail) },
+        )
     }
 }
 

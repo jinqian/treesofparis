@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
@@ -57,9 +58,12 @@ fun AboutRoute(
     viewModel: AboutViewModel = hiltViewModel(),
 ) {
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
+    val state = viewModel.uiState
     AboutScreen(
-        state = viewModel.uiState,
+        state = state,
         onOpenUrl = uriHandler::openUri,
+        onWriteToUs = { context.writeToUs(state.contactEmail, state.versionName) },
         onOpenLibraries = onOpenLibraries,
         onOpenFloweringSources = onOpenFloweringSources,
         modifier = modifier,
@@ -70,6 +74,7 @@ fun AboutRoute(
 fun AboutScreen(
     state: AboutUiState,
     onOpenUrl: (String) -> Unit,
+    onWriteToUs: () -> Unit,
     onOpenLibraries: () -> Unit,
     onOpenFloweringSources: () -> Unit,
     modifier: Modifier = Modifier,
@@ -81,6 +86,23 @@ fun AboutScreen(
             verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
         ) {
             item { AppCard(state) }
+            section(R.string.about_section_contact) {
+                InfoRow(
+                    title = stringResource(R.string.about_contact_write),
+                    subtitle = stringResource(R.string.about_contact_write_detail),
+                    leadingIcon = TreesIcons.Mail,
+                    trailing = InfoRowTrailing.EXTERNAL,
+                    onClick = onWriteToUs,
+                )
+                TreesDivider()
+                InfoRow(
+                    title = stringResource(R.string.about_contact_website),
+                    subtitle = state.websiteLabel,
+                    leadingIcon = TreesIcons.Website,
+                    trailing = InfoRowTrailing.EXTERNAL,
+                    onClick = { onOpenUrl(state.websiteUrl) },
+                )
+            }
             dataSections(state, onOpenUrl, onOpenFloweringSources)
             section(R.string.about_section_map) {
                 InfoRow(
@@ -220,8 +242,15 @@ private fun AppCard(state: AboutUiState) {
 private fun AboutScreenPreview() {
     TreesTheme {
         AboutScreen(
-            state = AboutUiState(versionName = "0.1.0", floweringSheetCount = 27),
+            state =
+                AboutUiState(
+                    versionName = "0.1.0",
+                    contactEmail = "arbresdeparis@gmail.com",
+                    websiteUrl = "https://arbresdeparis.fr",
+                    floweringSheetCount = 27,
+                ),
             onOpenUrl = {},
+            onWriteToUs = {},
             onOpenLibraries = {},
             onOpenFloweringSources = {},
         )

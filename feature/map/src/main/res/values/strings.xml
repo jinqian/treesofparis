@@ -32,6 +32,14 @@
     <string name="map_wikipedia_site">%1$s · fr.wikipedia.org</string>
     <string name="map_wikipedia_open">Ouvrir l’article Wikipédia</string>
     <string name="map_detail_source">Source : « Les arbres », Paris Data</string>
+    <string name="map_report_open">Signaler une erreur sur cet arbre</string>
+    <string name="map_report_subject">Erreur sur l’arbre n° %1$d — %2$s</string>
+    <string name="map_report_body">Bonjour,\n\nCe qui ne va pas (arbre abattu ou remplacé, mal placé, mauvaise essence, mesures fausses…) :\n\n</string>
+    <string name="map_report_tree">Arbre n° %1$d · %2$s</string>
+    <string name="map_report_tree_latin">Arbre n° %1$d · %2$s (%3$s)</string>
+    <string name="map_report_app">Arbres de Paris %1$s · Android %2$s</string>
+    <string name="map_report_app_data">Arbres de Paris %1$s · données du %2$s · Android %3$s</string>
+    <string name="map_report_no_app">Aucune messagerie installée : écrivez-nous à %1$s</string>
     <string name="map_flowering_title">Floraison</string>
     <string name="map_flowering_showy">%1$s · fleurs voyantes</string>
     <string name="map_flowering_discreet">%1$s · fleurs discrètes</string>
