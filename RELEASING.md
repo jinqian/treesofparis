@@ -1,7 +1,7 @@
 # Releasing
 
-How to cut a release of Arbres de Paris. There is no release signing or store upload automation yet; this covers
-versioning, release notes and tagging, so every build that leaves the repo says what changed.
+How to cut a release of Arbres de Paris: versioning, release notes, tagging and the signed bundle. CI builds and
+signs the bundle on each tag; uploading it to the Play Console is still done by hand.
 
 ## Versioning
 
@@ -37,8 +37,9 @@ watermark », not « update screen »).
    git tag -a v<versionName> -m "Arbres de Paris <versionName>"
    git push origin v<versionName>
    ```
-6. Build the signed App Bundle with `./gradlew bundleRelease` (see « Release build » below) and upload it with its
-   R8 mapping file.
+6. The tag starts the Release workflow, which builds the signed App Bundle (see « Release build » below). Download
+   it from the workflow run and upload it to the Play Console with its R8 mapping file. Locally,
+   `./gradlew bundleRelease` does the same with `keystore.properties`.
 
 Between releases, `git cliff -o CHANGELOG.md` refreshes the « Unreleased » section.
 
@@ -65,9 +66,22 @@ keyAlias=upload
 keyPassword=…
 ```
 
-In CI, set `TREES_KEYSTORE_FILE`, `TREES_KEYSTORE_PASSWORD`, `TREES_KEY_ALIAS` and `TREES_KEY_PASSWORD` instead.
-Without either, the release build is **unsigned** on purpose (it is never silently signed with the debug key, which
-Google Play rejects).
+Gradle also reads `TREES_KEYSTORE_FILE`, `TREES_KEYSTORE_PASSWORD`, `TREES_KEY_ALIAS` and `TREES_KEY_PASSWORD` from
+the environment. Without either, the release build is **unsigned** on purpose (it is never silently signed with the
+debug key, which Google Play rejects).
+
+**Signing in CI.** `.github/workflows/release.yml` builds the signed bundle on every `v*` tag (or from the Actions tab
+with « Run workflow ») and attaches `app-release.aab` and `mapping.txt` to the run for 90 days. It needs four
+repository secrets (Settings → Secrets and variables → Actions), set once from the repository root:
+
+```bash
+base64 -i upload-keystore.jks | gh secret set TREES_KEYSTORE_BASE64
+gh secret set TREES_KEYSTORE_PASSWORD   # each prompts for its value
+gh secret set TREES_KEY_ALIAS
+gh secret set TREES_KEY_PASSWORD
+```
+
+The workflow writes the key to the runner's temp directory, never to the workspace, and deletes it at the end.
 
 **Build and measure.**
 
