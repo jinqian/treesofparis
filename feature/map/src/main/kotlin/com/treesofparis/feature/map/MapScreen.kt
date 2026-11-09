@@ -100,6 +100,9 @@ fun MapRoute(
         onRemarkableInfoDismiss = viewModel::onRemarkableInfoDismiss,
         onOpenWikipedia = { url -> context.openInCustomTab(url) },
         onGenusFilterClear = viewModel::onGenusFilterClear,
+        onGenusPickerOpen = viewModel::onGenusPickerOpen,
+        onGenusPick = viewModel::onGenusPick,
+        onGenusPickerDismiss = viewModel::onGenusPickerDismiss,
         onFindNearestTree = { withLocationPermission(viewModel::onNearestTreeRequest) },
         onNearbyNext = viewModel::onNearbyNext,
         onNearbyOpen = viewModel::onNearbyOpen,
@@ -123,6 +126,9 @@ fun MapScreen(
     onRemarkableInfoDismiss: () -> Unit,
     onOpenWikipedia: (String) -> Unit,
     onGenusFilterClear: () -> Unit,
+    onGenusPickerOpen: () -> Unit,
+    onGenusPick: (GenusChoiceUi) -> Unit,
+    onGenusPickerDismiss: () -> Unit,
     onFindNearestTree: () -> Unit,
     onNearbyNext: () -> Unit,
     onNearbyOpen: () -> Unit,
@@ -148,6 +154,7 @@ fun MapScreen(
             onRemarkableFilterChange = onRemarkableFilterChange,
             onRemarkableInfoOpen = onRemarkableInfoOpen,
             onGenusFilterClear = onGenusFilterClear,
+            onGenusPickerOpen = onGenusPickerOpen,
             modifier = Modifier.align(Alignment.TopStart),
         )
         LocationControls(
@@ -170,6 +177,11 @@ fun MapScreen(
                     onFavoriteToggle = onFavoriteToggle,
                     onOpenWikipedia = onOpenWikipedia,
                 )
+            }
+        }
+        state.genusPicker?.let { picker ->
+            TreesBottomSheet(onDismiss = onGenusPickerDismiss) {
+                GenusPickerContent(picker = picker, onPick = onGenusPick)
             }
         }
         if (state.showRemarkableInfo) {
@@ -215,13 +227,17 @@ private fun LocationControls(
     }
 }
 
-/** The filter segments and, under them, the active filter's pill and the zoom hint. */
+/**
+ * The filter segments and, under them, the remarkable caption, the genus pill (« Toutes les essences » or
+ * « Seulement : Tilleul ») and the zoom hint.
+ */
 @Composable
 private fun MapFilters(
     state: MapUiState,
     onRemarkableFilterChange: (Boolean) -> Unit,
     onRemarkableInfoOpen: () -> Unit,
     onGenusFilterClear: () -> Unit,
+    onGenusPickerOpen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -230,16 +246,19 @@ private fun MapFilters(
     ) {
         RemarkableFilterBar(
             remarkableOnly = state.remarkableOnly,
-            genusFilterActive = state.genusFilter != null,
             onRemarkableFilterChange = onRemarkableFilterChange,
             onInfoClick = onRemarkableInfoOpen,
         )
         if (state.remarkableOnly) RemarkableOnlyCaption(Modifier.align(Alignment.CenterHorizontally))
-        state.genusFilter?.let {
+        val genusFilter = state.genusFilter
+        if (genusFilter == null) {
+            GenusFilterButton(onClick = onGenusPickerOpen, modifier = Modifier.align(Alignment.CenterHorizontally))
+        } else {
             GenusFilterPill(
-                it,
-                onGenusFilterClear,
-                Modifier.align(Alignment.CenterHorizontally),
+                filter = genusFilter,
+                onOpen = onGenusPickerOpen,
+                onClear = onGenusFilterClear,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
             )
         }
         if (state.showZoomHint) ZoomHint(Modifier.align(Alignment.CenterHorizontally))

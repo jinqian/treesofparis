@@ -19,6 +19,16 @@ internal interface TreeStatisticsDao {
     )
     suspend fun countByGenus(): List<GenusCountRow>
 
+    /** Trees per genus and French name (a few hundred rows), with their remarkable trees; no missing genus. */
+    @Query(
+        """
+        SELECT genus, common_name, COUNT(*) AS count, SUM(remarkable) AS remarkable_count FROM trees
+        WHERE genus IS NOT NULL AND genus != ''
+        GROUP BY genus, common_name
+        """,
+    )
+    suspend fun countByGenusAndName(): List<GenusNameCountRow>
+
     /** Distinct genus + species pairs (species and varieties). */
     @Query(
         """

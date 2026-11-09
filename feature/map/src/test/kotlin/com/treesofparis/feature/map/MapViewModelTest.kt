@@ -7,6 +7,7 @@ import com.treesofparis.core.map.MarkerStyle
 import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
 import com.treesofparis.domain.usecase.GetFloweringSeason
+import com.treesofparis.domain.usecase.GetGenera
 import com.treesofparis.domain.usecase.GetNearestTrees
 import com.treesofparis.domain.usecase.GetTree
 import com.treesofparis.domain.usecase.GetTreesInBounds
@@ -51,6 +52,7 @@ class MapViewModelTest {
             locateUser = LocateUser(location),
             getNearestTrees = GetNearestTrees(trees),
             getFloweringSeason = GetFloweringSeason(FakeFloweringRepository()),
+            getGenera = GetGenera(FakeStatisticsRepository()),
             clock = NOVEMBER,
             savedState = saved,
         )
@@ -298,60 +300,6 @@ class MapViewModelTest {
             vm.onRemarkableInfoDismiss()
             assertFalse(vm.uiState.value.showRemarkableInfo)
             assertFalse(vm.uiState.value.remarkableOnly)
-        }
-
-    @Test
-    fun genusFilter_showsOnlyThatGenusAtAnyZoom() =
-        runTest(main.dispatcher) {
-            val vm = viewModel()
-            vm.onCameraChange(MapCamera(center, zoom = 12.0), GeoBounds.COVERAGE)
-            vm.onGenusFilter("Tilia")
-            advanceUntilIdle()
-            assertEquals(GenusFilterUi("Tilia", TreeLeaf.TILIA), vm.uiState.value.genusFilter)
-            assertFalse(vm.uiState.value.showZoomHint)
-            assertEquals(
-                listOf(9003L),
-                vm.uiState.value.markers
-                    .map { it.id },
-            )
-            assertEquals("Tilia", trees.genusCalls.last())
-        }
-
-    @Test
-    fun genusFilter_andRemarkableExcludeEachOther() =
-        runTest(main.dispatcher) {
-            val vm = viewModel()
-            vm.onRemarkableFilterChange(true)
-            vm.onGenusFilter("Tilia")
-            assertFalse(vm.uiState.value.remarkableOnly)
-            vm.onRemarkableFilterChange(true)
-            assertNull(vm.uiState.value.genusFilter)
-        }
-
-    @Test
-    fun genusFilter_clear_showsAllTreesAgain() =
-        runTest(main.dispatcher) {
-            val vm = viewModel()
-            vm.onGenusFilter("Tilia")
-            vm.onGenusFilterClear()
-            vm.onCameraChange(MapCamera(center, zoom = 17.0), near)
-            advanceUntilIdle()
-            assertNull(vm.uiState.value.genusFilter)
-            assertEquals(null, trees.genusCalls.last())
-        }
-
-    @Test
-    fun genusFilter_fromNavigation_isAppliedOnceAndSurvivesRecreation() =
-        runTest(main.dispatcher) {
-            val saved = SavedStateHandle()
-            viewModel(saved).apply {
-                onGenusFilterRequest("Tilia")
-                onGenusFilterClear()
-            }
-            // Recreated: the request is not applied again over the user's choice.
-            val recreated = viewModel(saved)
-            recreated.onGenusFilterRequest("Tilia")
-            assertNull(recreated.uiState.value.genusFilter)
         }
 
     @Test

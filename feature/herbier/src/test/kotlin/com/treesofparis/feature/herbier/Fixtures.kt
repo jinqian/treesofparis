@@ -4,6 +4,7 @@ import com.treesofparis.domain.model.AreaCount
 import com.treesofparis.domain.model.FloweringSeason
 import com.treesofparis.domain.model.FloweringSheet
 import com.treesofparis.domain.model.GenusCount
+import com.treesofparis.domain.model.GenusSummary
 import com.treesofparis.domain.model.GeoBounds
 import com.treesofparis.domain.model.GeoPoint
 import com.treesofparis.domain.model.RemarkableStatistics
@@ -102,6 +103,8 @@ class FakeStatisticsRepository(
     private val statistics: TreeStatistics = PARIS,
 ) : TreeStatisticsRepository {
     override suspend fun getStatistics(areaLimit: Int) = statistics
+
+    override suspend fun getGenera() = emptyList<GenusSummary>()
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)

@@ -16,8 +16,10 @@ data class MapUiState(
     val isLocating: Boolean = false,
     val remarkableOnly: Boolean = false,
     val showRemarkableInfo: Boolean = false,
-    /** Only this genus is shown (opened from the Herbier tab), or null. */
+    /** Only this genus is shown (chosen in the « Essences » sheet or opened from Herbier), or null. */
     val genusFilter: GenusFilterUi? = null,
+    /** The open « Essences » sheet, or null. */
+    val genusPicker: GenusPickerUi? = null,
     val message: MapMessage? = null,
     /** The trees closest to the user after « Arbre le plus proche », or null. */
     val nearby: NearbyTreesUi? = null,
@@ -46,10 +48,34 @@ data class NearbyTreeUi(
     val leaf: TreeLeaf,
 )
 
-/** A genus filter: the dataset [genus] and its drawing, whose label names it in French. */
+/**
+ * A genus filter: the dataset [genus] and its drawing. A drawn genus is named by its drawing's label, another one by
+ * [commonName], the French name most of its trees carry (null until it is known).
+ */
 data class GenusFilterUi(
     val genus: String,
     val leaf: TreeLeaf,
+    val commonName: String? = null,
+)
+
+/**
+ * The « Essences » sheet: the genera with a leaf drawing as a grid, then the [others], most planted first. While only
+ * remarkable trees are shown, it lists the genera that have some and counts those.
+ */
+data class GenusPickerUi(
+    val drawn: List<GenusChoiceUi>,
+    val others: List<GenusChoiceUi>,
+    val remarkableOnly: Boolean,
+)
+
+/** One genus to choose: [count] trees (or remarkable trees), already formatted as [countLabel] (« 42 591 »). */
+data class GenusChoiceUi(
+    val genus: String,
+    val commonName: String,
+    val leaf: TreeLeaf,
+    val count: Int,
+    val countLabel: String,
+    val selected: Boolean,
 )
 
 /** One-off messages shown in a snackbar. */
