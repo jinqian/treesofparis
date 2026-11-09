@@ -48,6 +48,12 @@ android {
     }
 
     buildTypes {
+        // Debug installs next to the release build: its own application ID, plus its own icon and name
+        // (app/src/debug/res).
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
         release {
             // R8: shrink, optimise and obfuscate the code, then drop the resources nothing references.
             isMinifyEnabled = true
