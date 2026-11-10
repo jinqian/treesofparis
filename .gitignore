@@ -32,3 +32,6 @@ __pycache__/
 
 # Claude Code personal settings
 .claude/settings.local.json
+
+# Web map tree files, built from trees.db by data/scripts/build_web_map.py (and by the Pages workflow)
+website/maps/data/

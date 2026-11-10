@@ -1,11 +1,15 @@
 name: Website
 
-# Publishes website/ (arbresdeparis.fr) to GitHub Pages. Static files only: no build step.
+# Publishes website/ (arbresdeparis.fr) to GitHub Pages. Static files, plus the web map's tree files, cut from the
+# app's trees.db by data/scripts/build_web_map.py at each deployment (they are not in git).
 on:
   push:
     branches: [main]
     paths:
       - "website/**"
+      - "core/data/src/main/assets/trees.db"
+      - "core/data/trees-db-meta.json"
+      - "data/scripts/build_web_map.py"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -30,6 +34,9 @@ jobs:
       - uses: actions/checkout@v7
 
       - uses: actions/configure-pages@v6
+
+      - name: Build the web map's tree files
+        run: python3 data/scripts/build_web_map.py
 
       - uses: actions/upload-pages-artifact@v5
         with:

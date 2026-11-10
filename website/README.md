@@ -1,13 +1,16 @@
 # Website — arbresdeparis.fr
 
-The app's one-page site, in the same « Herbier » look: plain HTML and CSS, no build step, no tracking, no cookies.
-GitHub Pages serves this folder (`.github/workflows/pages.yml` deploys it when it changes on `main`). This README is
+The app's site, in the same « Herbier » look: plain HTML, CSS and JavaScript, no framework, no tracking, no cookies.
+GitHub Pages serves this folder (`.github/workflows/pages.yml` deploys it when it, `trees.db` or the map script change on
+`main`). This README is
 published with the site too; it holds nothing private.
 
 | File | What |
 |------|------|
 | `index.html`, `styles.css` | The page. Colours are CSS variables from `HerbierPalette`, with the night palette for dark mode. |
 | `confidentialite/index.html` | Privacy policy, linked from the footer and from the Play Console (`https://arbresdeparis.fr/confidentialite/`). Update its date when it changes. |
+| `maps/` | The web map (`/maps/`): `index.html`, `maps.js` (cells, taps, tree sheet, location), `style.js` (the Herbier map style, a copy of the app's `HerbierMapStyle.kt` and pin colours: keep them in step), `maps.css`. MapLibre GL JS 5.24.0 is self-hosted in `vendor/` with its BSD licence. |
+| `maps/data/` | Git-ignored. The trees, cut from the app's `trees.db` by `data/scripts/build_web_map.py`: one JSON file per ~1 km cell (loaded from street level), `clusters.json` (tree counts on 2 km, 1 km, 500 m and 250 m grids, drawn as discs below street level), `remarkable.json` (shown at every zoom), `taxa.json` (Wikipedia titles) and `index.json`. The Pages workflow builds it before each deployment. |
 | `404.html` | Shown by GitHub Pages for unknown paths (absolute links, as it can be served from any path). |
 | `fonts/` | Inter and Newsreader from `:core:designsystem`, subset to Latin + French punctuation and weights 400–600, WOFF2, with their OFL licences. Self-hosted: no request to Google Fonts. |
 | `images/` | App screenshots (debug build on an emulator, demo-mode status bar), 490 × 1100 JPEG. |
@@ -17,7 +20,8 @@ published with the site too; it holds nothing private.
 ## Preview
 
 ```bash
-python3 -m http.server --directory website 8000   # then open http://localhost:8000
+python3 data/scripts/build_web_map.py              # once, and after trees.db changes: the map's tree files
+python3 -m http.server --directory website 8000   # then open http://localhost:8000 (the map: /maps/)
 ```
 
 ## When the app is on a store

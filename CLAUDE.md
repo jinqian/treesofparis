@@ -16,7 +16,7 @@ UI language: **French**. Read `docs/adr/` for decisions and `docs/roadmap/` for 
 | `:feature:map` / `:feature:favorites` / `:feature:about` | Android lib | screen, scoped ViewModel, UI models, UI mappers | `:core:domain`, `:core:designsystem`, `:core:map` |
 | `build-logic` | included build | convention plugins (`trees.*`) | — |
 | `data/` | Python | dataset download + `trees.db` builder | — |
-| `website/` | static site | arbresdeparis.fr landing page, deployed to GitHub Pages (see `website/README.md`) | — |
+| `website/` | static site | arbresdeparis.fr landing page and web map (`maps/`, MapLibre GL JS), deployed to GitHub Pages (see `website/README.md`) | — |
 
 ## Rules (enforced)
 
@@ -39,6 +39,8 @@ UI language: **French**. Read `docs/adr/` for decisions and `docs/roadmap/` for 
   `XxxRoute` (gets the ViewModel) and a stateless `XxxScreen` (previewable, testable).
 - Map camera: `initialCamera` is applied once, `CameraRequest` (with a unique id) for programmatic moves,
   gestures only report through `onCameraChange`.
+- The web map (`website/maps/`) mirrors the app: `style.js` copies `HerbierMapStyle.kt` and the pin colours, and
+  `build_web_map.py` copies `formatArea`/`formatPlace`. Change both sides together.
 - The tree schema is owned by the Room entities. `data/scripts/update_trees.py` builds `trees.db` from
   Room's exported schema JSON in `core/data/schemas/`. Never hand-edit the schema in two places.
 
@@ -53,7 +55,8 @@ UI language: **French**. Read `docs/adr/` for decisions and `docs/roadmap/` for 
 ./gradlew check                         # everything CI runs on Kotlin code
 python3 -I -m pytest data/tests         # data script tests
 python3 data/scripts/update_trees.py    # refresh trees.db (see data/README.md)
-python3 -m http.server --directory website 8000   # preview the website
+python3 data/scripts/build_web_map.py             # web map tree files from trees.db (git-ignored)
+python3 -m http.server --directory website 8000   # preview the website (map at /maps/)
 ```
 
 ## Workflow
