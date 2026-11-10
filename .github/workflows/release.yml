@@ -71,6 +71,7 @@ jobs:
             fi
           done
           echo "Version $version_name, code $version_code"
+          echo "VERSION_NAME=$version_name" >> "$GITHUB_ENV"
           echo "VERSION_CODE=$version_code" >> "$GITHUB_ENV"
 
       # The upload key lives in repository secrets (base64 of the .jks file); it is written outside the workspace and
@@ -110,7 +111,8 @@ jobs:
       - name: Upload the bundle and mapping file
         uses: actions/upload-artifact@v7
         with:
-          name: arbres-de-paris-${{ github.ref_name }}
+          # Named after the version: a branch name (« chore/x ») may hold a « / », which artifact names refuse.
+          name: arbres-de-paris-${{ env.VERSION_NAME }}
           path: |
             android/app/build/outputs/bundle/release/app-release.aab
             android/app/build/outputs/mapping/release/mapping.txt
