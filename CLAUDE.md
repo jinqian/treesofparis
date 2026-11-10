@@ -1,7 +1,7 @@
 # Trees of Paris — agent guide
 
 Android app showing the trees of Paris (Paris Open Data `les-arbres`) on an OpenStreetMap map.
-UI language: **French**. Read `docs/superpowers/specs/` for the design and `docs/adr/` for decisions.
+UI language: **French**. Read `docs/adr/` for decisions and `docs/roadmap/` for ideas and plans.
 
 ## Modules
 

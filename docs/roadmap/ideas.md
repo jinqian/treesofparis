@@ -1,7 +1,8 @@
 # Feature ideas
 
-Brainstormed on 2026-11-08. Not planned yet: pick one, then detail it in `next-steps.md` (goal, approach, work,
-decisions, done when). Sizes are rough: **S** ≈ half a day, **M** ≈ 1–2 days, **L** ≈ 3+ days.
+Brainstormed on 2026-11-08. Not planned yet: pick one, then detail it in its own file in this folder (goal, approach,
+work, decisions, phases), like [`grand-paris-trees.md`](grand-paris-trees.md). Sizes are rough: **S** ≈ half a day,
+**M** ≈ 1–2 days, **L** ≈ 3+ days.
 
 Implemented from this list: « Herbier → carte » (tap a genus in Herbier to see only those trees on the map), and a first
 step of « Près de moi »: the map's « Arbre le plus proche » button (the 5 closest trees, one card at a time).
@@ -28,14 +29,19 @@ step of « Près de moi »: the map's « Arbre le plus proche » button (the 5 c
   found yourself (« 12 / 21 essences »). Stored in the user database next to favorites. Gentle gamification and a
   reason to come back.
 - **Promenades** — *L.* Short themed walks (« Les géants du 16e », « Les cerisiers du printemps ») drawn as a route on
-  the map. Needs curated content and probably the MapLibre map.
+  the map. Needs curated content.
 - **Share a tree** — *S–M.* A share card with the leaf drawing, name and place, and a link that opens the app on that
   tree (Android App Link).
 
 ## Polish and reach
 
-- **Offline use** — *L.* Ship the Paris map with the app (PMTiles, see the MapLibre plan) so it works in parks with poor
-  signal.
+- **Offline use** — *L.* Ship the Paris map with the app (a Protomaps PMTiles extract of `GeoBounds.COVERAGE`,
+  self-hosted or bundled) so it works in parks with poor signal.
+- **Clustering** — *S–M.* MapLibre clusters below zoom 15.5 instead of the « Zoomez pour voir les arbres » hint.
+- **Wikipedia in Herbier** — *S.* The species sheet's « En savoir plus sur Wikipédia » link on the Herbier genus rows
+  too. Once a year, delete the cached « no article » answers in `data/wikipedia-titles.json` to look them up again.
+- **« Nouveautés » sheet** — *S.* Show the French release note once after an update (last seen `versionCode` in
+  DataStore).
 - **Home-screen widget** — *S–M.* « L'arbre du jour » with its leaf (Glance).
 - **English version** — *S.* UI strings already live in resources; a translation pass plus English tree names for the
   21 drawn genera.
@@ -79,5 +85,6 @@ step of « Près de moi »: the map's « Arbre le plus proche » button (the 5 c
     cities.
   - *Refresh.* The monthly workflow downloads every source; one failing source must not block the others.
 
-  **First step:** add the Hauts-de-Seine cadastre vert as a second source. That proves the source-aware ids, the
-  mappers, the dedupe and the credits on one dataset before adding more.
+  **Detailed in [`grand-paris-trees.md`](grand-paris-trees.md)** (2026-11-10): the full list of sources, the schema
+  mapping and the phases. The cadastre vert above turned out to have no species (canopy detection only); the first
+  source is now GPSO (32,684 trees, 8 towns south-west of Paris).
