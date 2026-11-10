@@ -7,12 +7,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.arbresdeparis.core.designsystem.leaf.TreeLeaf
 import fr.arbresdeparis.core.map.CameraRequest
 import fr.arbresdeparis.core.map.MapCamera
+import fr.arbresdeparis.core.map.MapCluster
 import fr.arbresdeparis.core.map.MapConfig
 import fr.arbresdeparis.core.map.MapMarker
 import fr.arbresdeparis.core.map.MarkerStyle
-import fr.arbresdeparis.domain.format.formatParisDate
-import fr.arbresdeparis.domain.model.AppInfo
-import fr.arbresdeparis.domain.model.DatasetInfo
 import fr.arbresdeparis.domain.model.GeoBounds
 import fr.arbresdeparis.domain.model.GeoPoint
 import fr.arbresdeparis.domain.model.UserLocation
@@ -20,6 +18,7 @@ import fr.arbresdeparis.domain.usecase.GetFloweringSeason
 import fr.arbresdeparis.domain.usecase.GetGenera
 import fr.arbresdeparis.domain.usecase.GetNearestTrees
 import fr.arbresdeparis.domain.usecase.GetTree
+import fr.arbresdeparis.domain.usecase.GetTreeClusters
 import fr.arbresdeparis.domain.usecase.GetTreesInBounds
 import fr.arbresdeparis.domain.usecase.LocateUser
 import fr.arbresdeparis.domain.usecase.ObserveIsFavorite
@@ -27,6 +26,7 @@ import fr.arbresdeparis.domain.usecase.ToggleFavorite
 import fr.arbresdeparis.feature.map.mapper.toDetailUi
 import fr.arbresdeparis.feature.map.mapper.toFloweringUi
 import fr.arbresdeparis.feature.map.mapper.toGenusPicker
+import fr.arbresdeparis.feature.map.mapper.toMapCluster
 import fr.arbresdeparis.feature.map.mapper.toNearbyUi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -49,6 +49,7 @@ class MapViewModel
     @Inject
     constructor(
         private val getTreesInBounds: GetTreesInBounds,
+        private val getTreeClusters: GetTreeClusters,
         private val getTree: GetTree,
         private val observeIsFavorite: ObserveIsFavorite,
         private val toggleFavorite: ToggleFavorite,
@@ -56,8 +57,6 @@ class MapViewModel
         private val getNearestTrees: GetNearestTrees,
         private val getFloweringSeason: GetFloweringSeason,
         private val getGenera: GetGenera,
-        appInfo: AppInfo,
-        datasetInfo: DatasetInfo,
         private val clock: Clock,
         private val savedState: SavedStateHandle,
     ) : ViewModel() {
@@ -67,12 +66,6 @@ class MapViewModel
                     initialCamera = savedCamera() ?: DEFAULT_CAMERA,
                     remarkableOnly = savedState[KEY_REMARKABLE] ?: false,
                     genusFilter = savedState.get<String>(KEY_GENUS)?.toGenusFilter(),
-                    reportContact =
-                        ReportContactUi(
-                            email = appInfo.contactEmail,
-                            appVersion = appInfo.versionName,
-                            dataDate = datasetInfo.extractedAt?.let(::formatParisDate),
-                        ),
                 ),
             )
         val uiState: StateFlow<MapUiState> = state.asStateFlow()
@@ -108,6 +101,13 @@ class MapViewModel
         }
 
         fun onMarkerClick(id: Long) = select(id)
+
+        /** Zooms into a group, two levels closer, at most to just past street level where its trees show. */
+        fun onClusterClick(cluster: MapCluster) {
+            val zoom = cameraChanges.value?.first?.zoom ?: DEFAULT_CAMERA.zoom
+            val target = minOf(zoom + CLUSTER_ZOOM_STEP, MIN_TREE_ZOOM + CLUSTER_ZOOM_PAST_STREET_LEVEL)
+            state.update { it.copy(cameraRequest = request(cluster.position, target)) }
+        }
 
         fun onDetailDismissed() {
             selectionJob?.cancel()
@@ -338,9 +338,10 @@ class MapViewModel
         }
 
         /**
-         * Below [MIN_TREE_ZOOM] there are too many trees to show, except with a filter: there are only a couple
-         * of hundred remarkable trees, and a genus is shown at every zoom too, capped at the [MAX_MARKERS] trees
-         * closest to the centre, so its spread across the city stays visible.
+         * Below [MIN_TREE_ZOOM] there are too many trees to show: the map shows groups of trees with their count
+         * instead, except with a filter: there are only a few hundred remarkable trees, and a genus is shown at every
+         * zoom too, capped at the [MAX_MARKERS] trees closest to the centre, so its spread across the city stays
+         * visible.
          */
         private suspend fun loadMarkers(
             camera: MapCamera,
@@ -349,7 +350,14 @@ class MapViewModel
             onlyGenus: String?,
         ) {
             if (camera.zoom < MIN_TREE_ZOOM && !onlyRemarkable && onlyGenus == null) {
-                state.update { it.copy(markers = emptyList(), showZoomHint = true) }
+                val clusters =
+                    getTreeClusters(bounds, camera.zoom).mapIndexed {
+                        index,
+                        group,
+                        ->
+                        group.toMapCluster(index)
+                    }
+                state.update { it.copy(markers = emptyList(), clusters = clusters, showZoomHint = true) }
                 return
             }
             val selected = highlightedId
@@ -362,7 +370,7 @@ class MapViewModel
                         style = if (it.remarkable) MarkerStyle.REMARKABLE else MarkerStyle.TREE,
                     )
                 }
-            state.update { it.copy(markers = markers, showZoomHint = false) }
+            state.update { it.copy(markers = markers, clusters = emptyList(), showZoomHint = false) }
         }
 
         private fun select(id: Long) {
@@ -409,6 +417,12 @@ class MapViewModel
             /** At most this many pins, the closest to the centre: room for the densest views at [MIN_TREE_ZOOM]. */
             const val MAX_MARKERS = 3000
             const val CAMERA_DEBOUNCE_MS = 300L
+
+            /** A tap on a group zooms in by this much... */
+            const val CLUSTER_ZOOM_STEP = 2.0
+
+            /** ...but no further than this past [MIN_TREE_ZOOM], where the group's trees show one by one. */
+            const val CLUSTER_ZOOM_PAST_STREET_LEVEL = 0.5
             const val USER_ZOOM = 17.0
             const val TREE_ZOOM = 18.0
 

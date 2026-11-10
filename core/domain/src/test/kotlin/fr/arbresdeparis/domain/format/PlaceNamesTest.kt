@@ -35,4 +35,18 @@ class PlaceNamesTest {
         assertEquals("Route du Lac à Bagatelle", formatPlace("ROUTE DU LAC A BAGATELLE"))
         assertEquals("Avenue de la Porte de Vincennes", formatPlace("AVENUE DE LA PORTE DE VINCENNES"))
     }
+
+    @Test
+    fun formatPlace_keepsElidedArticlesLowerCase() {
+        assertEquals("Rue d'Estienne d'Orves", formatPlace("Rue d'Estienne d'Orves"))
+        assertEquals("Ville-d'Avray", formatPlace("VILLE-D'AVRAY"))
+        assertEquals("Avenue de l'Est", formatPlace("AVENUE DE L''EST"))
+        assertEquals("L'Haÿ-les-Roses", formatPlace("L'HAŸ-LES-ROSES"))
+    }
+
+    @Test
+    fun formatArea_namesTheNeighbouringTowns() {
+        assertEquals("Issy-les-Moulineaux", formatArea("Issy-les-Moulineaux"))
+        assertEquals("Ville-d'Avray", formatArea("Ville-d'Avray"))
+    }
 }

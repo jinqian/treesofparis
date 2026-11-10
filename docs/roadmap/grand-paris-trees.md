@@ -1,6 +1,8 @@
 # Trees beyond Paris — integration plan
 
-Drafted on 2026-11-10 from the « Petite couronne first » idea in `ideas.md`. Not started. Sizes are rough:
+Drafted on 2026-11-10 from the « Petite couronne first » idea in `ideas.md`. **Phase 1 (GPSO) built on 2026-11-10**
+(ADR 0008): the `city`, `source` and `height_class` columns, GPSO's 32,636 trees, the tree sheet and À propos credits.
+The Herbier stays on the Paris data until it can be filtered by town. Sizes are rough:
 **S** ≈ half a day, **M** ≈ 1–2 days, **L** ≈ 3+ days.
 
 Five open sources would add about 153,000 trees around Paris: GPSO, Plaine Commune, the Hauts-de-Seine and

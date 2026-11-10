@@ -9,6 +9,9 @@ private val PARTICLES = setOf("de", "du", "des", "la", "le", "les", "et", "sur",
 private val ROMAN_NUMERAL = Regex("^[ivx]{2,}$")
 private val ARRONDISSEMENT = Regex("""^PARIS (\d{1,2})(?:ER|E) ARRDT$""")
 
+/** « d'estienne », « l'est »: an elided article or preposition, then the word it is glued to. */
+private val ELISION = Regex("""^([dl])'(.+)$""")
+
 /**
  * Display name for the dataset's area field: "PARIS 19E ARRDT" → "Paris 19e", "PARIS 1ER ARRDT" → "Paris 1er",
  * "SEINE-SAINT-DENIS" → "Seine-Saint-Denis". Shared by the features that list or show trees.
@@ -19,10 +22,15 @@ fun formatArea(raw: String): String {
     return "Paris $number${if (number == 1) "er" else "e"}"
 }
 
-/** Upper-case dataset text to French title case: "QUAI DE LA SEINE" → "Quai de la Seine". */
+/**
+ * Dataset text to French title case: "QUAI DE LA SEINE" → "Quai de la Seine", "RUE D'ESTIENNE D'ORVES" → "Rue
+ * d'Estienne d'Orves", "VILLE-D'AVRAY" → "Ville-d'Avray". The doubled apostrophes of the Paris data (« L''EST ») count
+ * as one.
+ */
 fun formatPlace(raw: String): String =
     raw
         .trim()
+        .replace(Regex("['’]+"), "'")
         .lowercase(FRENCH)
         .split(" ")
         .mapIndexed { index, word ->
@@ -34,12 +42,30 @@ fun formatPlace(raw: String): String =
 
                 index > 0 && ROMAN_NUMERAL.matches(word) -> word.uppercase(FRENCH)
 
-                else -> word.titleCaseCompound()
+                else -> word.titleCaseCompound(first = index == 0)
             }
         }.joinToString(" ")
 
-private fun String.titleCaseCompound(): String =
+private fun String.titleCaseCompound(first: Boolean): String =
     split("-")
         .mapIndexed { index, part ->
-            if (index > 0 && part in PARTICLES) part else part.replaceFirstChar { it.titlecase(FRENCH) }
+            val elision = ELISION.matchEntire(part)
+            when {
+                // « d'Avray », « l'Est »; the article keeps its capital only at the very start: « L'Haÿ-les-Roses ».
+                elision != null -> {
+                    val (article, word) = elision.destructured
+                    val head = if (first && index == 0) article.uppercase(FRENCH) else article
+                    "$head'${word.capitalized()}"
+                }
+
+                index > 0 && part in PARTICLES -> {
+                    part
+                }
+
+                else -> {
+                    part.capitalized()
+                }
+            }
         }.joinToString("-")
+
+private fun String.capitalized(): String = replaceFirstChar { it.titlecase(FRENCH) }

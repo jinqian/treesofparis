@@ -5,6 +5,7 @@ const OPENFREEMAP_TILES = "https://tiles.openfreemap.org/planet";
 const OPENFREEMAP_GLYPHS = "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf";
 const FONT_REGULAR = "Noto Sans Regular";
 const FONT_ITALIC = "Noto Sans Italic";
+const FONT_BOLD = "Noto Sans Bold";
 const VECTOR = "openmaptiles";
 
 export const PINS_SOURCE = "pins";
@@ -32,11 +33,14 @@ export const COLORS = {
     land: "#F4F3EC", green: "#DCE4D2", water: "#CFDDE0", building: "#E8E6DC", road: "#FBFAF6",
     casing: "#E2E1D8", rail: "#D3D2C8", label: "#5C665D", labelHalo: "#F4F3EC", place: "#1E2620",
     tree: "#4F7556", remarkable: "#C9962E", selected: "#1E2620", ring: "#FBFAF6", user: "#4A7FA8",
+    group: "#3F5F45", groupLabel: "#F4F3EC",
   },
   dark: {
     land: "#1A1F1B", green: "#20291E", water: "#1B2A2E", building: "#222823", road: "#272D28",
     casing: "#2E352F", rail: "#2E352F", label: "#A3AB9F", labelHalo: "#1A1F1B", place: "#E6E8E1",
     tree: "#7FA286", remarkable: "#D4A443", selected: "#E6E8E1", ring: "#141815", user: "#7FB0D6",
+    // The night pins are a light green: groups use the day pin green, so the white count stays legible.
+    group: "#4F7556", groupLabel: "#F4F3EC",
   },
 };
 
@@ -94,8 +98,8 @@ function clusterLayers(c) {
       {
         id: `clusters-${level}`, type: "circle", ...common,
         paint: {
-          "circle-color": c.tree,
-          "circle-opacity": 0.78,
+          "circle-color": c.group,
+          "circle-opacity": 0.92,
           "circle-radius": ["interpolate", ["linear"], ["zoom"], Math.max(minzoom, 10), sized(radius[0]), maxzoom, sized(radius[1])],
           "circle-stroke-color": c.ring,
           "circle-stroke-width": 1.5,
@@ -104,10 +108,10 @@ function clusterLayers(c) {
       {
         id: `clusters-${level}-count`, type: "symbol", ...common,
         layout: {
-          "text-field": ["get", "label"], "text-font": [FONT_REGULAR], "text-size": 11.5,
+          "text-field": ["get", "label"], "text-font": [FONT_BOLD], "text-size": 11.5,
           "text-allow-overlap": true, "text-ignore-placement": true,
         },
-        paint: { "text-color": c.ring },
+        paint: { "text-color": c.groupLabel },
       },
     ];
   });

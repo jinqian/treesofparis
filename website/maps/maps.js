@@ -20,7 +20,11 @@ const TREE_MIN_ZOOM = 14.5;
 const PARIS = [2.3522, 48.8566];
 const WIKIPEDIA = "https://fr.wikipedia.org/wiki/";
 
-const F = { id: 0, lat: 1, lon: 2, name: 3, genus: 4, species: 5, cultivar: 6, circ: 7, height: 8, stage: 9, remarkable: 10, address: 11, area: 12 };
+const F = { id: 0, lat: 1, lon: 2, name: 3, genus: 4, species: 5, cultivar: 6, circ: 7, height: 8, stage: 9, remarkable: 10, address: 11, area: 12, heightClass: 13, source: 14 };
+const SOURCES = {
+  paris: "« Les arbres », Paris Data",
+  gpso: "« Arbres », Grand Paris Seine Ouest",
+};
 
 const $ = (selector) => document.querySelector(selector);
 const nf = new Intl.NumberFormat("fr-FR");
@@ -209,7 +213,11 @@ function openSheet(row) {
     ${latin ? `<p class="latin">${escapeHtml(latin)}</p>` : '<p class="latin unknown">Espèce inconnue</p>'}
     <p class="place">${place}</p>
     <dl class="facts">
-      ${measure("Hauteur", row[F.height], "m")}
+      ${
+        row[F.height] == null && row[F.heightClass]
+          ? `<div class="fact"><dt>Hauteur</dt><dd class="range">${escapeHtml(row[F.heightClass])} m</dd></div>`
+          : measure("Hauteur", row[F.height], "m")
+      }
       ${measure("Circonférence", row[F.circ], "cm")}
       <div class="fact"><dt>Stade</dt><dd>${row[F.stage] ? escapeHtml(row[F.stage]) : '<span class="unknown">inconnu</span>'}</dd></div>
     </dl>
@@ -221,7 +229,7 @@ function openSheet(row) {
            </a>`
         : ""
     }
-    <p class="source">Arbre n° ${row[F.id]} · Source : « Les arbres », Paris Data</p>`;
+    <p class="source">Arbre n° ${row[F.id]} · Source : ${SOURCES[row[F.source]] ?? SOURCES.paris}</p>`;
   $("#sheet").hidden = false;
   $("#sheet").scrollTop = 0;
   keepInSight(row);

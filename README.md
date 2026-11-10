@@ -7,7 +7,7 @@
 - **Carte**: the 220,339 trees the City of Paris manages, in Paris and in its sites nearby (cemeteries of Pantin,
   Thiais, Ivry…), on a calm « Herbier » map, light or dark. Show only the remarkable trees or one genus
   (« Toutes les essences »), find the tree closest to you, and tap a tree for its sheet: height, girth, flowering
-  calendar, Wikipédia, favorite, and « Signaler une erreur ».
+  calendar, Wikipédia and favorite.
 - **Herbier**: the most planted genera with their leaf drawings, flowering through the year, the remarkable trees,
   ages and arrondissements.
 - **Favoris**: the trees you saved, stored only on your device (and in Android's backup).

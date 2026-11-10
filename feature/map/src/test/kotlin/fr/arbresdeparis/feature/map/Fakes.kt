@@ -1,7 +1,5 @@
 package fr.arbresdeparis.feature.map
 
-import fr.arbresdeparis.domain.model.AppInfo
-import fr.arbresdeparis.domain.model.DatasetInfo
 import fr.arbresdeparis.domain.model.Favorite
 import fr.arbresdeparis.domain.model.FavoriteSnapshot
 import fr.arbresdeparis.domain.model.FloweringSheet
@@ -9,6 +7,7 @@ import fr.arbresdeparis.domain.model.GenusSummary
 import fr.arbresdeparis.domain.model.GeoBounds
 import fr.arbresdeparis.domain.model.GeoPoint
 import fr.arbresdeparis.domain.model.Tree
+import fr.arbresdeparis.domain.model.TreeCluster
 import fr.arbresdeparis.domain.model.TreeStatistics
 import fr.arbresdeparis.domain.repository.FavoritesRepository
 import fr.arbresdeparis.domain.repository.FloweringRepository
@@ -30,6 +29,7 @@ import java.time.Clock
 import java.time.Instant
 import java.time.Month
 import java.time.ZoneId
+import kotlin.math.floor
 
 fun tree(
     id: Long,
@@ -82,6 +82,24 @@ class FakeTreeRepository(
     override suspend fun getTreesByIds(ids: List<Long>) = trees.filter { it.id in ids }
 
     override suspend fun getRemarkableTrees() = trees.filter { it.remarkable }
+
+    val clusterCalls = mutableListOf<GeoBounds>()
+
+    override suspend fun getTreeClusters(
+        bounds: GeoBounds,
+        cellLat: Double,
+        cellLon: Double,
+    ): List<TreeCluster> {
+        clusterCalls += bounds
+        return trees
+            .filter { bounds.contains(it.location) }
+            .groupBy { floor(it.location.lat / cellLat) to floor(it.location.lon / cellLon) }
+            .values
+            .map { group ->
+                val lat = group.map { it.location.lat }.average()
+                TreeCluster(GeoPoint(lat, group.map { it.location.lon }.average()), group.size)
+            }
+    }
 }
 
 class FakeFavoritesRepository(
@@ -151,9 +169,3 @@ class FakeStatisticsRepository : TreeStatisticsRepository {
             GenusSummary("Ginkgo", "Arbre aux quarante écus", treeCount = 1_154, remarkableCount = 0),
         )
 }
-
-val APP_INFO =
-    AppInfo(versionName = "0.1.0", contactEmail = "arbresdeparis@gmail.com", websiteUrl = "https://arbresdeparis.fr")
-
-/** Extracted on 6 November 2026 in Paris. */
-val DATASET_INFO = DatasetInfo(extractedAt = Instant.parse("2026-11-06T16:30:03Z"), treeCount = 220_339)

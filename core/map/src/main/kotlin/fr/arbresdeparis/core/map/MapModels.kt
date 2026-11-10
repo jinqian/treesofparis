@@ -31,6 +31,17 @@ data class MapMarker(
     val style: MarkerStyle = MarkerStyle.TREE,
 )
 
+/**
+ * A group of [count] trees drawn as one disc with [label] (the count, formatted by the feature) when the map shows
+ * too many trees to draw each one. [id] is unique among the clusters on screen.
+ */
+data class MapCluster(
+    val id: Long,
+    val position: GeoPoint,
+    val count: Int,
+    val label: String,
+)
+
 /** Kinds of markers, in drawing order: later styles are drawn on top. Providers decide how each one looks. */
 enum class MarkerStyle { TREE, REMARKABLE }
 
@@ -52,4 +63,8 @@ data class MapPalette(
     val selected: Color,
     val ring: Color,
     val userLocation: Color,
+    /** The disc of a [MapCluster]... */
+    val treeGroup: Color,
+    /** ...and its count. */
+    val treeGroupLabel: Color,
 )

@@ -4,8 +4,9 @@ Brainstormed on 2026-11-08. Not planned yet: pick one, then detail it in its own
 work, decisions, phases), like [`grand-paris-trees.md`](grand-paris-trees.md). Sizes are rough: **S** ≈ half a day,
 **M** ≈ 1–2 days, **L** ≈ 3+ days.
 
-Implemented from this list: « Herbier → carte » (tap a genus in Herbier to see only those trees on the map), and a first
-step of « Près de moi »: the map's « Arbre le plus proche » button (the 5 closest trees, one card at a time).
+Implemented from this list: « Herbier → carte » (tap a genus in Herbier to see only those trees on the map), a first
+step of « Près de moi »: the map's « Arbre le plus proche » button (the 5 closest trees, one card at a time), and tree
+groups below street level (a disc per ~70 dp cell with its count, counted live in SQLite; a tap zooms in).
 
 ## Explore the map
 
@@ -37,7 +38,6 @@ step of « Près de moi »: the map's « Arbre le plus proche » button (the 5 c
 
 - **Offline use** — *L.* Ship the Paris map with the app (a Protomaps PMTiles extract of `GeoBounds.COVERAGE`,
   self-hosted or bundled) so it works in parks with poor signal.
-- **Clustering** — *S–M.* MapLibre clusters below zoom 15.5 instead of the « Zoomez pour voir les arbres » hint.
 - **Wikipedia in Herbier** — *S.* The species sheet's « En savoir plus sur Wikipédia » link on the Herbier genus rows
   too. Once a year, delete the cached « no article » answers in `data/wikipedia-titles.json` to look them up again.
 - **« Nouveautés » sheet** — *S.* Show the French release note once after an update (last seen `versionCode` in

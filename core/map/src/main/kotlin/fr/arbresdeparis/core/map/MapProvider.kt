@@ -22,10 +22,12 @@ interface MapProvider {
         initialCamera: MapCamera,
         cameraRequest: CameraRequest?,
         markers: List<MapMarker>,
+        clusters: List<MapCluster>,
         userLocation: GeoPoint?,
         config: MapConfig,
         palette: MapPalette,
         onMarkerClick: (Long) -> Unit,
+        onClusterClick: (MapCluster) -> Unit,
         onCameraChange: (MapCamera, GeoBounds) -> Unit,
         modifier: Modifier,
     )

@@ -2,6 +2,7 @@ package fr.arbresdeparis.core.map.maplibre
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import fr.arbresdeparis.core.map.MapCluster
 import fr.arbresdeparis.core.map.MapMarker
 import fr.arbresdeparis.core.map.MapPalette
 import fr.arbresdeparis.domain.model.GeoPoint
@@ -20,6 +21,19 @@ internal fun markersGeoJson(markers: List<MapMarker>): String =
                     put("id", marker.id)
                     put("style", marker.style.name)
                     put("selected", marker.selected)
+                }
+            },
+        ).toString()
+
+/** The tree groups as GeoJSON points with `id`, `count` and `label` (what the disc shows). */
+internal fun clustersGeoJson(clusters: List<MapCluster>): String =
+    GeoJson
+        .featureCollection(
+            clusters.map { cluster ->
+                point(cluster.position) {
+                    put("id", cluster.id)
+                    put("count", cluster.count)
+                    put("label", cluster.label)
                 }
             },
         ).toString()
@@ -53,6 +67,8 @@ internal fun MapPalette.toPinColors() =
         selected = selected.toHex(),
         ring = ring.toHex(),
         user = userLocation.toHex(),
+        treeGroup = treeGroup.toHex(),
+        treeGroupLabel = treeGroupLabel.toHex(),
     )
 
 /** Keeps red, green and blue, drops alpha: the style gets opaque « #RRGGBB » colours. */

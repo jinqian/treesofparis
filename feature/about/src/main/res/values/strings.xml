@@ -15,6 +15,8 @@
     <string name="about_data_credit">« Les arbres », Paris Data — Ville de Paris</string>
     <string name="about_data_extraction">Extraction du %1$s · %2$s arbres</string>
     <string name="about_data_license">Licence ODbL</string>
+    <string name="about_data_gpso_credit">« Arbres », Grand Paris Seine Ouest</string>
+    <string name="about_data_gpso_detail">Boulogne-Billancourt, Issy-les-Moulineaux, Meudon et cinq autres villes · Licence Ouverte 2.0</string>
     <string name="about_section_flowering">Floraisons</string>
     <string name="about_flowering_credit">« Guide des Essences de Paris » — Ville de Paris, Cerema</string>
     <string name="about_flowering_license">Calendriers de floraison, 2023 · Licence ODbL</string>

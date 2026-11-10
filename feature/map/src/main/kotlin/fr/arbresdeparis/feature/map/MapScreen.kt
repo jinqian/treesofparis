@@ -41,6 +41,7 @@ import fr.arbresdeparis.core.designsystem.component.TreesBottomSheet
 import fr.arbresdeparis.core.designsystem.theme.TreesSpacing
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.core.map.MapCamera
+import fr.arbresdeparis.core.map.MapCluster
 import fr.arbresdeparis.core.map.MapPalette
 import fr.arbresdeparis.core.map.TreeMapView
 import fr.arbresdeparis.domain.model.GeoBounds
@@ -82,7 +83,6 @@ fun MapRoute(
         onRemarkableInfoOpen = viewModel::onRemarkableInfoOpen,
         onRemarkableInfoDismiss = viewModel::onRemarkableInfoDismiss,
         onOpenWikipedia = { url -> context.openInCustomTab(url) },
-        onReportError = { tree -> context.reportTreeError(tree, state.reportContact) },
         onGenusFilterClear = viewModel::onGenusFilterClear,
         onGenusPickerOpen = viewModel::onGenusPickerOpen,
         onGenusPick = viewModel::onGenusPick,
@@ -92,6 +92,7 @@ fun MapRoute(
         onNearbyOpen = viewModel::onNearbyOpen,
         onNearbyDismiss = viewModel::onNearbyDismiss,
         modifier = modifier,
+        onClusterClick = viewModel::onClusterClick,
     )
 }
 
@@ -109,7 +110,6 @@ fun MapScreen(
     onRemarkableInfoOpen: () -> Unit,
     onRemarkableInfoDismiss: () -> Unit,
     onOpenWikipedia: (String) -> Unit,
-    onReportError: (TreeDetailUi) -> Unit,
     onGenusFilterClear: () -> Unit,
     onGenusPickerOpen: () -> Unit,
     onGenusPick: (GenusChoiceUi) -> Unit,
@@ -119,6 +119,7 @@ fun MapScreen(
     onNearbyOpen: () -> Unit,
     onNearbyDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    onClusterClick: (MapCluster) -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     MessageEffect(state.message, snackbarHostState, onMessageDismiss, onOpenSettings)
@@ -127,6 +128,8 @@ fun MapScreen(
             initialCamera = state.initialCamera,
             cameraRequest = state.cameraRequest,
             markers = state.markers,
+            clusters = state.clusters,
+            onClusterClick = onClusterClick,
             userLocation = state.userLocation,
             config = MapViewModel.MAP_CONFIG,
             palette = mapPalette(),
@@ -155,7 +158,7 @@ fun MapScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = TreesSpacing.xl * 2),
         )
-        TreeSheet(state.selectedTree, onDetailDismiss, onFavoriteToggle, onOpenWikipedia, onReportError)
+        TreeSheet(state.selectedTree, onDetailDismiss, onFavoriteToggle, onOpenWikipedia)
         state.genusPicker?.let { picker ->
             TreesBottomSheet(onDismiss = onGenusPickerDismiss) {
                 GenusPickerContent(picker = picker, onPick = onGenusPick)
@@ -172,14 +175,13 @@ fun MapScreen(
     }
 }
 
-/** The open tree's sheet: its details, favorite, Wikipédia link and « Signaler une erreur ». */
+/** The open tree's sheet: its details, favorite and Wikipédia link. */
 @Composable
 private fun TreeSheet(
     detail: TreeDetailUi?,
     onDismiss: () -> Unit,
     onFavoriteToggle: () -> Unit,
     onOpenWikipedia: (String) -> Unit,
-    onReportError: (TreeDetailUi) -> Unit,
 ) {
     if (detail == null) return
     TreesBottomSheet(onDismiss = onDismiss) {
@@ -187,7 +189,6 @@ private fun TreeSheet(
             detail = detail,
             onFavoriteToggle = onFavoriteToggle,
             onOpenWikipedia = onOpenWikipedia,
-            onReportError = { onReportError(detail) },
         )
     }
 }
@@ -271,6 +272,8 @@ private fun mapPalette() =
         selected = MaterialTheme.colorScheme.onSurface,
         ring = TreesTheme.colors.pinRing,
         userLocation = TreesTheme.colors.userLocation,
+        treeGroup = TreesTheme.colors.treeGroup,
+        treeGroupLabel = TreesTheme.colors.treeGroupLabel,
     )
 
 /** A paper pill floating over the map, softly shadowed. */

@@ -26,6 +26,7 @@ import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.core.map.CameraRequest
 import fr.arbresdeparis.core.map.LocalMapProvider
 import fr.arbresdeparis.core.map.MapCamera
+import fr.arbresdeparis.core.map.MapCluster
 import fr.arbresdeparis.core.map.MapConfig
 import fr.arbresdeparis.core.map.MapMarker
 import fr.arbresdeparis.core.map.MapPalette
@@ -51,10 +52,12 @@ class MapScreenTest {
             initialCamera: MapCamera,
             cameraRequest: CameraRequest?,
             markers: List<MapMarker>,
+            clusters: List<MapCluster>,
             userLocation: GeoPoint?,
             config: MapConfig,
             palette: MapPalette,
             onMarkerClick: (Long) -> Unit,
+            onClusterClick: (MapCluster) -> Unit,
             onCameraChange: (MapCamera, GeoBounds) -> Unit,
             modifier: Modifier,
         ) = Box(modifier)
@@ -90,7 +93,6 @@ class MapScreenTest {
                         onRemarkableInfoOpen = { infoOpens++ },
                         onRemarkableInfoDismiss = {},
                         onOpenWikipedia = {},
-                        onReportError = {},
                         onGenusFilterClear = { genusClears++ },
                         onGenusPickerOpen = { genusPickerOpens++ },
                         onGenusPick = { genusPicks += it.genus },

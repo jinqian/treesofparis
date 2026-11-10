@@ -21,7 +21,14 @@ data class TreeEntity(
     val stage: String?,
     val remarkable: Boolean,
     val address: String,
+    /** Paris: « PARIS 12E ARRDT », a Bois or a département; other sources: the town, as [city]. */
     val arrondissement: String,
     val lat: Double,
     val lon: Double,
+    /** The town the tree stands in (« Paris », « Issy-les-Moulineaux », « Pantin »). */
+    val city: String = "Paris",
+    /** The dataset it comes from: « paris » or « gpso » ([fr.arbresdeparis.domain.model.TreeSource]). */
+    val source: String = "paris",
+    /** A height range (« 5 à 10 », in metres) when the source has no exact [heightM]. */
+    @ColumnInfo(name = "height_class") val heightClass: String? = null,
 )

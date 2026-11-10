@@ -3,6 +3,7 @@ package fr.arbresdeparis.feature.map
 import androidx.lifecycle.SavedStateHandle
 import fr.arbresdeparis.core.designsystem.leaf.TreeLeaf
 import fr.arbresdeparis.core.map.MapCamera
+import fr.arbresdeparis.core.map.MapCluster
 import fr.arbresdeparis.core.map.MarkerStyle
 import fr.arbresdeparis.domain.model.GeoBounds
 import fr.arbresdeparis.domain.model.GeoPoint
@@ -10,6 +11,7 @@ import fr.arbresdeparis.domain.usecase.GetFloweringSeason
 import fr.arbresdeparis.domain.usecase.GetGenera
 import fr.arbresdeparis.domain.usecase.GetNearestTrees
 import fr.arbresdeparis.domain.usecase.GetTree
+import fr.arbresdeparis.domain.usecase.GetTreeClusters
 import fr.arbresdeparis.domain.usecase.GetTreesInBounds
 import fr.arbresdeparis.domain.usecase.LocateUser
 import fr.arbresdeparis.domain.usecase.ObserveIsFavorite
@@ -46,6 +48,7 @@ class MapViewModelTest {
     private fun viewModel(saved: SavedStateHandle = SavedStateHandle()) =
         MapViewModel(
             getTreesInBounds = GetTreesInBounds(trees),
+            getTreeClusters = GetTreeClusters(trees),
             getTree = GetTree(trees),
             observeIsFavorite = ObserveIsFavorite(favorites),
             toggleFavorite = ToggleFavorite(favorites, trees),
@@ -53,19 +56,9 @@ class MapViewModelTest {
             getNearestTrees = GetNearestTrees(trees),
             getFloweringSeason = GetFloweringSeason(FakeFloweringRepository()),
             getGenera = GetGenera(FakeStatisticsRepository()),
-            appInfo = APP_INFO,
-            datasetInfo = DATASET_INFO,
             clock = NOVEMBER,
             savedState = saved,
         )
-
-    @Test
-    fun reportContact_isTheContactAddressWithTheAppVersionAndDataDate() {
-        assertEquals(
-            ReportContactUi("arbresdeparis@gmail.com", "0.1.0", "6 novembre 2026"),
-            viewModel().uiState.value.reportContact,
-        )
-    }
 
     @Test
     fun selectedTree_knowsWhereItStands() =
@@ -93,17 +86,63 @@ class MapViewModelTest {
     }
 
     @Test
-    fun onCameraChange_belowMinZoom_showsZoomHintAndLoadsNoTrees() =
+    fun onCameraChange_belowMinZoom_showsTreeGroupsInsteadOfTrees() =
         runTest(main.dispatcher) {
             val vm = viewModel()
             vm.onCameraChange(MapCamera(center, zoom = MapViewModel.MIN_TREE_ZOOM - 1), near)
             advanceUntilIdle()
-            assertTrue(vm.uiState.value.showZoomHint)
+            val state = vm.uiState.value
+            assertTrue(state.showZoomHint)
+            assertTrue(state.markers.isEmpty())
+            assertTrue(trees.boundsCalls.isEmpty())
+            assertEquals(listOf(near), trees.clusterCalls)
+            assertTrue(state.clusters.isNotEmpty())
+            // Every tree of the view is in exactly one group.
+            assertEquals(
+                trees.getTreesInBounds(near, Int.MAX_VALUE, false, null).size,
+                state.clusters.sumOf { it.count },
+            )
+        }
+
+    @Test
+    fun onCameraChange_atStreetLevel_dropsTheGroups() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            vm.onCameraChange(MapCamera(center, zoom = 13.0), near)
+            advanceUntilIdle()
+            vm.onCameraChange(MapCamera(center, zoom = 17.0), near)
+            advanceUntilIdle()
             assertTrue(
-                vm.uiState.value.markers
+                vm.uiState.value.clusters
                     .isEmpty(),
             )
-            assertTrue(trees.boundsCalls.isEmpty())
+            assertTrue(
+                vm.uiState.value.markers
+                    .isNotEmpty(),
+            )
+        }
+
+    @Test
+    fun onClusterClick_zoomsTwoLevelsCloser_atMostJustPastStreetLevel() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            val group = MapCluster(id = 0, position = GeoPoint(48.86, 2.34), count = 12, label = "12")
+            vm.onCameraChange(MapCamera(center, zoom = 12.0), near)
+            vm.onClusterClick(group)
+            assertEquals(
+                MapCamera(group.position, zoom = 14.0),
+                vm.uiState.value.cameraRequest
+                    ?.camera,
+            )
+
+            vm.onCameraChange(MapCamera(center, zoom = 15.0), near)
+            vm.onClusterClick(group)
+            assertEquals(
+                16.0,
+                vm.uiState.value.cameraRequest
+                    ?.camera
+                    ?.zoom,
+            )
         }
 
     @Test

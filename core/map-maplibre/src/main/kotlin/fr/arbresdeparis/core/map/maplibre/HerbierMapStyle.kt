@@ -67,11 +67,16 @@ data class PinColors(
     val selected: String,
     val ring: String,
     val user: String,
+    val treeGroup: String,
+    val treeGroupLabel: String,
 ) {
-    val all: Set<String> get() = setOf(tree, remarkable, selected, ring, user)
+    val all: Set<String> get() = setOf(tree, remarkable, selected, ring, user, treeGroup, treeGroupLabel)
 }
 
 internal const val PINS_SOURCE = "pins"
+internal const val CLUSTERS_SOURCE = "clusters"
+internal const val CLUSTER_LAYER = "clusters"
+internal const val CLUSTER_COUNT_LAYER = "clusters-count"
 internal const val USER_SOURCE = "user"
 internal const val PIN_LAYER_TREE = "pins-tree"
 internal const val PIN_LAYER_REMARKABLE = "pins-remarkable"
@@ -85,6 +90,7 @@ private const val OPENFREEMAP_TILES = "https://tiles.openfreemap.org/planet"
 private const val OPENFREEMAP_GLYPHS = "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf"
 private const val FONT_REGULAR = "Noto Sans Regular"
 private const val FONT_ITALIC = "Noto Sans Italic"
+private const val FONT_BOLD = "Noto Sans Bold"
 private const val VECTOR = "openmaptiles"
 
 /**
@@ -119,9 +125,10 @@ fun herbierStyle(
                 put("url", OPENFREEMAP_TILES)
             }
             put(PINS_SOURCE, emptyGeoJsonSource())
+            put(CLUSTERS_SOURCE, emptyGeoJsonSource())
             put(USER_SOURCE, emptyGeoJsonSource())
         }
-        put("layers", JsonArray(basemapLayers(basemap) + pinLayers(pins)))
+        put("layers", JsonArray(basemapLayers(basemap) + clusterLayers(pins) + pinLayers(pins)))
     }.toString()
 
 private fun emptyGeoJsonSource() =
@@ -222,6 +229,58 @@ private fun basemapLayers(c: BasemapColors): List<JsonObject> =
             filter = classIn("city", "town", "village"),
         ),
     )
+
+/**
+ * Groups of trees below street level: a deep green disc, ringed like the pins, whose area grows with the count (the
+ * radius follows its square root, from 12 dp for a few trees to 28 dp for a couple of thousand), the count inside in
+ * bold paper white.
+ */
+private fun clusterLayers(p: PinColors): List<JsonObject> {
+    val radius =
+        expression(
+            "interpolate",
+            expression("linear"),
+            expression("sqrt", expression("get", "count")),
+            1,
+            12,
+            10,
+            15,
+            30,
+            20,
+            60,
+            28,
+        )
+    val disc =
+        buildJsonObject {
+            put("id", CLUSTER_LAYER)
+            put("type", "circle")
+            put("source", CLUSTERS_SOURCE)
+            putJsonObject("paint") {
+                put("circle-color", p.treeGroup)
+                put("circle-opacity", CLUSTER_OPACITY)
+                put("circle-radius", radius)
+                put("circle-stroke-color", p.ring)
+                put("circle-stroke-width", 1.5)
+            }
+        }
+    val count =
+        buildJsonObject {
+            put("id", CLUSTER_COUNT_LAYER)
+            put("type", "symbol")
+            put("source", CLUSTERS_SOURCE)
+            putJsonObject("layout") {
+                put("text-field", expression("get", "label"))
+                put("text-font", JsonArray(listOf(JsonPrimitive(FONT_BOLD))))
+                put("text-size", 12)
+                put("text-allow-overlap", true)
+                put("text-ignore-placement", true)
+            }
+            putJsonObject("paint") { put("text-color", p.treeGroupLabel) }
+        }
+    return listOf(disc, count)
+}
+
+private const val CLUSTER_OPACITY = 0.92
 
 private fun pinLayers(p: PinColors): List<JsonObject> =
     listOf(

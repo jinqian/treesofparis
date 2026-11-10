@@ -31,7 +31,7 @@ META = REPO / "core" / "data" / "trees-db-meta.json"
 OUT = REPO / "website" / "maps" / "data"
 
 # Must match GeoBounds.COVERAGE in :core:domain and COVERAGE in update_trees.py: south, west, north, east.
-COVERAGE = (48.735, 2.200, 48.920, 2.480)
+COVERAGE = (48.735, 2.150, 48.920, 2.480)
 # A cell: 0.01° of latitude × 0.015° of longitude, about 1.1 km × 1.1 km in Paris.
 CELL_LAT = 0.01
 CELL_LON = 0.015
@@ -59,12 +59,15 @@ FIELDS = (
     "remarkable",
     "address",
     "area",
+    "heightClass",
+    "source",
 )
 
 # --- French place names (same rules as fr.arbresdeparis.domain.format.PlaceNames) ---------------------------------
 
 PARTICLES = {"de", "du", "des", "la", "le", "les", "et", "sur", "sous", "au", "aux", "en", "à"}
 ROMAN_NUMERAL = re.compile(r"^[ivx]{2,}$")
+ELISION = re.compile(r"^([dl])'(.+)$")
 ARRONDISSEMENT = re.compile(r"^PARIS (\d{1,2})(?:ER|E) ARRDT$")
 
 
@@ -77,15 +80,24 @@ def format_area(raw: str) -> str:
     return f"Paris {number}{'er' if number == 1 else 'e'}"
 
 
-def _title_compound(word: str) -> str:
-    parts = word.split("-")
-    return "-".join(p if i > 0 and p in PARTICLES else p[:1].upper() + p[1:] for i, p in enumerate(parts))
+def _title_compound(word: str, first: bool) -> str:
+    parts = []
+    for i, part in enumerate(word.split("-")):
+        elision = ELISION.match(part)
+        if elision:  # « d'Avray », « l'Est »; the article keeps its capital only at the very start
+            article = elision.group(1).upper() if first and i == 0 else elision.group(1)
+            parts.append(f"{article}'{elision.group(2)[:1].upper()}{elision.group(2)[1:]}")
+        elif i > 0 and part in PARTICLES:
+            parts.append(part)
+        else:
+            parts.append(part[:1].upper() + part[1:])
+    return "-".join(parts)
 
 
 def format_place(raw: str) -> str:
-    """Upper-case dataset text to French title case: "QUAI DE LA SEINE" → "Quai de la Seine"."""
+    """Dataset text to French title case: "QUAI DE LA SEINE" → "Quai de la Seine", "VILLE-D'AVRAY" → "Ville-d'Avray"."""
     words = []
-    for index, word in enumerate(raw.strip().lower().split(" ")):
+    for index, word in enumerate(re.sub(r"['’]+", "'", raw.strip()).lower().split(" ")):
         if index > 0 and word == "a":
             words.append("à")  # the dataset has no accents: a lone « A » is the preposition « à »
         elif index > 0 and word in PARTICLES:
@@ -93,7 +105,7 @@ def format_place(raw: str) -> str:
         elif index > 0 and ROMAN_NUMERAL.match(word):
             words.append(word.upper())
         else:
-            words.append(_title_compound(word))
+            words.append(_title_compound(word, first=index == 0))
     return " ".join(words)
 
 
@@ -120,7 +132,9 @@ def tree_row(row: sqlite3.Row) -> list:
         row["stage"],
         1 if row["remarkable"] else 0,
         format_place(row["address"]) if row["address"] else None,
-        format_area(row["arrondissement"]),
+        format_area(row["arrondissement"]) if row["city"] == "Paris" else row["city"],
+        row["height_class"],
+        row["source"],
     ]
 
 

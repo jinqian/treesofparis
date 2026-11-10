@@ -5,6 +5,7 @@ import fr.arbresdeparis.domain.model.FavoriteSnapshot
 import fr.arbresdeparis.domain.model.GeoBounds
 import fr.arbresdeparis.domain.model.GeoPoint
 import fr.arbresdeparis.domain.model.Tree
+import fr.arbresdeparis.domain.model.TreeCluster
 import fr.arbresdeparis.domain.repository.FavoritesRepository
 import fr.arbresdeparis.domain.repository.TreeRepository
 import kotlinx.coroutines.Dispatchers
@@ -53,6 +54,12 @@ class FakeTreeRepository(
     override suspend fun getTreesByIds(ids: List<Long>) = trees.filter { it.id in ids }
 
     override suspend fun getRemarkableTrees() = trees.filter { it.remarkable }
+
+    override suspend fun getTreeClusters(
+        bounds: GeoBounds,
+        cellLat: Double,
+        cellLon: Double,
+    ) = emptyList<TreeCluster>()
 }
 
 class FakeFavoritesRepository(

@@ -2,11 +2,12 @@ package fr.arbresdeparis.feature.map
 
 import fr.arbresdeparis.core.designsystem.leaf.TreeLeaf
 import fr.arbresdeparis.domain.model.GeoPoint
+import fr.arbresdeparis.domain.model.TreeSource
 
 /** What the detail sheet shows. Null fields are unknown in the dataset; the UI shows a placeholder. */
 data class TreeDetailUi(
     val id: Long,
-    /** Where the tree stands; « Signaler une erreur » gives it in the email. */
+    /** Where the tree stands. */
     val location: GeoPoint,
     val name: String,
     val scientificName: String?,
@@ -23,6 +24,8 @@ data class TreeDetailUi(
     val wikipedia: WikipediaUi? = null,
     /** When the genus flowers, or null when the guide has no calendar for it. */
     val flowering: FloweringUi? = null,
+    /** The dataset it comes from, credited at the bottom of the sheet. */
+    val source: TreeSource = TreeSource.PARIS,
 )
 
 /** The 12-month flowering bar of the sheet. */

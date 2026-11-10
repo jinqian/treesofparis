@@ -25,3 +25,10 @@ internal data class GenusNameCountRow(
     val count: Int,
     @ColumnInfo(name = "remarkable_count") val remarkableCount: Int,
 )
+
+/** One cell of [TreeDao.clusters]: how many trees, and where they are on average. */
+data class ClusterRow(
+    val lat: Double,
+    val lon: Double,
+    val count: Int,
+)

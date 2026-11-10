@@ -1,6 +1,7 @@
 package fr.arbresdeparis.core.map.maplibre
 
 import android.content.Context
+import android.graphics.PointF
 import android.graphics.RectF
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -31,6 +32,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import fr.arbresdeparis.core.map.CameraRequest
 import fr.arbresdeparis.core.map.MapCamera
+import fr.arbresdeparis.core.map.MapCluster
 import fr.arbresdeparis.core.map.MapConfig
 import fr.arbresdeparis.core.map.MapMarker
 import fr.arbresdeparis.core.map.MapPalette
@@ -61,16 +63,19 @@ class MapLibreMapProvider
             initialCamera: MapCamera,
             cameraRequest: CameraRequest?,
             markers: List<MapMarker>,
+            clusters: List<MapCluster>,
             userLocation: GeoPoint?,
             config: MapConfig,
             palette: MapPalette,
             onMarkerClick: (Long) -> Unit,
+            onClusterClick: (MapCluster) -> Unit,
             onCameraChange: (MapCamera, GeoBounds) -> Unit,
             modifier: Modifier,
         ) {
             val context = LocalContext.current
             val currentOnCameraChange by rememberUpdatedState(onCameraChange)
             val currentOnMarkerClick by rememberUpdatedState(onMarkerClick)
+            val currentOnClusterClick by rememberUpdatedState(onClusterClick)
             val dark = isSystemInDarkTheme()
             val style =
                 remember(dark, palette) {
@@ -86,6 +91,7 @@ class MapLibreMapProvider
                         tapRadiusPx = tapRadiusPx,
                         onCameraChange = { camera, bounds -> currentOnCameraChange(camera, bounds) },
                         onMarkerClick = { id -> currentOnMarkerClick(id) },
+                        onClusterClick = { cluster -> currentOnClusterClick(cluster) },
                     )
                 }
             MapViewLifecycle(state.mapView)
@@ -98,6 +104,7 @@ class MapLibreMapProvider
                         state.setConfig(config)
                         state.request(cameraRequest)
                         state.setMarkers(markers)
+                        state.setClusters(clusters)
                         state.setUser(userLocation)
                     },
                 )
@@ -122,6 +129,7 @@ private class MapLibreState(
     private val tapRadiusPx: Float,
     private val onCameraChange: (MapCamera, GeoBounds) -> Unit,
     private val onMarkerClick: (Long) -> Unit,
+    private val onClusterClick: (MapCluster) -> Unit,
 ) {
     val mapView: MapView
     private var map: MapLibreMap? = null
@@ -131,6 +139,8 @@ private class MapLibreState(
     private var pendingRequest: CameraRequest? = null
     private var markers: List<MapMarker> = emptyList()
     private var markersShown: List<MapMarker>? = null
+    private var clusters: List<MapCluster> = emptyList()
+    private var clustersShown: List<MapCluster>? = null
     private var user: GeoPoint? = null
     private var userShown: Boolean = false
     private var userShownAt: GeoPoint? = null
@@ -188,6 +198,11 @@ private class MapLibreState(
         pushData()
     }
 
+    fun setClusters(newClusters: List<MapCluster>) {
+        clusters = newClusters
+        pushData()
+    }
+
     fun setUser(location: GeoPoint?) {
         user = location
         pushData()
@@ -201,6 +216,7 @@ private class MapLibreState(
             style = loaded
             // A new style starts with empty sources: send the pins again.
             markersShown = null
+            clustersShown = null
             userShown = false
             pushData()
         }
@@ -221,6 +237,10 @@ private class MapLibreState(
         if (markers != markersShown) {
             loaded.getSourceAs<GeoJsonSource>(PINS_SOURCE)?.setGeoJson(markersGeoJson(markers))
             markersShown = markers
+        }
+        if (clusters != clustersShown) {
+            loaded.getSourceAs<GeoJsonSource>(CLUSTERS_SOURCE)?.setGeoJson(clustersGeoJson(clusters))
+            clustersShown = clusters
         }
         if (!userShown || user != userShownAt) {
             loaded.getSourceAs<GeoJsonSource>(USER_SOURCE)?.setGeoJson(userGeoJson(user))
@@ -244,23 +264,47 @@ private class MapLibreState(
         )
     }
 
-    /** Opens the topmost pin near the tap (selected, then remarkable, then any tree). */
+    /** Opens the topmost pin near the tap (selected, then remarkable, then any tree), else the group under it. */
     private fun onTap(
         ready: MapLibreMap,
         point: LatLng,
     ): Boolean {
         val screen = ready.projection.toScreenLocation(point)
+        val treeId = pinNear(ready, screen)
+        val cluster = if (treeId == null) clusterAt(ready, screen) else null
+        when {
+            treeId != null -> onMarkerClick(treeId)
+            cluster != null -> onClusterClick(cluster)
+        }
+        return treeId != null || cluster != null
+    }
+
+    private fun pinNear(
+        ready: MapLibreMap,
+        screen: PointF,
+    ): Long? {
         val area = RectF(screen.x - tapRadiusPx, screen.y - tapRadiusPx, screen.x + tapRadiusPx, screen.y + tapRadiusPx)
+        return PIN_LAYERS_TOP_FIRST.firstNotNullOfOrNull { layer ->
+            ready
+                .queryRenderedFeatures(area, layer)
+                .firstOrNull()
+                ?.getNumberProperty("id")
+                ?.toLong()
+        }
+    }
+
+    /** A group is a large disc: only a tap inside it counts. */
+    private fun clusterAt(
+        ready: MapLibreMap,
+        screen: PointF,
+    ): MapCluster? {
         val id =
-            PIN_LAYERS_TOP_FIRST.firstNotNullOfOrNull { layer ->
-                ready
-                    .queryRenderedFeatures(area, layer)
-                    .firstOrNull()
-                    ?.getNumberProperty("id")
-                    ?.toLong()
-            } ?: return false
-        onMarkerClick(id)
-        return true
+            ready
+                .queryRenderedFeatures(screen, CLUSTER_LAYER)
+                .firstOrNull()
+                ?.getNumberProperty("id")
+                ?.toLong() ?: return null
+        return clusters.firstOrNull { it.id == id }
     }
 
     private companion object {
