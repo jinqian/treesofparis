@@ -1,13 +1,17 @@
 # Releasing
 
 How to cut a release of Arbres de Paris: versioning, release notes, tagging and the signed bundle. CI builds and
-signs the bundle on each tag; uploading it to the Play Console is still done by hand.
+signs the bundle on each tag and uploads it to Google Play as a draft on the closed testing track.
 
 ## Versioning
 
-- `versionName` (in `app/build.gradle.kts`) follows [SemVer](https://semver.org): `0.y.z` until the first public
-  release, then `1.0.0`. A new user-facing feature bumps `y` (minor), fixes only bump `z` (patch).
-- `versionCode` goes up by exactly one per release, whatever the `versionName` change.
+- The version is `appVersionName` at the top of `app/build.gradle.kts`, in [SemVer](https://semver.org): `0.y.z`
+  until the first public release, then `1.0.0`. A new user-facing feature bumps `y` (minor), fixes only bump `z`
+  (patch). Minor and patch stay below 100.
+- `versionCode` is computed from it: `major × 10,000 + minor × 100 + patch` (0.1.0 → 100, 0.2.0 → 200,
+  1.0.0 → 10000). It goes up whenever the version does, as Google Play requires. `./gradlew -q :app:printVersionCode`
+  prints it. The release workflow fails if a tag does not match `appVersionName` or its code is not above every
+  earlier tag's.
 - Each release is tagged `v<versionName>` on `main` (e.g. `v0.1.0`).
 
 ## Release notes
@@ -24,8 +28,9 @@ watermark », not « update screen »).
 
 ## Steps
 
-1. On an up-to-date `main`, bump `versionCode` and `versionName` in `app/build.gradle.kts`.
-2. Write `fastlane/metadata/android/fr-FR/changelogs/<versionCode>.txt` (≤ 500 characters).
+1. On an up-to-date `main`, bump `appVersionName` in `app/build.gradle.kts`.
+2. Write `fastlane/metadata/android/fr-FR/changelogs/<versionCode>.txt` (≤ 500 characters), named after the code
+   `./gradlew -q :app:printVersionCode` prints (`100.txt` for 0.1.0).
 3. Regenerate the changelog for the new tag:
    ```bash
    git cliff --tag v<versionName> -o CHANGELOG.md   # brew install git-cliff, or pip install git-cliff
@@ -37,9 +42,14 @@ watermark », not « update screen »).
    git tag -a v<versionName> -m "Arbres de Paris <versionName>"
    git push origin v<versionName>
    ```
-6. The tag starts the Release workflow, which builds the signed App Bundle (see « Release build » below). Download
-   it from the workflow run and upload it to the Play Console with its R8 mapping file. Locally,
-   `./gradlew bundleRelease` does the same with `keystore.properties`.
+6. The tag starts the Release workflow. It builds the signed App Bundle (see « Release build » below), then uploads
+   it to Google Play with its R8 mapping file and the French note, as a **draft** on the closed testing track
+   (`alpha`). See « Google Play upload » below.
+7. In the Play Console (Test and release → Closed testing), check the draft and send it for review / roll it out.
+
+To upload to another track, or to roll out at once, run the workflow from the Actions tab (Release → Run workflow)
+and pick the track and status. Untick « Upload to Google Play » to only build the bundle. Locally,
+`./gradlew bundleRelease` builds the same bundle with `keystore.properties`.
 
 Between releases, `git cliff -o CHANGELOG.md` refreshes the « Unreleased » section.
 
@@ -72,7 +82,7 @@ debug key, which Google Play rejects).
 
 **Signing in CI.** `.github/workflows/release.yml` builds the signed bundle on every `v*` tag (or from the Actions tab
 with « Run workflow ») and attaches `app-release.aab` and `mapping.txt` to the run for 90 days. It needs four
-repository secrets (Settings → Secrets and variables → Actions), set once from the repository root:
+repository secrets for signing (Settings → Secrets and variables → Actions), set once from the repository root:
 
 ```bash
 base64 -i upload-keystore.jks | gh secret set TREES_KEYSTORE_BASE64
@@ -93,6 +103,26 @@ base64 -i app/google-services.json | gh secret set GOOGLE_SERVICES_JSON
 ```
 
 Replace the secret when the file changes (a new app registered, for example).
+
+**Google Play upload.** The workflow's last step runs fastlane `supply`, which uploads the bundle, `mapping.txt`
+and `fastlane/metadata/android/fr-FR/changelogs/<versionCode>.txt` (the step fails if that note is missing). It
+never changes the store listing, the description or the images. It signs in with a Google Cloud service account:
+
+1. In [Google Cloud](https://console.cloud.google.com), pick (or create) a project, enable the **Google Play Android
+   Developer API**, then IAM → Service accounts → create one (no role needed) → Keys → Add key → JSON.
+2. In the Play Console → Users and permissions → Invite new user: the service account's email, with access to
+   Arbres de Paris only and the « Release to testing tracks » permission (add « Release to production » later, if
+   CI should also publish to production).
+3. Store the key as a secret, then delete the downloaded file:
+   ```bash
+   base64 -i play-service-account.json | gh secret set PLAY_SERVICE_ACCOUNT_JSON
+   ```
+
+Two Google Play limits:
+- **The first bundle goes up by hand.** The API can only add releases to an app that already has one: upload the
+  first bundle in the Play Console (download it from the workflow run, with « Upload to Google Play » unticked).
+- **Drafts only until the app is reviewed.** While the app has never been published, Google Play accepts only
+  `draft` releases from the API, so keep the `draft` status; `completed` works once the app is live.
 
 **Build and measure.**
 
