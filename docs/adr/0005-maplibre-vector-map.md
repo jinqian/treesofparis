@@ -7,7 +7,8 @@ Status: accepted (2026-11-09). Supersedes the osmdroid choice of ADR 0002 (the c
   a published app rely on that server, so the app could not ship to Google Play with it.
 - The standard OSM tiles are bright and full of icons; the « Herbier » interface looked pasted on top.
 - Pins drawn by osmdroid merged into continuous bands at medium zoom.
-- Plan: `docs/superpowers/plans/2026-11-07-maplibre-herbier-map.md`.
+- Plan: `docs/superpowers/plans/2026-11-07-maplibre-herbier-map.md`, done and deleted on 2026-11-10 (in git history,
+  commit `cf02764`).
 
 ## Decision
 - `:core:map-maplibre` implements `MapProvider` with **MapLibre Native Android** (`org.maplibre.gl:android-sdk`,
