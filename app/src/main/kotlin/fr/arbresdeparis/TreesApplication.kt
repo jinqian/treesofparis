@@ -2,6 +2,7 @@ package fr.arbresdeparis
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
+import fr.arbresdeparis.crash.FirebaseCrashReporting
 import fr.arbresdeparis.domain.usecase.RefreshFavoriteSnapshots
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -13,10 +14,14 @@ class TreesApplication : Application() {
     @Inject
     lateinit var refreshFavoriteSnapshots: RefreshFavoriteSnapshots
 
+    @Inject
+    lateinit var crashReporting: FirebaseCrashReporting
+
     private val scope = CoroutineScope(SupervisorJob())
 
     override fun onCreate() {
         super.onCreate()
+        crashReporting.applyToCrashlytics()
         // Remember what each favorite tree is while it is still in the data, so a later data refresh that removes it
         // leaves its name in Favoris. Room runs the queries off the main thread.
         scope.launch { refreshFavoriteSnapshots() }

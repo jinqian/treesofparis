@@ -23,6 +23,8 @@ UI language: **French**. Read `docs/superpowers/specs/` for the design and `docs
 - `:core:domain` has **no Android dependencies**.
 - Features **never** depend on `:core:data` or `:core:map-maplibre` (`checkModuleBoundaries` fails the build).
 - `org.maplibre` imports are allowed **only** in `:core:map-maplibre` (Detekt `ForbiddenImport`).
+- Firebase (Crashlytics only) lives **only** in `:app`, behind `CrashReportingRepository` (ADR 0007).
+  `app/google-services.json` is git-ignored; builds without it send nothing.
 - New modules use the convention plugins: `trees.jvm.library`, `trees.android.library`,
   `trees.android.compose`, `trees.android.hilt`, `trees.android.feature`, `trees.android.application`.
   Add versions to `gradle/libs.versions.toml`, never inline.

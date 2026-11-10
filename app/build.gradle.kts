@@ -8,6 +8,23 @@ plugins {
     alias(libs.plugins.aboutlibraries)
 }
 
+// Firebase Crashlytics (ADR 0007). `google-services.json` is git-ignored: copy it from the Firebase console for local
+// builds; CI writes it from the GOOGLE_SERVICES_JSON secret. Without it the app builds and runs, and sends nothing.
+if (file("google-services.json").exists()) {
+    apply(
+        plugin =
+            libs.plugins.google.services
+                .get()
+                .pluginId,
+    )
+    apply(
+        plugin =
+            libs.plugins.firebase.crashlytics
+                .get()
+                .pluginId,
+    )
+}
+
 /**
  * Release signing (upload key for Google Play), from `keystore.properties` at the repository root (git-ignored) or
  * from environment variables in CI. Without them the release build is left unsigned. See RELEASING.md.
@@ -86,4 +103,6 @@ dependencies {
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.kotlinx.serialization.json)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
 }

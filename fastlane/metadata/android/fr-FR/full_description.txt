@@ -20,7 +20,7 @@ VOS FAVORIS
 • Gardez les arbres qui vous plaisent et retrouvez-les en un geste.
 
 RESPECTUEUSE DE VOTRE VIE PRIVÉE
-• Pas de compte, pas de publicité, pas de suivi.
+• Pas de compte, pas de publicité, pas de statistiques d’usage. Seulement des rapports de plantage, que vous pouvez couper.
 • Les arbres sont dans l’application : la fiche s’ouvre même sans réseau. Seul le fond de carte se télécharge.
 • Votre position sert seulement à centrer la carte et à trouver l’arbre le plus proche. Elle n’est ni enregistrée ni partagée.
 

@@ -35,6 +35,10 @@
     <string name="about_map_tiles_detail">Schéma des tuiles vectorielles</string>
     <string name="about_map_host">OpenFreeMap</string>
     <string name="about_map_host_detail">Tuiles vectorielles gratuites, affichées avec MapLibre</string>
+    <string name="about_section_privacy">Confidentialité</string>
+    <string name="about_crash_reports">Envoyer les rapports de plantage</string>
+    <string name="about_crash_reports_detail">Si l’application plante : le modèle du téléphone, les versions d’Android et de l’application, et l’erreur. Jamais votre position ni vos favoris.</string>
+    <string name="about_privacy_policy">Politique de confidentialité</string>
     <string name="about_section_project">Projet</string>
     <string name="about_project_source">Code source</string>
     <string name="about_section_fonts">Polices</string>
