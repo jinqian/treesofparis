@@ -1,7 +1,6 @@
 package fr.arbresdeparis.feature.map
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,9 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -37,10 +33,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.core.locationbutton.compose.LocationButton
+import androidx.core.locationbutton.compose.LocationButtonTextType
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.arbresdeparis.core.designsystem.component.TreesBottomSheet
-import fr.arbresdeparis.core.designsystem.icon.TreesIcons
 import fr.arbresdeparis.core.designsystem.theme.TreesSpacing
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.core.map.MapCamera
@@ -50,7 +47,8 @@ import fr.arbresdeparis.domain.model.GeoBounds
 
 /**
  * The Carte tab. [treeId] opens a tree coming from another screen (Favoris); [genus] shows only that genus (from
- * Herbier). Asks for the location permission once; the map works without it.
+ * Herbier). Never asks for location by itself: the user shares it with the location button (ADR 0006), and the map
+ * centres on them at launch only when location is already granted.
  */
 @Composable
 fun MapRoute(
@@ -61,26 +59,11 @@ fun MapRoute(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    // What to do with the answer of the pending permission request: centre silently (launch), centre with feedback
-    // (« Me localiser ») or find the nearest tree.
-    var onPermissionResult by remember { mutableStateOf<(Boolean) -> Unit>({}) }
-    val permissionLauncher =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts.RequestMultiplePermissions(),
-        ) { results -> onPermissionResult(results.values.any { it }) }
-    val withLocationPermission = { action: (Boolean) -> Unit ->
-        if (context.hasLocationPermission()) {
-            action(true)
-        } else {
-            onPermissionResult = action
-            permissionLauncher.launch(LOCATION_PERMISSIONS)
-        }
-    }
-    var askedForLocation by rememberSaveable { mutableStateOf(false) }
+    var checkedLocationAtLaunch by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        if (!askedForLocation) {
-            askedForLocation = true
-            withLocationPermission { viewModel.onLocationPermissionResult(it, userInitiated = false) }
+        if (!checkedLocationAtLaunch) {
+            checkedLocationAtLaunch = true
+            if (context.hasLocationPermission()) viewModel.onLocationPermissionResult(true, userInitiated = false)
         }
     }
     LaunchedEffect(treeId) { treeId?.let(viewModel::onOpenTree) }
@@ -92,7 +75,7 @@ fun MapRoute(
         onMarkerClick = viewModel::onMarkerClick,
         onDetailDismiss = viewModel::onDetailDismissed,
         onFavoriteToggle = viewModel::onFavoriteToggle,
-        onLocateMe = { withLocationPermission { viewModel.onLocationPermissionResult(it, userInitiated = true) } },
+        onLocateResult = { granted -> viewModel.onLocationPermissionResult(granted, userInitiated = true) },
         onMessageDismiss = viewModel::onMessageShown,
         onOpenSettings = { context.openAppSettings() },
         onRemarkableFilterChange = viewModel::onRemarkableFilterChange,
@@ -104,7 +87,7 @@ fun MapRoute(
         onGenusPickerOpen = viewModel::onGenusPickerOpen,
         onGenusPick = viewModel::onGenusPick,
         onGenusPickerDismiss = viewModel::onGenusPickerDismiss,
-        onFindNearestTree = { withLocationPermission(viewModel::onNearestTreeRequest) },
+        onFindNearestTree = { viewModel.onNearestTreeRequest(context.hasLocationPermission()) },
         onNearbyNext = viewModel::onNearbyNext,
         onNearbyOpen = viewModel::onNearbyOpen,
         onNearbyDismiss = viewModel::onNearbyDismiss,
@@ -119,7 +102,7 @@ fun MapScreen(
     onMarkerClick: (Long) -> Unit,
     onDetailDismiss: () -> Unit,
     onFavoriteToggle: () -> Unit,
-    onLocateMe: () -> Unit,
+    onLocateResult: (Boolean) -> Unit,
     onMessageDismiss: () -> Unit,
     onOpenSettings: () -> Unit,
     onRemarkableFilterChange: (Boolean) -> Unit,
@@ -161,7 +144,7 @@ fun MapScreen(
         )
         LocationControls(
             state = state,
-            onLocateMe = onLocateMe,
+            onLocateResult = onLocateResult,
             onFindNearestTree = onFindNearestTree,
             onNearbyNext = onNearbyNext,
             onNearbyOpen = onNearbyOpen,
@@ -213,7 +196,7 @@ private fun TreeSheet(
 @Composable
 private fun LocationControls(
     state: MapUiState,
-    onLocateMe: () -> Unit,
+    onLocateResult: (Boolean) -> Unit,
     onFindNearestTree: () -> Unit,
     onNearbyNext: () -> Unit,
     onNearbyOpen: () -> Unit,
@@ -228,7 +211,7 @@ private fun LocationControls(
         if (state.nearby == null) {
             NearestTreeButton(isSearching = state.isFindingNearest, onClick = onFindNearestTree)
         }
-        LocateButton(isLocating = state.isLocating, onClick = onLocateMe)
+        LocateButton(isLocating = state.isLocating, onResult = onLocateResult)
         state.nearby?.let {
             NearbyTreeCard(
                 nearby = it,
@@ -305,37 +288,54 @@ private fun FloatingPill(
     )
 }
 
+/**
+ * « Me localiser »: the system location button (Android 17+), icon only, in the round paper look of the map controls.
+ * It shares the precise location for this session; on Android 16 and lower the same button shows the usual permission
+ * prompt. [onResult] tells whether location was granted. While locating, a spinner takes its place.
+ */
 @Composable
 private fun LocateButton(
     isLocating: Boolean,
-    onClick: () -> Unit,
+    onResult: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    FloatingActionButton(
-        onClick = { if (!isLocating) onClick() },
-        modifier = modifier.size(52.dp),
+    val description = stringResource(if (isLocating) R.string.map_locating else R.string.map_locate_me)
+    Surface(
+        // The icon-only button has no label of its own: name it for screen readers.
+        modifier =
+            modifier.size(LOCATE_BUTTON_SIZE).semantics(mergeDescendants = true) {
+                contentDescription =
+                    description
+            },
         shape = CircleShape,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        contentColor = MaterialTheme.colorScheme.primary,
-        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 4.dp, pressedElevation = 6.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shadowElevation = 4.dp,
     ) {
-        if (isLocating) {
-            val description = stringResource(R.string.map_locating)
-            CircularProgressIndicator(
-                modifier = Modifier.size(TreesSpacing.l).semantics { contentDescription = description },
-                strokeWidth = 2.dp,
-            )
-        } else {
-            Icon(
-                TreesIcons.MyLocation,
-                contentDescription = stringResource(R.string.map_locate_me),
-                modifier = Modifier.size(22.dp),
-            )
+        Box(contentAlignment = Alignment.Center) {
+            if (isLocating) {
+                CircularProgressIndicator(modifier = Modifier.size(TreesSpacing.l), strokeWidth = 2.dp)
+            } else {
+                LocationButton(
+                    modifier = Modifier.fillMaxSize(),
+                    backgroundColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    iconTint = MaterialTheme.colorScheme.primary,
+                    textType = LocationButtonTextType.None,
+                    cornerRadius = LOCATE_BUTTON_SIZE / 2,
+                    pressedCornerRadius = LOCATE_BUTTON_SIZE / 2,
+                    onError = { onResult(false) },
+                    onPermissionResult = onResult,
+                )
+            }
         }
     }
 }
 
-/** Shows [message] once in a snackbar, then reports it consumed. Permission errors offer a « Réglages » action. */
+private val LOCATE_BUTTON_SIZE = 52.dp
+
+/**
+ * Shows [message] once in a snackbar, then reports it consumed. A refused permission offers « Réglages » on Android 16
+ * and lower; from Android 17 precise location only comes from the location button, so there is nothing to change there.
+ */
 @Composable
 private fun MessageEffect(
     message: MapMessage?,
@@ -352,7 +352,11 @@ private fun MessageEffect(
         val result =
             snackbarHostState.showSnackbar(
                 message = text,
-                actionLabel = settings.takeIf { message == MapMessage.PERMISSION_DENIED },
+                actionLabel =
+                    settings.takeIf {
+                        message == MapMessage.PERMISSION_DENIED &&
+                            Build.VERSION.SDK_INT < Build.VERSION_CODES.CINNAMON_BUN
+                    },
                 duration = SnackbarDuration.Short,
             )
         currentOnMessageShown()
@@ -366,6 +370,7 @@ private val MapMessage.textRes: Int
             MapMessage.OUT_OF_AREA -> R.string.map_location_outside
             MapMessage.LOCATION_UNAVAILABLE -> R.string.map_location_unavailable
             MapMessage.PERMISSION_DENIED -> R.string.map_location_denied
+            MapMessage.LOCATE_FIRST -> R.string.map_nearest_locate_first
             MapMessage.NO_TREE_NEARBY -> R.string.map_nearest_none
         }
 

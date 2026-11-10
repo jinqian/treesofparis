@@ -604,7 +604,7 @@ class MapViewModelTest {
         }
 
     @Test
-    fun nearestTree_outsideCoverageOrDenied_explainsWhy() =
+    fun nearestTree_outsideCoverageOrNotLocated_explainsWhy() =
         runTest(main.dispatcher) {
             location.location = GeoPoint(45.764, 4.8357) // Lyon
             val vm = viewModel()
@@ -614,7 +614,8 @@ class MapViewModelTest {
 
             vm.onMessageShown()
             vm.onNearestTreeRequest(granted = false)
-            assertEquals(MapMessage.PERMISSION_DENIED, vm.uiState.value.message)
+            // No location yet: the precise location only comes from the location button.
+            assertEquals(MapMessage.LOCATE_FIRST, vm.uiState.value.message)
             assertNull(vm.uiState.value.nearby)
         }
 

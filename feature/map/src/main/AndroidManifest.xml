@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Centre the map on the user (optional: the map works without it). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!--
+      Location centres the map on the user and finds the nearest tree; the map works without it. Precise location only
+      comes from the system location button, for one session (Android 17+; older versions show the usual prompt from
+      the same button). See docs/adr/0006-location-button.md.
+    -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission
+        android:name="android.permission.ACCESS_FINE_LOCATION"
+        android:usesPermissionFlags="onlyForLocationButton"
+        tools:ignore="UnusedAttribute" /> <!-- Ignored before Android 12; it only matters from Android 17. -->
+    <uses-permission android:name="android.permission.USE_LOCATION_BUTTON" />
 </manifest>
