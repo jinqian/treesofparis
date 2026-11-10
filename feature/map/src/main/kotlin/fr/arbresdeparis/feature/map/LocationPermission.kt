@@ -23,6 +23,14 @@ internal fun Context.hasLocationPermission(): Boolean =
         ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
     }
 
+/**
+ * Whether the app has precise location now: shared with the location button for this session (Android 17+) or granted
+ * at the prompt (Android 16 and lower). Approximate location alone is too rough to find the nearest tree.
+ */
+internal fun Context.hasPreciseLocationPermission(): Boolean =
+    ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) ==
+        PackageManager.PERMISSION_GRANTED
+
 /** Opens this app's system settings page, where a permanently refused permission can be granted again. */
 internal fun Context.openAppSettings() {
     startActivity(

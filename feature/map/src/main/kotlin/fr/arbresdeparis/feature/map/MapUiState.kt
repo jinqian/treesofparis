@@ -82,4 +82,4 @@ data class GenusChoiceUi(
 )
 
 /** One-off messages shown in a snackbar. */
-enum class MapMessage { OUT_OF_AREA, LOCATION_UNAVAILABLE, PERMISSION_DENIED, LOCATE_FIRST, NO_TREE_NEARBY }
+enum class MapMessage { OUT_OF_AREA, LOCATION_UNAVAILABLE, PERMISSION_DENIED, NO_TREE_NEARBY }

@@ -650,8 +650,8 @@ class MapViewModelTest {
 
             vm.onMessageShown()
             vm.onNearestTreeRequest(granted = false)
-            // No location yet: the precise location only comes from the location button.
-            assertEquals(MapMessage.LOCATE_FIRST, vm.uiState.value.message)
+            // The user refused to share their location from the button: the same message as « Me localiser ».
+            assertEquals(MapMessage.PERMISSION_DENIED, vm.uiState.value.message)
             assertNull(vm.uiState.value.nearby)
         }
 

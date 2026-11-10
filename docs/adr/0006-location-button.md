@@ -19,9 +19,11 @@ Status: accepted (2026-11-10).
   location **for the session**; on Android 16 and lower the same composable shows the usual permission prompt.
 - The app no longer asks for location at launch. It centres on the user at launch only when location is already
   granted.
-- « Arbre le plus proche » keeps its own pill and wording (the button's text can only come from a system list).
-  Without location it shows « Touchez le bouton de localisation pour partager votre position, puis cherchez l’arbre
-  le plus proche. »; once located, it works for the rest of the session.
+- « Arbre le plus proche » behaves like « Me localiser » (amended 2026-11-11): until precise location is shared, it
+  is the system location button itself, a green pill reading « Près de ma position exacte » (the button's text can
+  only come from a system list); one tap shares the location and shows the nearest tree. Once shared, it becomes the
+  app's own « Arbre le plus proche » pill for the rest of the session. The screen checks the permission again each
+  time it comes back to the foreground.
 - Manifest (`:feature:map`): `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION` with `onlyForLocationButton`, and
   `USE_LOCATION_BUTTON`. The « Réglages » snackbar action after a refusal is only offered on Android 16 and lower.
 

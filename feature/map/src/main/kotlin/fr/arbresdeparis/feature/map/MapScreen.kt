@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.locationbutton.compose.LocationButton
 import androidx.core.locationbutton.compose.LocationButtonTextType
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.arbresdeparis.core.designsystem.component.TreesBottomSheet
 import fr.arbresdeparis.core.designsystem.theme.TreesSpacing
@@ -67,6 +68,12 @@ fun MapRoute(
             if (context.hasLocationPermission()) viewModel.onLocationPermissionResult(true, userInitiated = false)
         }
     }
+    // The system grants precise location for a session: check again whenever the screen comes back.
+    var preciseLocation by remember { mutableStateOf(context.hasPreciseLocationPermission()) }
+    LifecycleResumeEffect(Unit) {
+        preciseLocation = context.hasPreciseLocationPermission()
+        onPauseOrDispose {}
+    }
     LaunchedEffect(treeId) { treeId?.let(viewModel::onOpenTree) }
     LaunchedEffect(genus) { genus?.let(viewModel::onGenusFilterRequest) }
 
@@ -76,7 +83,10 @@ fun MapRoute(
         onMarkerClick = viewModel::onMarkerClick,
         onDetailDismiss = viewModel::onDetailDismissed,
         onFavoriteToggle = viewModel::onFavoriteToggle,
-        onLocateResult = { granted -> viewModel.onLocationPermissionResult(granted, userInitiated = true) },
+        onLocateResult = { granted ->
+            preciseLocation = context.hasPreciseLocationPermission()
+            viewModel.onLocationPermissionResult(granted, userInitiated = true)
+        },
         onMessageDismiss = viewModel::onMessageShown,
         onOpenSettings = { context.openAppSettings() },
         onRemarkableFilterChange = viewModel::onRemarkableFilterChange,
@@ -93,6 +103,11 @@ fun MapRoute(
         onNearbyDismiss = viewModel::onNearbyDismiss,
         modifier = modifier,
         onClusterClick = viewModel::onClusterClick,
+        preciseLocation = preciseLocation,
+        onNearestLocationResult = { granted ->
+            preciseLocation = context.hasPreciseLocationPermission()
+            viewModel.onNearestTreeRequest(granted)
+        },
     )
 }
 
@@ -120,6 +135,8 @@ fun MapScreen(
     onNearbyDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     onClusterClick: (MapCluster) -> Unit = {},
+    preciseLocation: Boolean = true,
+    onNearestLocationResult: (Boolean) -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     MessageEffect(state.message, snackbarHostState, onMessageDismiss, onOpenSettings)
@@ -149,6 +166,8 @@ fun MapScreen(
             state = state,
             onLocateResult = onLocateResult,
             onFindNearestTree = onFindNearestTree,
+            preciseLocation = preciseLocation,
+            onNearestLocationResult = onNearestLocationResult,
             onNearbyNext = onNearbyNext,
             onNearbyOpen = onNearbyOpen,
             onNearbyDismiss = onNearbyDismiss,
@@ -193,8 +212,13 @@ private fun TreeSheet(
     }
 }
 
-/** « Arbre le plus proche » over « Me localiser »; the nearby tree's card takes the button's place under them. */
+/**
+ * « Arbre le plus proche » over « Me localiser »; the nearby tree's card takes the button's place under them. Until
+ * precise location is shared ([preciseLocation] false), « Arbre le plus proche » is the system location button itself
+ * (« Près de ma position exacte »): one tap shares the location and finds the tree, like « Me localiser ».
+ */
 @Composable
+@Suppress("LongParameterList") // the controls' state and events
 private fun LocationControls(
     state: MapUiState,
     onLocateResult: (Boolean) -> Unit,
@@ -203,6 +227,8 @@ private fun LocationControls(
     onNearbyOpen: () -> Unit,
     onNearbyDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    preciseLocation: Boolean = true,
+    onNearestLocationResult: (Boolean) -> Unit = {},
 ) {
     Column(
         modifier = modifier.padding(TreesSpacing.m),
@@ -210,7 +236,11 @@ private fun LocationControls(
         verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
     ) {
         if (state.nearby == null) {
-            NearestTreeButton(isSearching = state.isFindingNearest, onClick = onFindNearestTree)
+            if (preciseLocation || state.isFindingNearest) {
+                NearestTreeButton(isSearching = state.isFindingNearest, onClick = onFindNearestTree)
+            } else {
+                NearestTreeLocationButton(onResult = onNearestLocationResult)
+            }
         }
         LocateButton(isLocating = state.isLocating, onResult = onLocateResult)
         state.nearby?.let {
@@ -373,7 +403,6 @@ private val MapMessage.textRes: Int
             MapMessage.OUT_OF_AREA -> R.string.map_location_outside
             MapMessage.LOCATION_UNAVAILABLE -> R.string.map_location_unavailable
             MapMessage.PERMISSION_DENIED -> R.string.map_location_denied
-            MapMessage.LOCATE_FIRST -> R.string.map_nearest_locate_first
             MapMessage.NO_TREE_NEARBY -> R.string.map_nearest_none
         }
 

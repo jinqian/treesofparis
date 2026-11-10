@@ -160,12 +160,12 @@ class MapViewModel
 
         /**
          * « Arbre le plus proche »: frames the closest tree (of the active filter) and the user, and highlights it; the
-         * card then offers its sheet and the next closest trees. Without location ([granted] false) it points to the
-         * location button, the only way to share a precise location.
+         * card then offers its sheet and the next closest trees. [granted] is false when the user refused to share
+         * their location (the button shares it first, like « Me localiser »).
          */
         fun onNearestTreeRequest(granted: Boolean) {
             if (!granted) {
-                state.update { it.copy(message = MapMessage.LOCATE_FIRST) }
+                state.update { it.copy(message = MapMessage.PERMISSION_DENIED) }
                 return
             }
             if (state.value.isFindingNearest) return
