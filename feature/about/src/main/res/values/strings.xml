@@ -2,7 +2,7 @@
 <resources>
     <string name="about_title">À propos</string>
     <string name="about_app_name">Arbres de Paris</string>
-    <string name="about_description">Explorez sur une carte les arbres gérés par la Ville de Paris, dans Paris comme dans ses cimetières et parcs voisins.</string>
+    <string name="about_description">Explorez sur une carte les arbres de Paris et de huit villes voisines, de Boulogne-Billancourt à Meudon, ainsi que ceux des cimetières et parcs que la Ville de Paris gère alentour.</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_section_contact">Contact</string>
     <string name="about_contact_write">Nous écrire</string>

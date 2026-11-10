@@ -2,13 +2,14 @@
 
 [![CI](https://github.com/jinqian/treesofparis/actions/workflows/ci.yml/badge.svg)](https://github.com/jinqian/treesofparis/actions/workflows/ci.yml)
 
-**Arbres de Paris**, an Android app to explore the trees of Paris on a map: [arbresdeparis.fr](https://arbresdeparis.fr).
+**Arbres de Paris**, an Android app to explore the trees of Paris and its neighbouring towns on a map: [arbresdeparis.fr](https://arbresdeparis.fr).
 
-- **Carte**: the 220,339 trees the City of Paris manages, in Paris and in its sites nearby (cemeteries of Pantin,
-  Thiais, Ivry…), on a calm « Herbier » map, light or dark. Show only the remarkable trees or one genus
+- **Carte**: 252,975 trees: the 220,339 the City of Paris manages, in Paris and in its sites nearby (cemeteries of
+  Pantin, Thiais, Ivry…), and the 32,636 of Grand Paris Seine Ouest's 8 towns (Boulogne-Billancourt to Ville-d'Avray),
+  on a calm « Herbier » map, light or dark; zoomed out, groups of trees with their count. Show only the remarkable trees or one genus
   (« Toutes les essences »), find the tree closest to you, and tap a tree for its sheet: height, girth, flowering
   calendar, Wikipédia and favorite.
-- **Herbier**: the most planted genera with their leaf drawings, flowering through the year, the remarkable trees,
+- **Herbier** (Paris data): the most planted genera with their leaf drawings, flowering through the year, the remarkable trees,
   ages and arrondissements.
 - **Favoris**: the trees you saved, stored only on your device (and in Android's backup).
 - **À propos**: contact, data sources and credits, the open-source projects the app uses.
@@ -16,7 +17,8 @@
 ## Credits
 
 - **Trees:** [Paris Open Data, « Les arbres »](https://opendata.paris.fr/explore/dataset/les-arbres/information/)
-  (Ville de Paris, ODbL).
+  (Ville de Paris, ODbL) and [« Arbres »](https://data.seineouest.fr/explore/dataset/arbres-v2/information/)
+  (Grand Paris Seine Ouest, Licence Ouverte 2.0); town boundaries from geo.api.gouv.fr (Licence Ouverte).
 - **Flowering months:** the species sheets of the
   [« Guide des Essences de Paris »](https://opendata.paris.fr/explore/dataset/fiches-essences-du-guide-des-essences-de-paris/information/)
   (Ville de Paris, Cerema, 2023, ODbL), listed in `GuideFloweringRepository` and in the app under À propos.
@@ -85,7 +87,7 @@ GitHub Actions (`.github/workflows/`):
 |----------|------|------|
 | `ci.yml` | pull requests, pushes to `main` | Spotless, Detekt, module boundaries, unit tests, Android lint, debug APK, data script tests, dependency review |
 | `pr-title.yml` | pull requests | PR title follows Conventional Commits (it becomes the squash commit message) |
-| `update-data.yml` | monthly, or manually | Rebuilds `trees.db` from Paris Open Data and opens a PR when the data changed |
+| `update-data.yml` | monthly, or manually | Rebuilds `trees.db` from the open tree datasets and opens a PR when the data changed |
 | `pages.yml` | pushes to `main` that touch `website/`, or manually | Publishes the website to GitHub Pages (see [`website/README.md`](website/README.md)) |
 
 Dependabot keeps Gradle, GitHub Actions and Python dev dependencies up to date.
