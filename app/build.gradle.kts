@@ -26,6 +26,31 @@ if (file("google-services.json").exists()) {
 }
 
 /**
+ * The app version, in SemVer (see RELEASING.md). Change only this: the versionCode follows from it, so it goes up
+ * whenever the version does.
+ */
+val appVersionName = "0.1.0"
+
+/**
+ * `major.minor.patch` → `major × 10,000 + minor × 100 + patch` (0.1.0 → 100, 1.2.3 → 10203). Minor and patch stay
+ * below 100 so that a higher version always gives a higher code. The release workflow repeats this formula for the
+ * earlier tags; keep both in sync.
+ */
+fun versionCodeOf(name: String): Int {
+    val parts =
+        Regex("""(\d+)\.(\d+)\.(\d+)""")
+            .matchEntire(name)
+            ?.destructured
+            ?.toList()
+            ?.map(String::toInt)
+    requireNotNull(parts) { "versionName must be major.minor.patch, got \"$name\"" }
+    val (major, minor, patch) = parts
+    require(minor < 100 && patch < 100) { "minor and patch must be below 100, got $name" }
+    require(major < 2100) { "major must be below 2100 (Google Play's versionCode limit), got $name" }
+    return major * 10_000 + minor * 100 + patch
+}
+
+/**
  * Release signing (upload key for Google Play), from `keystore.properties` at the repository root (git-ignored) or
  * from environment variables in CI. Without them the release build is left unsigned. See RELEASING.md.
  */
@@ -48,8 +73,8 @@ android {
     namespace = "fr.arbresdeparis"
     defaultConfig {
         applicationId = "fr.arbresdeparis"
-        versionCode = 2
-        versionName = "1.0.0"
+        versionCode = versionCodeOf(appVersionName)
+        versionName = appVersionName
     }
     buildFeatures.buildConfig = true
 
@@ -79,6 +104,12 @@ android {
             signingConfig = signingConfigs.findByName("release")
         }
     }
+}
+
+// Used by the release workflow to find the release note (fastlane/metadata/.../changelogs/<versionCode>.txt).
+tasks.register("printVersionCode") {
+    val code = versionCodeOf(appVersionName)
+    doLast { println(code) }
 }
 
 aboutLibraries {

@@ -1,11 +1,26 @@
 name: Release
 
-# Builds the signed App Bundle for Google Play on a version tag (or by hand), with the R8 mapping file.
-# The bundle is uploaded to the Play Console by hand; see RELEASING.md.
+# Builds the signed App Bundle on a version tag (or by hand), keeps it with its R8 mapping file, and uploads both to
+# Google Play with fastlane supply, as a draft release on the chosen track. See RELEASING.md.
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      track:
+        description: Google Play track
+        type: choice
+        options: [alpha, internal, beta, production]
+        default: alpha
+      status:
+        description: "Release status: draft (finish in the Play Console) or completed (rolled out at once)"
+        type: choice
+        options: [draft, completed]
+        default: draft
+      upload:
+        description: Upload to Google Play
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -17,6 +32,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # the earlier v* tags, for the version check
 
       - uses: actions/setup-java@v6
         with:
@@ -26,6 +43,31 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
+
+      # versionCode comes from versionName (app/build.gradle.kts). Google Play needs it to go up with every upload:
+      # fail early if it is not above every earlier v* tag, or if a tag does not match versionName.
+      - name: Check the version goes up
+        run: |
+          code_of() { IFS=. read -r major minor patch <<< "$1"; echo $((major * 10000 + minor * 100 + patch)); }
+          version_name=$(sed -n 's/^val appVersionName = "\(.*\)"$/\1/p' app/build.gradle.kts)
+          version_code=$(./gradlew -q :app:printVersionCode)
+          if [ "$(code_of "$version_name")" != "$version_code" ]; then
+            echo "::error::The versionCode formula here and in app/build.gradle.kts differ."
+            exit 1
+          fi
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "v$version_name" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match versionName $version_name."
+            exit 1
+          fi
+          for tag in $(git tag -l 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$'); do
+            [ "$tag" = "v$version_name" ] && continue
+            if [ "$(code_of "${tag#v}")" -ge "$version_code" ]; then
+              echo "::error::versionName $version_name (code $version_code) is not above $tag. Bump appVersionName."
+              exit 1
+            fi
+          done
+          echo "Version $version_name, code $version_code"
+          echo "VERSION_CODE=$version_code" >> "$GITHUB_ENV"
 
       # The upload key lives in repository secrets (base64 of the .jks file); it is written outside the workspace and
       # deleted when the job ends.
@@ -70,6 +112,45 @@ jobs:
             app/build/outputs/mapping/release/mapping.txt
           retention-days: 90
 
-      - name: Remove the upload key
+      # fastlane supply uploads the bundle, its R8 mapping file and the French « Nouveautés » text
+      # (fastlane/metadata/android/fr-FR/changelogs/<versionCode>.txt). The store listing and images are not touched.
+      - name: Set up Ruby
+        if: github.event_name == 'push' || inputs.upload
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+
+      - name: Upload to Google Play
+        if: github.event_name == 'push' || inputs.upload
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          TRACK: ${{ inputs.track || 'alpha' }}
+          STATUS: ${{ inputs.status || 'draft' }}
+        run: |
+          if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "::error::The PLAY_SERVICE_ACCOUNT_JSON secret is not set (see RELEASING.md)."
+            exit 1
+          fi
+          changelog="fastlane/metadata/android/fr-FR/changelogs/$VERSION_CODE.txt"
+          if [ ! -f "$changelog" ]; then
+            echo "::error::$changelog is missing: write the French release note first (see RELEASING.md)."
+            exit 1
+          fi
+          echo "$PLAY_SERVICE_ACCOUNT_JSON" | base64 --decode > "$RUNNER_TEMP/play-service-account.json"
+          gem install fastlane -v 2.241.2 --no-document
+          fastlane supply \
+            --package_name fr.arbresdeparis \
+            --json_key "$RUNNER_TEMP/play-service-account.json" \
+            --aab app/build/outputs/bundle/release/app-release.aab \
+            --mapping app/build/outputs/mapping/release/mapping.txt \
+            --track "$TRACK" \
+            --release_status "$STATUS" \
+            --metadata_path fastlane/metadata/android \
+            --skip_upload_metadata true \
+            --skip_upload_images true \
+            --skip_upload_screenshots true \
+            --skip_upload_apk true
+
+      - name: Remove the keys
         if: always()
-        run: rm -f "$RUNNER_TEMP/upload-keystore.jks"
+        run: rm -f "$RUNNER_TEMP/upload-keystore.jks" "$RUNNER_TEMP/play-service-account.json"
