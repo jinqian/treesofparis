@@ -15,7 +15,7 @@ sys.path.insert(0, str(REPO / "data" / "scripts"))
 import update_trees as ut  # noqa: E402
 
 FIXTURE = Path(__file__).parent / "fixtures" / "sample.csv"
-SCHEMA_DIR = REPO / "core" / "data" / "schemas" / "fr.arbresdeparis.core.data.db.TreeDatabase"
+SCHEMA_DIR = REPO / "android" / "core" / "data" / "schemas" / "fr.arbresdeparis.core.data.db.TreeDatabase"
 
 
 @pytest.fixture
@@ -130,7 +130,7 @@ def test_report_counts_dropped_rows(cleaned):
 
 
 def test_coverage_matches_kotlin_domain():
-    kotlin = (REPO / "core/domain/src/main/kotlin/fr/arbresdeparis/domain/model/GeoBounds.kt").read_text()
+    kotlin = (REPO / "android/core/domain/src/main/kotlin/fr/arbresdeparis/domain/model/GeoBounds.kt").read_text()
     match = re.search(
         r"COVERAGE = GeoBounds\(south = ([\d.]+), west = ([\d.]+), north = ([\d.]+), east = ([\d.]+)\)", kotlin
     )

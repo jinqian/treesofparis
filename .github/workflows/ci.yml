@@ -18,6 +18,9 @@ jobs:
     name: Android (static analysis, unit tests, build)
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: android
     steps:
       - uses: actions/checkout@v7
 
@@ -53,15 +56,15 @@ jobs:
         with:
           name: reports
           path: |
-            **/build/reports/
-            **/build/test-results/
+            android/**/build/reports/
+            android/**/build/test-results/
           retention-days: 14
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v7
         with:
           name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14
 
   data:
@@ -102,6 +105,8 @@ jobs:
           distribution: temurin
           java-version: 25
       - uses: gradle/actions/dependency-submission@v6
+        with:
+          build-root-directory: android
 
   dependency-review:
     name: Dependency review

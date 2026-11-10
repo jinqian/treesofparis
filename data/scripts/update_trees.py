@@ -2,8 +2,8 @@
 """Download the open tree datasets (Paris Open Data "les-arbres", then the neighbouring towns: see gpso.py) and build
 the app's pre-packaged `trees.db`. Every tree gets the town it stands in (`city`) and its dataset (`source`).
 
-The database schema is taken from Room's exported schema JSON (core/data/schemas/), so the Room entities stay the
-single source of truth. When the cleaned data changes, the data version (core/data/trees-db-version.txt) is bumped;
+The database schema is taken from Room's exported schema JSON (android/core/data/schemas/), so the Room entities stay the
+single source of truth. When the cleaned data changes, the data version (android/core/data/trees-db-version.txt) is bumped;
 the app then replaces the old copy of the tree data on existing installs.
 
 Standard library only. Usage (from the repository root):
@@ -15,7 +15,7 @@ It also links each species to its French Wikipedia article, found through Wikida
 fallback to the genus article. Answers are cached in data/wikipedia-titles.json so monthly runs only look up new
 names; --no-wikipedia-lookup builds from the cache alone.
 
-Each run also writes core/data/trees-db-meta.json: when the data was extracted, from where, the dataset's own
+Each run also writes android/core/data/trees-db-meta.json: when the data was extracted, from where, the dataset's own
 « last modified » date, and how many records were kept or dropped. The app shows the extraction date from it.
 """
 
@@ -536,13 +536,13 @@ def main(argv: list[str] | None = None) -> int:
         "--refresh-communes", action="store_true", help="download the town boundaries again (geo.api.gouv.fr)"
     )
     parser.add_argument("--skip-download", action="store_true", help="reuse the CSV already in --raw")
-    parser.add_argument("--output", type=Path, default=REPO / "core/data/src/main/assets/trees.db")
+    parser.add_argument("--output", type=Path, default=REPO / "android/core/data/src/main/assets/trees.db")
     parser.add_argument(
-        "--schema-dir", type=Path, default=REPO / "core/data/schemas/fr.arbresdeparis.core.data.db.TreeDatabase"
+        "--schema-dir", type=Path, default=REPO / "android/core/data/schemas/fr.arbresdeparis.core.data.db.TreeDatabase"
     )
-    parser.add_argument("--version-file", type=Path, default=REPO / "core/data/trees-db-version.txt")
-    parser.add_argument("--hash-file", type=Path, default=REPO / "core/data/trees-db-content.sha256")
-    parser.add_argument("--meta-file", type=Path, default=REPO / "core/data/trees-db-meta.json")
+    parser.add_argument("--version-file", type=Path, default=REPO / "android/core/data/trees-db-version.txt")
+    parser.add_argument("--hash-file", type=Path, default=REPO / "android/core/data/trees-db-content.sha256")
+    parser.add_argument("--meta-file", type=Path, default=REPO / "android/core/data/trees-db-meta.json")
     parser.add_argument("--wikipedia-cache", type=Path, default=REPO / "data/wikipedia-titles.json")
     parser.add_argument(
         "--no-wikipedia-lookup", action="store_true", help="only use the cached Wikipedia titles, ask Wikidata nothing"
