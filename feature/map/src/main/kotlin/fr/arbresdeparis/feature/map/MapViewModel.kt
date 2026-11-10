@@ -122,9 +122,9 @@ class MapViewModel
         }
 
         /**
-         * Outcome of the location permission request (also called when it was already granted). [userInitiated] is true
-         * for the "Me localiser" button: then the user gets a message when the map cannot centre on them. The automatic
-         * request at launch stays silent and simply keeps the map on Paris.
+         * Outcome of the location button « Me localiser » ([userInitiated]), or of the launch check when location is
+         * already granted. A user tap gets a message when the map cannot centre on them; the launch check stays silent
+         * and simply keeps the map on Paris.
          */
         fun onLocationPermissionResult(
             granted: Boolean,
@@ -159,12 +159,13 @@ class MapViewModel
         }
 
         /**
-         * « Arbre le plus proche », once the location permission is answered: frames the closest tree (of the active
-         * filter) and the user, and highlights it; the card then offers its sheet and the next closest trees.
+         * « Arbre le plus proche »: frames the closest tree (of the active filter) and the user, and highlights it; the
+         * card then offers its sheet and the next closest trees. Without location ([granted] false) it points to the
+         * location button, the only way to share a precise location.
          */
         fun onNearestTreeRequest(granted: Boolean) {
             if (!granted) {
-                state.update { it.copy(message = MapMessage.PERMISSION_DENIED) }
+                state.update { it.copy(message = MapMessage.LOCATE_FIRST) }
                 return
             }
             if (state.value.isFindingNearest) return

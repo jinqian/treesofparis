@@ -54,6 +54,7 @@
     <string name="map_nearest_next">Suivant</string>
     <string name="map_nearest_close">Fermer</string>
     <string name="map_nearest_none">Aucun arbre trouvé autour de vous.</string>
+    <string name="map_nearest_locate_first">Touchez le bouton de localisation pour partager votre position, puis cherchez l’arbre le plus proche.</string>
     <string name="map_genus_all">Toutes les essences</string>
     <string name="map_genus_change">changer d’essence</string>
     <string name="map_genus_title">Essences</string>

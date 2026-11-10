@@ -1,5 +1,6 @@
 package fr.arbresdeparis.feature.map
 
+import android.Manifest
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -36,6 +37,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 
 @RunWith(RobolectricTestRunner::class)
 class MapScreenTest {
@@ -59,7 +62,7 @@ class MapScreenTest {
 
     private var messagesShown = 0
     private var settingsOpened = 0
-    private var locateClicks = 0
+    private val locateResults = mutableListOf<Boolean>()
     private val filterChanges = mutableListOf<Boolean>()
     private var infoOpens = 0
     private var genusClears = 0
@@ -80,7 +83,7 @@ class MapScreenTest {
                         onMarkerClick = {},
                         onDetailDismiss = {},
                         onFavoriteToggle = {},
-                        onLocateMe = { locateClicks++ },
+                        onLocateResult = { locateResults += it },
                         onMessageDismiss = { messagesShown++ },
                         onOpenSettings = { settingsOpened++ },
                         onRemarkableFilterChange = { filterChanges += it },
@@ -230,10 +233,12 @@ class MapScreenTest {
     }
 
     @Test
-    fun locateButton_invokesLocateMe() {
+    fun locateButton_withPermission_reportsGranted() {
+        // Robolectric runs Android 16: the location button falls back to the classic permission check.
+        shadowOf(RuntimeEnvironment.getApplication()).grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
         show(base)
         compose.onNodeWithContentDescription("Me localiser").performClick()
-        assertEquals(1, locateClicks)
+        assertEquals(listOf(true), locateResults)
     }
 
     @Test
@@ -247,6 +252,15 @@ class MapScreenTest {
         show(base.copy(message = MapMessage.OUT_OF_AREA))
         compose.onNodeWithText("Vous êtes en dehors de la zone couverte par la carte.").assertIsDisplayed()
         compose.waitUntil(timeoutMillis = 10_000) { messagesShown == 1 }
+    }
+
+    @Test
+    fun locateFirstMessage_pointsToTheLocationButton() {
+        show(base.copy(message = MapMessage.LOCATE_FIRST))
+        compose
+            .onNodeWithText(
+                "Touchez le bouton de localisation pour partager votre position, puis cherchez l’arbre le plus proche.",
+            ).assertIsDisplayed()
     }
 
     @Test
