@@ -18,6 +18,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -29,9 +30,11 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.arbresdeparis.core.designsystem.component.InfoRow
 import fr.arbresdeparis.core.designsystem.component.InfoRowTrailing
 import fr.arbresdeparis.core.designsystem.component.SectionHeader
+import fr.arbresdeparis.core.designsystem.component.SwitchRow
 import fr.arbresdeparis.core.designsystem.component.TreesCardGroup
 import fr.arbresdeparis.core.designsystem.component.TreesDivider
 import fr.arbresdeparis.core.designsystem.component.TreesScaffold
@@ -50,6 +53,7 @@ private const val OPENMAPTILES_URL = "https://www.openmaptiles.org/"
 private const val OPENFREEMAP_URL = "https://openfreemap.org"
 private const val SOURCE_URL = "https://github.com/jinqian/treesofparis"
 private const val OFL_URL = "https://openfontlicense.org"
+private const val PRIVACY_URL = "https://arbresdeparis.fr/confidentialite/"
 
 /** The À propos tab. [onOpenLibraries] shows the open source libraries screen. */
 @Composable
@@ -61,13 +65,14 @@ fun AboutRoute(
 ) {
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
-    val state = viewModel.uiState
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     AboutScreen(
         state = state,
         onOpenUrl = uriHandler::openUri,
         onWriteToUs = { context.writeToUs(state.contactEmail, state.versionName) },
         onOpenLibraries = onOpenLibraries,
         onOpenFloweringSources = onOpenFloweringSources,
+        onCrashReportingChange = viewModel::onCrashReportingChange,
         modifier = modifier,
     )
 }
@@ -79,6 +84,7 @@ fun AboutScreen(
     onWriteToUs: () -> Unit,
     onOpenLibraries: () -> Unit,
     onOpenFloweringSources: () -> Unit,
+    onCrashReportingChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     TreesScaffold(title = stringResource(R.string.about_title), modifier = modifier) { padding ->
@@ -107,6 +113,7 @@ fun AboutScreen(
             }
             dataSections(state, onOpenUrl, onOpenFloweringSources)
             mapSection(onOpenUrl)
+            privacySection(state.crashReportingEnabled, onCrashReportingChange, onOpenUrl)
             section(R.string.about_section_project) {
                 InfoRow(
                     title = stringResource(R.string.about_project_source),
@@ -203,6 +210,28 @@ private fun LazyListScope.mapSection(onOpenUrl: (String) -> Unit) {
     }
 }
 
+/** The crash-report switch and the link to the privacy policy. */
+private fun LazyListScope.privacySection(
+    crashReportingEnabled: Boolean,
+    onCrashReportingChange: (Boolean) -> Unit,
+    onOpenUrl: (String) -> Unit,
+) {
+    section(R.string.about_section_privacy) {
+        SwitchRow(
+            title = stringResource(R.string.about_crash_reports),
+            subtitle = stringResource(R.string.about_crash_reports_detail),
+            checked = crashReportingEnabled,
+            onCheckedChange = onCrashReportingChange,
+        )
+        TreesDivider()
+        InfoRow(
+            title = stringResource(R.string.about_privacy_policy),
+            trailing = InfoRowTrailing.EXTERNAL,
+            onClick = { onOpenUrl(PRIVACY_URL) },
+        )
+    }
+}
+
 /** A section header followed by its rows in one card. */
 private fun LazyListScope.section(
     @StringRes title: Int,
@@ -274,6 +303,7 @@ private fun AboutScreenPreview() {
             onWriteToUs = {},
             onOpenLibraries = {},
             onOpenFloweringSources = {},
+            onCrashReportingChange = {},
         )
     }
 }

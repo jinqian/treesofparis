@@ -8,6 +8,9 @@ local.properties
 keystore.properties
 *.jks
 *.keystore
+
+# Firebase config: written from a CI secret, copied by hand for local builds (ADR 0007)
+google-services.json
 .kotlin/
 *.hprof
 

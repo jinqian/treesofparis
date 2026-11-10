@@ -8,16 +8,21 @@ import dagger.hilt.components.SingletonComponent
 import fr.arbresdeparis.BuildConfig
 import fr.arbresdeparis.core.map.MapProvider
 import fr.arbresdeparis.core.map.maplibre.MapLibreMapProvider
+import fr.arbresdeparis.crash.FirebaseCrashReporting
 import fr.arbresdeparis.domain.model.AppInfo
+import fr.arbresdeparis.domain.repository.CrashReportingRepository
 import java.time.Clock
 import java.time.ZoneId
 
-/** App-level wiring: the one place that picks the map implementation. */
+/** App-level wiring: the one place that picks the map and crash-reporting implementations. */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class AppModule {
     @Binds
     abstract fun bindMapProvider(impl: MapLibreMapProvider): MapProvider
+
+    @Binds
+    abstract fun bindCrashReporting(impl: FirebaseCrashReporting): CrashReportingRepository
 
     companion object {
         @Provides

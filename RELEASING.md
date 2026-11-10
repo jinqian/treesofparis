@@ -83,6 +83,17 @@ gh secret set TREES_KEY_PASSWORD
 
 The workflow writes the key to the runner's temp directory, never to the workspace, and deletes it at the end.
 
+**Firebase config.** Crashlytics needs `app/google-services.json` (ADR 0007). It is git-ignored: download it from the
+Firebase console (project settings → your apps), with both `fr.arbresdeparis` and `fr.arbresdeparis.debug`
+registered, and copy it to `app/`. Without it the app builds and sends nothing. The release workflow writes it from a
+fifth secret and fails without it:
+
+```bash
+base64 -i app/google-services.json | gh secret set GOOGLE_SERVICES_JSON
+```
+
+Replace the secret when the file changes (a new app registered, for example).
+
 **Build and measure.**
 
 ```bash
@@ -90,8 +101,8 @@ The workflow writes the key to the runner's temp directory, never to the workspa
 ./gradlew assembleRelease  # app/build/outputs/apk/release/, to measure or test the shrunk app
 ```
 
-R8 writes `app/build/outputs/mapping/release/mapping.txt`: upload it with each release in the Play Console (App
-bundle explorer → Downloads → ReTrace mapping file) so crash reports show real class and line names.
+R8 writes `app/build/outputs/mapping/release/mapping.txt`. With the Firebase config present, the build uploads it to
+Crashlytics itself (`uploadCrashlyticsMappingFileRelease`). Play reads it from the bundle; keep the copy CI attaches.
 
 **Testing a release build on a device** without the upload key: sign a copy with the debug key, outside Gradle.
 

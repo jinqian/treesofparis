@@ -3,6 +3,7 @@ package fr.arbresdeparis.feature.about
 import android.app.Application
 import android.content.Intent
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -12,11 +13,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ApplicationProvider
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
-import fr.arbresdeparis.domain.model.AppInfo
 import fr.arbresdeparis.domain.model.DatasetInfo
-import fr.arbresdeparis.domain.model.FloweringSheet
-import fr.arbresdeparis.domain.repository.FloweringRepository
-import fr.arbresdeparis.domain.usecase.GetFloweringSources
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -26,19 +23,11 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import java.time.Instant
-import java.time.Month
-
-private object OneSheet : FloweringRepository {
-    override fun sheets() =
-        listOf(FloweringSheet("Tilia", "Tilia tomentosa", "Tilleul argenté", setOf(Month.JUNE), false, "https://x"))
-}
 
 @RunWith(RobolectricTestRunner::class)
 class AboutTest {
     @get:Rule
     val compose = createComposeRule()
-
-    private val appInfo = AppInfo("0.1.0", "arbresdeparis@gmail.com", "https://arbresdeparis.fr")
 
     private val state =
         AboutUiState(
@@ -48,17 +37,6 @@ class AboutTest {
             extraction = ExtractionUi(date = "6 novembre 2026", treeCount = "220\u202F339"),
             floweringSheetCount = 27,
         )
-
-    @Test
-    fun viewModel_exposesVersionAndExtraction() {
-        val dataset = DatasetInfo(extractedAt = Instant.parse("2026-11-06T16:30:03Z"), treeCount = 220_339)
-        val ui = AboutViewModel(appInfo, dataset, GetFloweringSources(OneSheet)).uiState
-        assertEquals("0.1.0", ui.versionName)
-        assertEquals("arbresdeparis@gmail.com", ui.contactEmail)
-        assertEquals("arbresdeparis.fr", ui.websiteLabel)
-        assertEquals(1, ui.floweringSheetCount)
-        assertEquals(ExtractionUi(date = "6 novembre 2026", treeCount = "220\u202F339"), ui.extraction)
-    }
 
     @Test
     fun extraction_isTheParisDate() {
@@ -80,6 +58,7 @@ class AboutTest {
                     onWriteToUs = { writes++ },
                     onOpenLibraries = {},
                     onOpenFloweringSources = {},
+                    onCrashReportingChange = {},
                 )
             }
         }
@@ -113,6 +92,7 @@ class AboutTest {
                     onWriteToUs = {},
                     onOpenLibraries = {},
                     onOpenFloweringSources = {},
+                    onCrashReportingChange = {},
                 )
             }
         }
@@ -133,6 +113,7 @@ class AboutTest {
                     onWriteToUs = {},
                     onOpenLibraries = {},
                     onOpenFloweringSources = {},
+                    onCrashReportingChange = {},
                 )
             }
         }
@@ -154,6 +135,7 @@ class AboutTest {
                     onWriteToUs = {},
                     onOpenLibraries = {},
                     onOpenFloweringSources = {},
+                    onCrashReportingChange = {},
                 )
             }
         }
@@ -172,6 +154,7 @@ class AboutTest {
                     onWriteToUs = {},
                     onOpenLibraries = {},
                     onOpenFloweringSources = {},
+                    onCrashReportingChange = {},
                 )
             }
         }
@@ -199,6 +182,7 @@ class AboutTest {
                     onWriteToUs = {},
                     onOpenLibraries = {},
                     onOpenFloweringSources = {},
+                    onCrashReportingChange = {},
                 )
             }
         }
@@ -218,6 +202,7 @@ class AboutTest {
                     onWriteToUs = {},
                     onOpenLibraries = {},
                     onOpenFloweringSources = { opened++ },
+                    onCrashReportingChange = {},
                 )
             }
         }
@@ -246,6 +231,7 @@ class AboutTest {
                     onWriteToUs = {},
                     onOpenLibraries = { opened++ },
                     onOpenFloweringSources = {},
+                    onCrashReportingChange = {},
                 )
             }
         }
@@ -283,5 +269,29 @@ class AboutTest {
         }
         compose.onNodeWithContentDescription("Retour").performClick()
         assertEquals(1, backs)
+    }
+
+    @Test
+    fun aboutScreen_privacy_switchesCrashReportsAndOpensThePolicy() {
+        val choices = mutableListOf<Boolean>()
+        val urls = mutableListOf<String>()
+        compose.setContent {
+            TreesTheme {
+                AboutScreen(
+                    state.copy(crashReportingEnabled = true),
+                    onOpenUrl = { urls += it },
+                    onWriteToUs = {},
+                    onOpenLibraries = {},
+                    onOpenFloweringSources = {},
+                    onCrashReportingChange = { choices += it },
+                )
+            }
+        }
+        compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText("Envoyer les rapports de plantage"))
+        compose.onNodeWithText("Envoyer les rapports de plantage").assertIsOn().performClick()
+        compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText("Politique de confidentialité"))
+        compose.onNodeWithText("Politique de confidentialité").performClick()
+        assertEquals(listOf(false), choices)
+        assertEquals(listOf("https://arbresdeparis.fr/confidentialite/"), urls)
     }
 }

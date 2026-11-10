@@ -13,11 +13,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -125,6 +127,43 @@ fun InfoRow(
     }
 }
 
+/**
+ * A row with a switch at its end, for a setting. The whole row toggles it, and screen readers read it as one switch
+ * with its [title] and [subtitle].
+ */
+@Composable
+fun SwitchRow(
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+) {
+    Row(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .heightIn(min = 52.dp)
+                .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
+                .padding(horizontal = TreesSpacing.m, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TreesSpacing.m),
+    ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyMedium)
+            if (subtitle != null) {
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        // The row handles the toggle; the switch only shows the state.
+        Switch(checked = checked, onCheckedChange = null)
+    }
+}
+
 @PreviewLightDark
 @Composable
 private fun TreesCardGroupPreview() {
@@ -133,6 +172,8 @@ private fun TreesCardGroupPreview() {
             InfoRow(title = "« Les arbres », Paris Data", subtitle = "Ville de Paris")
             TreesDivider()
             InfoRow(title = "Licence ODbL", trailing = InfoRowTrailing.EXTERNAL, onClick = {})
+            TreesDivider()
+            SwitchRow(title = "Envoyer les rapports de plantage", checked = true, onCheckedChange = {})
         }
     }
 }
