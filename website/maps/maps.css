@@ -1,0 +1,450 @@
+/* The web map: full-screen « Herbier » map with floating paper controls and a tree sheet. */
+
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/inter.woff2") format("woff2");
+  font-weight: 400 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Newsreader";
+  src: url("../fonts/newsreader.woff2") format("woff2");
+  font-weight: 400 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Newsreader";
+  src: url("../fonts/newsreader-italic.woff2") format("woff2");
+  font-weight: 400 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* HerbierPalette, as in ../styles.css. */
+:root {
+  color-scheme: light dark;
+  --paper: #f4f3ec;
+  --surface: #fbfaf6;
+  --ink: #1e2620;
+  --ink-soft: #39443b;
+  --ink-muted: #5c665d;
+  --moss: #3f5f45;
+  --sage: #e1e8da;
+  --hairline: #e2e1d8;
+  --gold: #c9962e;
+  --gold-ink: #8a5e0f;
+  --gold-wash: #f3e7cc;
+  --shadow: rgba(30, 38, 32, 0.16);
+  --serif: "Newsreader", Georgia, "Times New Roman", serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --gap: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #141815;
+    --surface: #1c211d;
+    --ink: #e6e8e1;
+    --ink-soft: #c4cbc0;
+    --ink-muted: #a3ab9f;
+    --moss: #a8c3a0;
+    --sage: #2e3d30;
+    --hairline: #2e352f;
+    --gold: #d4a443;
+    --gold-ink: #e0b65a;
+    --gold-wash: #4a3810;
+    --shadow: rgba(0, 0, 0, 0.45);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font: 15px/1.45 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+#map {
+  position: fixed;
+  inset: 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Floating paper: the bar, the pills, the sheet. */
+.bar,
+.pill,
+.round,
+.hint,
+.toast,
+.sheet {
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--hairline);
+  box-shadow: 0 2px 10px var(--shadow);
+}
+
+.bar {
+  position: fixed;
+  top: calc(var(--gap) + env(safe-area-inset-top));
+  left: var(--gap);
+  right: var(--gap);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 560px;
+  padding: 8px 14px 8px 8px;
+  border-radius: 20px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  text-decoration: none;
+}
+
+.brand svg {
+  flex: none;
+}
+
+.brand > span {
+  display: grid;
+  min-width: 0;
+}
+
+.brand strong {
+  font: 600 19px/1.15 var(--serif);
+}
+
+.brand small {
+  overflow: hidden;
+  color: var(--ink-muted);
+  font-size: 12.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.app-link {
+  flex: none;
+  color: var(--moss);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.app-link:hover,
+.brand:hover strong {
+  text-decoration: underline;
+}
+
+/* Tools, top right on wide screens, under the bar on phones. */
+.tools {
+  position: fixed;
+  top: calc(var(--gap) + 72px + env(safe-area-inset-top));
+  right: var(--gap);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (min-width: 720px) {
+  .tools {
+    top: calc(var(--gap) + 8px + env(safe-area-inset-top));
+  }
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 22px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pill .dot {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold);
+}
+
+.pill[aria-pressed="true"] {
+  background: var(--gold-wash);
+  border-color: var(--gold);
+  color: var(--gold-ink);
+}
+
+.round {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.round[aria-busy="true"] svg {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--moss);
+  outline-offset: 2px;
+}
+
+.hint,
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(52px + env(safe-area-inset-bottom));
+  z-index: 2;
+  max-width: calc(100% - 2 * var(--gap));
+  white-space: nowrap;
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: 22px;
+  font-size: 14px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* « Zoomer pour voir chaque arbre »: a real button, in moss, that zooms to street level. */
+.hint-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: 0;
+  background: var(--moss);
+  color: var(--paper);
+  font-size: 15px;
+  font-weight: 600;
+  pointer-events: auto;
+}
+
+.hint-button:hover {
+  filter: brightness(1.08);
+}
+
+.toast {
+  bottom: calc(104px + env(safe-area-inset-bottom));
+  z-index: 4;
+  white-space: normal;
+  text-align: center;
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+/* The tree sheet: a bottom sheet on phones, a side card on wide screens. */
+.sheet {
+  position: fixed;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 62vh;
+  overflow-y: auto;
+  padding: 22px 20px calc(20px + env(safe-area-inset-bottom));
+  border-radius: 22px 22px 0 0;
+  border-bottom: 0;
+}
+
+@media (min-width: 720px) {
+  .sheet {
+    top: calc(var(--gap) + 76px);
+    left: var(--gap);
+    right: auto;
+    bottom: auto;
+    width: 380px;
+    max-height: calc(100vh - 76px - 3 * var(--gap));
+    border-radius: 20px;
+    border-bottom: 1px solid var(--hairline);
+  }
+}
+
+.sheet-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--sage);
+  color: var(--ink);
+}
+
+.sheet h2 {
+  margin: 0 48px 2px 0;
+  font: 600 28px/1.15 var(--serif);
+}
+
+.badge {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: var(--gold-wash);
+  color: var(--gold-ink);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.latin {
+  margin: 0 0 6px;
+  color: var(--ink-soft);
+  font: italic 18px/1.3 var(--serif);
+}
+
+.place {
+  margin: 0 0 16px;
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+
+.unknown {
+  color: var(--ink-muted);
+  font-style: normal;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.fact {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--paper);
+}
+
+.fact dt {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.fact dd {
+  margin: 2px 0 0;
+  font: 600 20px/1.2 var(--serif);
+}
+
+.fact dd small {
+  margin-left: 2px;
+  color: var(--ink-muted);
+  font: 13px var(--sans);
+}
+
+.fact .unknown {
+  font: 14px var(--sans);
+}
+
+.wiki {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  text-decoration: none;
+}
+
+.wiki span {
+  color: var(--moss);
+  font-weight: 600;
+}
+
+.wiki small {
+  color: var(--ink-muted);
+}
+
+.wiki:hover span {
+  text-decoration: underline;
+}
+
+.source {
+  margin: 14px 0 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+/* MapLibre controls in the same paper. */
+.maplibregl-ctrl-group,
+.maplibregl-ctrl-attrib {
+  background: var(--surface) !important;
+  color: var(--ink-muted);
+}
+
+.maplibregl-ctrl-group {
+  border: 1px solid var(--hairline);
+  border-radius: 14px !important;
+  box-shadow: 0 2px 10px var(--shadow) !important;
+}
+
+.maplibregl-ctrl-group button + button {
+  border-top-color: var(--hairline) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+    filter: invert(1);
+  }
+}
+
+.maplibregl-ctrl-attrib a {
+  color: var(--ink-soft);
+}
+
+.maplibregl-ctrl-attrib.maplibregl-compact {
+  border-radius: 12px;
+}
+
+@media (max-width: 719px) {
+  .maplibregl-ctrl-bottom-right {
+    margin-bottom: env(safe-area-inset-bottom);
+  }
+}
