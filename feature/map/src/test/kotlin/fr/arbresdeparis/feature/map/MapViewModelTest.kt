@@ -95,13 +95,10 @@ class MapViewModelTest {
             assertTrue(state.showZoomHint)
             assertTrue(state.markers.isEmpty())
             assertTrue(trees.boundsCalls.isEmpty())
-            assertEquals(listOf(near), trees.clusterCalls)
+            // The groups of a zoom level are built once, for the whole map.
+            assertEquals(listOf(GeoBounds.COVERAGE), trees.clusterCalls)
             assertTrue(state.clusters.isNotEmpty())
-            // Every tree of the view is in exactly one group.
-            assertEquals(
-                trees.getTreesInBounds(near, Int.MAX_VALUE, false, null).size,
-                state.clusters.sumOf { it.count },
-            )
+            assertTrue(state.clusters.all { it.weight in 0.0..1.0 })
         }
 
     @Test

@@ -34,6 +34,7 @@ internal fun clustersGeoJson(clusters: List<MapCluster>): String =
                     put("id", cluster.id)
                     put("count", cluster.count)
                     put("label", cluster.label)
+                    put("weight", cluster.weight)
                 }
             },
         ).toString()

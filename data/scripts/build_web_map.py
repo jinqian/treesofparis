@@ -36,7 +36,7 @@ COVERAGE = (48.735, 2.150, 48.920, 2.480)
 CELL_LAT = 0.01
 CELL_LON = 0.015
 DECIMALS = 6  # about 10 cm
-# Tree groups shown below street level, coarsest first: (level name, cell height in °, cell width in °).
+# Tree groups shown below street level, coarsest first: (level name, group radius in ° of latitude, of longitude).
 CLUSTER_GRIDS = (
     ("district", 0.02, 0.03),
     ("coarse", 0.01, 0.015),
@@ -139,22 +139,60 @@ def tree_row(row: sqlite3.Row) -> list:
 
 
 def clusters(points: list[tuple[float, float]]) -> dict[str, list]:
-    """For each grid of CLUSTER_GRIDS: one [lat, lon, count, size] per non-empty cell, at the mean position of its
-    trees. `size` (0–1) is the square root of the count over the level's largest count: the page sizes discs by area."""
+    """For each level of CLUSTER_GRIDS: groups of trees placed where the trees gather, as [lat, lon, count, size].
+
+    The trees are counted in cells a third of the level's radius; then, densest cell first, each cell not yet taken
+    gathers every free cell within the radius into one group, at the mean position of its trees (the app does the
+    same: GetTreeClusters). Groups so sit on parks and avenues rather than on a grid, more than a radius apart. `size`
+    (0–1) is the square root of the count over the level's largest count: the page sizes discs by area."""
     levels = {}
-    for name, cell_lat, cell_lon in CLUSTER_GRIDS:
+    for name, radius_lat, radius_lon in CLUSTER_GRIDS:
+        cell_lat, cell_lon = radius_lat / 3, radius_lon / 3
         sums: dict[tuple[int, int], list] = {}
         for lat, lon in points:
             total = sums.setdefault((int(lat // cell_lat), int(lon // cell_lon)), [0.0, 0.0, 0])
             total[0] += lat
             total[1] += lon
             total[2] += 1
-        biggest_first = sorted(sums.values(), key=lambda s: -s[2])
-        largest = biggest_first[0][2] if biggest_first else 1
+        cells = [(la / n, lo / n, n) for la, lo, n in sums.values()]
+        groups = gather(cells, radius_lat, radius_lon)
+        largest = max((g[2] for g in groups), default=1)
         levels[name] = [
-            [round(la / n, 5), round(lo / n, 5), n, round(math.sqrt(n / largest), 3)] for la, lo, n in biggest_first
+            [round(la, 5), round(lo, 5), n, round(math.sqrt(n / largest), 3)]
+            for la, lo, n in sorted(groups, key=lambda g: -g[2])
         ]
     return levels
+
+
+def gather(cells: list[tuple], radius_lat: float, radius_lon: float) -> list[tuple]:
+    """Densest first, each free (lat, lon, count) cell takes every free cell within the radius ellipse; returns the
+    groups as (lat, lon, count) at the mean position of their trees."""
+    ordered = sorted(cells, key=lambda c: (-c[2], c[0], c[1]))
+    buckets: dict[tuple[int, int], list[int]] = {}
+    for index, (lat, lon, _) in enumerate(ordered):
+        buckets.setdefault((math.floor(lat / radius_lat), math.floor(lon / radius_lon)), []).append(index)
+    taken = [False] * len(ordered)
+    groups = []
+    for seed, (seed_lat, seed_lon, _) in enumerate(ordered):
+        if taken[seed]:
+            continue
+        row, column = math.floor(seed_lat / radius_lat), math.floor(seed_lon / radius_lon)
+        members = [
+            index
+            for d_row in (-1, 0, 1)
+            for d_column in (-1, 0, 1)
+            for index in buckets.get((row + d_row, column + d_column), ())
+            if not taken[index]
+            and ((ordered[index][0] - seed_lat) / radius_lat) ** 2 + ((ordered[index][1] - seed_lon) / radius_lon) ** 2
+            <= 1
+        ]
+        for index in members:
+            taken[index] = True
+        count = sum(ordered[i][2] for i in members)
+        lat = sum(ordered[i][0] * ordered[i][2] for i in members) / count
+        lon = sum(ordered[i][1] * ordered[i][2] for i in members) / count
+        groups.append((lat, lon, count))
+    return groups
 
 
 def build(db: Path, meta_file: Path, out: Path) -> dict:

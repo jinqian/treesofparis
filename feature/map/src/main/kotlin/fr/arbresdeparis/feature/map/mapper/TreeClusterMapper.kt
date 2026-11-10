@@ -12,6 +12,7 @@ fun TreeCluster.toMapCluster(id: Int) =
         position = center,
         count = count,
         label = FRENCH_INTEGER.format(count).replace(NARROW_NO_BREAK_SPACE, NO_BREAK_SPACE),
+        weight = weight,
     )
 
 private val FRENCH_INTEGER: NumberFormat = NumberFormat.getIntegerInstance(Locale.FRANCE)

@@ -40,6 +40,8 @@ data class MapCluster(
     val position: GeoPoint,
     val count: Int,
     val label: String,
+    /** Its size next to the other groups, from 0 (smallest disc) to 1 (largest). */
+    val weight: Double = 1.0,
 )
 
 /** Kinds of markers, in drawing order: later styles are drawn on top. Providers decide how each one looks. */

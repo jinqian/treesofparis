@@ -136,6 +136,12 @@ def test_clusters_count_trees_at_their_mean_position():
     assert levels["fine"][1][2:] == [1, 0.707]  # half the trees: √½ of the size
 
 
+def test_gather_merges_cells_around_the_densest_and_keeps_far_ones_apart():
+    groups = wm.gather([(48.8500, 2.35, 30), (48.8504, 2.35, 10), (48.8600, 2.35, 5)], 0.001, 0.0015)
+    assert [g[2] for g in groups] == [40, 5]
+    assert groups[0][0] == pytest.approx(48.8501)
+
+
 def test_build_replaces_an_older_output(small_db, tmp_path):
     db, meta = small_db
     out = tmp_path / "out"

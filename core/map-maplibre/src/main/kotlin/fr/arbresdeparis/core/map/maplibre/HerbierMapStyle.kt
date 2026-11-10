@@ -231,24 +231,16 @@ private fun basemapLayers(c: BasemapColors): List<JsonObject> =
     )
 
 /**
- * Groups of trees below street level: a deep green disc, ringed like the pins, whose area grows with the count (the
- * radius follows its square root, from 12 dp for a few trees to 28 dp for a couple of thousand), the count inside in
- * bold paper white.
+ * Groups of trees below street level: a deep green disc, ringed like the pins, from [CLUSTER_MIN_RADIUS] to
+ * [CLUSTER_MAX_RADIUS] dp by its `weight` (its area follows its trees, next to the other groups of the zoom level;
+ * groups are 60 dp apart or more, so discs do not touch), the count inside in bold paper white.
  */
 private fun clusterLayers(p: PinColors): List<JsonObject> {
     val radius =
         expression(
-            "interpolate",
-            expression("linear"),
-            expression("sqrt", expression("get", "count")),
-            1,
-            12,
-            10,
-            15,
-            30,
-            20,
-            60,
-            28,
+            "+",
+            CLUSTER_MIN_RADIUS,
+            expression("*", expression("get", "weight"), CLUSTER_MAX_RADIUS - CLUSTER_MIN_RADIUS),
         )
     val disc =
         buildJsonObject {
@@ -281,6 +273,8 @@ private fun clusterLayers(p: PinColors): List<JsonObject> {
 }
 
 private const val CLUSTER_OPACITY = 0.92
+private const val CLUSTER_MIN_RADIUS = 12
+private const val CLUSTER_MAX_RADIUS = 26
 
 private fun pinLayers(p: PinColors): List<JsonObject> =
     listOf(
