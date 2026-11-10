@@ -10,6 +10,7 @@ import fr.arbresdeparis.domain.usecase.GetFloweringSeason
 import fr.arbresdeparis.domain.usecase.GetGenera
 import fr.arbresdeparis.domain.usecase.GetNearestTrees
 import fr.arbresdeparis.domain.usecase.GetTree
+import fr.arbresdeparis.domain.usecase.GetTreeClusters
 import fr.arbresdeparis.domain.usecase.GetTreesInBounds
 import fr.arbresdeparis.domain.usecase.LocateUser
 import fr.arbresdeparis.domain.usecase.ObserveIsFavorite
@@ -47,6 +48,7 @@ class MapViewModelGenusTest {
     private fun viewModel(saved: SavedStateHandle = SavedStateHandle()) =
         MapViewModel(
             getTreesInBounds = GetTreesInBounds(trees),
+            getTreeClusters = GetTreeClusters(trees),
             getTree = GetTree(trees),
             observeIsFavorite = ObserveIsFavorite(favorites),
             toggleFavorite = ToggleFavorite(favorites, trees),
@@ -54,8 +56,6 @@ class MapViewModelGenusTest {
             getNearestTrees = GetNearestTrees(trees),
             getFloweringSeason = GetFloweringSeason(FakeFloweringRepository()),
             getGenera = GetGenera(FakeStatisticsRepository()),
-            appInfo = APP_INFO,
-            datasetInfo = DATASET_INFO,
             clock = NOVEMBER,
             savedState = saved,
         )

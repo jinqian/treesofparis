@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Download the Paris Open Data "les-arbres" dataset and build the app's pre-packaged `trees.db`.
+"""Download the open tree datasets (Paris Open Data "les-arbres", then the neighbouring towns: see gpso.py) and build
+the app's pre-packaged `trees.db`. Every tree gets the town it stands in (`city`) and its dataset (`source`).
 
 The database schema is taken from Room's exported schema JSON (core/data/schemas/), so the Room entities stay the
 single source of truth. When the cleaned data changes, the data version (core/data/trees-db-version.txt) is bumped;
@@ -8,7 +9,7 @@ the app then replaces the old copy of the tree data on existing installs.
 Standard library only. Usage (from the repository root):
 
     python3 data/scripts/update_trees.py                 # download, clean, build
-    python3 data/scripts/update_trees.py --skip-download # rebuild from data/raw/les-arbres.csv
+    python3 data/scripts/update_trees.py --skip-download # rebuild from data/raw/les-arbres.csv and gpso-arbres.csv
 
 It also links each species to its French Wikipedia article, found through Wikidata (taxon name, P225), with a
 fallback to the genus article. Answers are cached in data/wikipedia-titles.json so monthly runs only look up new
@@ -25,6 +26,7 @@ import contextlib
 import csv
 import hashlib
 import json
+import math
 import os
 import re
 import sqlite3
@@ -35,6 +37,12 @@ import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+
+# The source modules sit next to this script; isolated mode (python3 -I) leaves its folder off the path.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import communes as communes_module  # noqa: E402
+import gpso  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 EXPORT_URL = (
@@ -47,7 +55,7 @@ WIKIDATA_BATCH = 80
 USER_AGENT = "treesofparis-data-update (+https://github.com/jinqian/treesofparis)"
 
 # Must match GeoBounds.COVERAGE in :core:domain (checked by the tests): south, west, north, east.
-COVERAGE = (48.735, 2.200, 48.920, 2.480)
+COVERAGE = (48.735, 2.150, 48.920, 2.480)
 
 EXPECTED_FIELDS = (
     "idbase",
@@ -86,7 +94,15 @@ COLUMNS = (
     "arrondissement",
     "lat",
     "lon",
+    "city",
+    "source",
+    "height_class",
 )
+
+PARIS_SOURCE = "paris"
+PARIS_CITY = "Paris"
+# Paris's own areas in the dataset; its other trees stand in neighbouring towns (cemeteries, sports grounds).
+PARIS_AREAS = ("PARIS ", "BOIS DE ")
 
 
 TAXON_COLUMNS = ("genus", "species", "wikipedia_title", "genus_only")
@@ -114,10 +130,10 @@ class Report:
 # --- download / read -----------------------------------------------------------------------------------------------
 
 
-def download(dest: Path) -> Path:
-    """Downloads the full CSV export to [dest] atomically and writes a SHA-256 checksum next to it."""
+def download(dest: Path, url: str = EXPORT_URL) -> Path:
+    """Downloads a full CSV export to [dest] atomically and writes a SHA-256 checksum next to it."""
     dest.parent.mkdir(parents=True, exist_ok=True)
-    request = urllib.request.Request(EXPORT_URL, headers={"User-Agent": USER_AGENT})
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     digest = hashlib.sha256()
     with urllib.request.urlopen(request, timeout=300) as response, tempfile.NamedTemporaryFile(
         dir=dest.parent, delete=False
@@ -181,8 +197,18 @@ def _address(row: dict) -> str:
     return ", ".join(parts)
 
 
-def clean(rows: list[dict]) -> tuple[list[dict], Report]:
-    """Returns rows keyed by Room column name, sorted by id, and a report of what was dropped."""
+def paris_city(arrondissement: str, lat: float, lon: float, communes=None) -> str:
+    """« Paris » for an arrondissement or a Bois; otherwise the town holding the point (« Pantin »), found with
+    [communes], or the département written in title case when it cannot tell."""
+    if arrondissement.startswith(PARIS_AREAS):
+        return PARIS_CITY
+    found = communes.locate(lat, lon) if communes is not None else None
+    return found or "-".join(part.capitalize() for part in arrondissement.lower().split("-"))
+
+
+def clean(rows: list[dict], communes=None) -> tuple[list[dict], Report]:
+    """Returns rows keyed by Room column name, sorted by id, and a report of what was dropped. [communes] names the
+    town of the trees the City manages outside Paris (see [paris_city])."""
     report = Report(total=len(rows))
     seen: dict[int, dict] = {}
     for row in rows:
@@ -216,10 +242,57 @@ def clean(rows: list[dict]) -> tuple[list[dict], Report]:
             "arrondissement": _text(row.get("arrondissement")) or "",
             "lat": lat,
             "lon": lon,
+            "city": paris_city(_text(row.get("arrondissement")) or "", lat, lon, communes),
+            "source": PARIS_SOURCE,
+            "height_class": None,
         }
     cleaned = [seen[k] for k in sorted(seen)]
     report.kept = len(cleaned)
     return cleaned, report
+
+
+def common_names(rows: list[dict]) -> dict:
+    """(genus, species) and (genus, "") → the French name the Paris data uses most for them."""
+    counts: dict[tuple, dict[str, int]] = {}
+    for row in rows:
+        if not row["genus"]:
+            continue
+        for key in ((row["genus"], row["species"] or ""), (row["genus"], "")):
+            names = counts.setdefault(key, {})
+            names[row["common_name"]] = names.get(row["common_name"], 0) + 1
+    return {key: max(names, key=lambda n: (names[n], n)) for key, names in counts.items()}
+
+
+def drop_near_duplicates(rows: list[dict], reference: list[dict], max_m: float = 1.0) -> tuple[list[dict], int]:
+    """Drops the [rows] that stand within [max_m] metres of a [reference] tree of the same genus: the same tree,
+    listed by two managers. Returns the rows kept and how many were dropped."""
+    cell = 0.0001  # about 11 m of latitude: a tree's neighbours within 1 m are in its cell or the next ones
+    grid: dict[tuple[int, int], list[dict]] = {}
+    for tree in reference:
+        grid.setdefault((int(tree["lat"] // cell), int(tree["lon"] // cell)), []).append(tree)
+    kept, dropped = [], 0
+    for tree in rows:
+        y, x = int(tree["lat"] // cell), int(tree["lon"] // cell)
+        near = (
+            other
+            for dy in (-1, 0, 1)
+            for dx in (-1, 0, 1)
+            for other in grid.get((y + dy, x + dx), ())
+            if other["genus"] == tree["genus"]
+            and distance_m(tree["lat"], tree["lon"], other["lat"], other["lon"]) <= max_m
+        )
+        if next(near, None) is None:
+            kept.append(tree)
+        else:
+            dropped += 1
+    return kept, dropped
+
+
+def distance_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Equirectangular distance, exact enough within a few kilometres."""
+    x = math.radians(lon2 - lon1) * math.cos(math.radians((lat1 + lat2) / 2))
+    y = math.radians(lat2 - lat1)
+    return 6_371_000 * math.hypot(x, y)
 
 
 def content_hash(rows: list[dict], links: list[dict] | None = None) -> str:
@@ -406,9 +479,9 @@ def extracted_at(raw: Path) -> str:
     return when.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def fetch_metadata() -> dict | None:
-    """The dataset's Opendatasoft metadata, or None when it cannot be fetched (the build does not depend on it)."""
-    request = urllib.request.Request(METADATA_URL, headers={"User-Agent": USER_AGENT})
+def fetch_metadata(url: str = METADATA_URL) -> dict | None:
+    """A dataset's Opendatasoft metadata, or None when it cannot be fetched (the build does not depend on it)."""
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     try:
         with urllib.request.urlopen(request, timeout=60) as response:
             return json.load(response)
@@ -457,6 +530,11 @@ def write_meta(path: Path, meta: dict) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--raw", type=Path, default=REPO / "data/raw/les-arbres.csv", help="downloaded CSV")
+    parser.add_argument("--gpso-raw", type=Path, default=REPO / "data/raw/gpso-arbres.csv", help="GPSO CSV")
+    parser.add_argument("--communes", type=Path, default=REPO / "data/communes.geojson", help="town boundaries")
+    parser.add_argument(
+        "--refresh-communes", action="store_true", help="download the town boundaries again (geo.api.gouv.fr)"
+    )
     parser.add_argument("--skip-download", action="store_true", help="reuse the CSV already in --raw")
     parser.add_argument("--output", type=Path, default=REPO / "core/data/src/main/assets/trees.db")
     parser.add_argument(
@@ -471,11 +549,22 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
+    if args.refresh_communes or not args.communes.exists():
+        print(f"Downloading the town boundaries -> {args.communes.name}")
+        print(f"{communes_module.fetch(args.communes, USER_AGENT)} towns")
+    towns = communes_module.Communes.load(args.communes)
     if not args.skip_download:
         print(f"Downloading {EXPORT_URL}")
         download(args.raw)
-    rows, report = clean(read_rows(args.raw))
+        print(f"Downloading {gpso.EXPORT_URL}")
+        download(args.gpso_raw, gpso.EXPORT_URL)
+    paris_rows, report = clean(read_rows(args.raw), towns)
     print(report)
+    gpso_rows, gpso_report = gpso.clean(gpso.read_rows(args.gpso_raw), towns, common_names(paris_rows), _in_coverage)
+    gpso_rows, gpso_duplicates = drop_near_duplicates(gpso_rows, paris_rows)
+    gpso_report.kept = len(gpso_rows)
+    print(f"{gpso_report}; {gpso_duplicates} already in the Paris data")
+    rows = sorted(paris_rows + gpso_rows, key=lambda r: r["id"])
 
     cache = load_wikipedia_cache(args.wikipedia_cache)
     if not args.no_wikipedia_lookup:
@@ -505,6 +594,28 @@ def main(argv: list[str] | None = None) -> int:
         previous_dataset_modified_at(args.meta_file) if args.skip_download else dataset_modified_at(fetch_metadata())
     )
     meta = build_meta(report, version, extracted_at(args.raw), modified, wikipedia_links=len(links))
+    previous = json.loads(args.meta_file.read_text()) if args.meta_file.exists() else {}
+    previous_gpso = (previous.get("otherSources") or [{}])[0]
+    meta["otherSources"] = [
+        {
+            "id": gpso.SOURCE,
+            "datasetModifiedAt": (previous_gpso.get("datasetModifiedAt") if args.skip_download else None)
+            or dataset_modified_at(fetch_metadata(gpso.METADATA_URL)),
+            "dropped": {
+                "invalidCoordinates": gpso_report.invalid_coordinates,
+                "outsideCoverage": gpso_report.outside_coverage,
+                "stumps": gpso_report.not_trees,
+                "alreadyInParisData": gpso_duplicates,
+            },
+            "extractedAt": extracted_at(args.gpso_raw),
+            "license": gpso.LICENSE,
+            "recordsKept": len(gpso_rows),
+            "recordsRead": gpso_report.total,
+            "source": gpso.DATASET_PAGE,
+            "sourceExport": gpso.EXPORT_URL,
+        }
+    ]
+    meta["treesKept"] = len(rows)
     write_meta(args.meta_file, meta)
     print(f"Extraction {meta['extractedAt']} (dataset modified {modified or 'unknown'}) -> {args.meta_file.name}")
 

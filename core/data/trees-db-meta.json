@@ -1,5 +1,5 @@
 {
-  "dataVersion": 2,
+  "dataVersion": 3,
   "datasetModifiedAt": "2026-11-06T09:34:19+00:00",
   "dropped": {
     "duplicateIds": 0,
@@ -8,9 +8,28 @@
   },
   "extractedAt": "2026-11-06T16:30:03Z",
   "license": "ODbL",
+  "otherSources": [
+    {
+      "datasetModifiedAt": "2026-11-10T11:49:41+00:00",
+      "dropped": {
+        "alreadyInParisData": 0,
+        "invalidCoordinates": 0,
+        "outsideCoverage": 0,
+        "stumps": 48
+      },
+      "extractedAt": "2026-11-10T21:16:17Z",
+      "id": "gpso",
+      "license": "Licence Ouverte 2.0",
+      "recordsKept": 32636,
+      "recordsRead": 32684,
+      "source": "https://data.seineouest.fr/explore/dataset/arbres-v2/information/",
+      "sourceExport": "https://data.seineouest.fr/api/explore/v2.1/catalog/datasets/arbres-v2/exports/csv?delimiter=%3B"
+    }
+  ],
   "recordsKept": 220339,
   "recordsRead": 220339,
   "source": "https://opendata.paris.fr/explore/dataset/les-arbres/information/",
   "sourceExport": "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/les-arbres/exports/csv?delimiter=%3B",
-  "wikipediaLinks": 978
+  "treesKept": 252975,
+  "wikipediaLinks": 1059
 }

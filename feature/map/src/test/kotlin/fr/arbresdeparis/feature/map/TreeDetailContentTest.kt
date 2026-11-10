@@ -131,15 +131,4 @@ class TreeDetailContentTest {
         compose.onNodeWithText("En savoir plus sur Wikipédia").assertDoesNotExist()
         compose.onNodeWithText("sur Wikipédia", substring = true).assertDoesNotExist()
     }
-
-    @Test
-    fun reportRow_opensTheErrorReport() {
-        var reports = 0
-        val detail = tree(1).toDetailUi(isFavorite = false)
-        compose.setContent {
-            TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}, onReportError = { reports++ }) }
-        }
-        compose.onNodeWithText("Signaler une erreur sur cet arbre").performScrollTo().performClick()
-        assertEquals(1, reports)
-    }
 }

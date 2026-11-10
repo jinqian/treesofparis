@@ -1,6 +1,7 @@
 package fr.arbresdeparis.core.map.maplibre
 
 import androidx.compose.ui.graphics.Color
+import fr.arbresdeparis.core.map.MapCluster
 import fr.arbresdeparis.core.map.MapMarker
 import fr.arbresdeparis.core.map.MapPalette
 import fr.arbresdeparis.core.map.MarkerStyle
@@ -60,6 +61,23 @@ class PinsGeoJsonTest {
     }
 
     @Test
+    fun clusters_becomePointsWithIdCountAndLabel() {
+        val json = clustersGeoJson(listOf(MapCluster(3, GeoPoint(48.85, 2.35), count = 1234, label = "1\u00A0234")))
+        val feature =
+            Json
+                .parseToJsonElement(json)
+                .jsonObject
+                .getValue("features")
+                .jsonArray
+                .single()
+                .jsonObject
+        val properties = feature.getValue("properties").jsonObject
+        assertEquals("3", properties.getValue("id").jsonPrimitive.content)
+        assertEquals("1234", properties.getValue("count").jsonPrimitive.content)
+        assertEquals("1\u00A0234", properties.getValue("label").jsonPrimitive.content)
+    }
+
+    @Test
     fun userLocation_isOnePoint_orNothing() {
         val one = Json.parseToJsonElement(userGeoJson(GeoPoint(48.85, 2.35))).jsonObject.getValue("features")
         assertEquals(1, one.jsonArray.size)
@@ -76,8 +94,13 @@ class PinsGeoJsonTest {
                 selected = Color(0xFF1E2620),
                 ring = Color(0xFFFBFAF6),
                 userLocation = Color(0xFF4A7FA8),
+                treeGroup = Color(0xFF3F5F45),
+                treeGroupLabel = Color(0xFFF4F3EC),
             )
-        assertEquals(PinColors("#4F7556", "#C9962E", "#1E2620", "#FBFAF6", "#4A7FA8"), palette.toPinColors())
+        assertEquals(
+            PinColors("#4F7556", "#C9962E", "#1E2620", "#FBFAF6", "#4A7FA8", "#3F5F45", "#F4F3EC"),
+            palette.toPinColors(),
+        )
     }
 
     @Test

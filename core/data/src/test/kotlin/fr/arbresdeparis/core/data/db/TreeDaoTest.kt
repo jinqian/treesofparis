@@ -95,6 +95,33 @@ class TreeDaoTest {
         }
 
     @Test
+    fun clusters_countTheTreesOfEachCell_atTheirMeanPosition() =
+        runTest {
+            db.insert(
+                treeEntity(1, 48.8501, 2.3501),
+                treeEntity(2, 48.8503, 2.3503),
+                treeEntity(3, 48.8800, 2.3000),
+                treeEntity(4, 48.9500, 2.3000), // outside the box
+            )
+            val cells = dao.clusters(48.80, 2.25, 48.90, 2.40, cellLat = 0.01, cellLon = 0.01).sortedBy { it.count }
+            assertEquals(listOf(1, 2), cells.map { it.count })
+            assertEquals(48.8502, cells[1].lat, 1e-9)
+            assertEquals(2.3502, cells[1].lon, 1e-9)
+        }
+
+    @Test
+    fun remarkable_leavesOutTheOtherTownsTrees() =
+        runTest {
+            db.insert(
+                treeEntity(1, 48.850, 2.350).copy(remarkable = true),
+                treeEntity(2, 48.824, 2.271, city = "Issy-les-Moulineaux", source = "gpso").copy(remarkable = true),
+            )
+            assertEquals(listOf(1L), dao.remarkable().map { it.id })
+            // The map still shows both.
+            assertEquals(2, dao.inBounds(48.8, 2.2, 48.9, 2.4, remarkableOnly = true, genus = null, limit = 10).size)
+        }
+
+    @Test
     fun getByIds_ignoresUnknownIds() =
         runTest {
             db.insert(treeEntity(1), treeEntity(2))

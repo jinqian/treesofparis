@@ -22,9 +22,10 @@ fun Tree.toDetailUi(
     location = location,
     name = commonName,
     scientificName = scientificName(),
-    area = formatArea(arrondissement),
+    area = if (city == Tree.PARIS) formatArea(arrondissement) else city,
     address = formatPlace(address),
-    height = heightM?.let { MeasureUi(it.toString(), "m") },
+    // A range (« 5 à 10 m ») reads as one value, without the big-number layout of an exact height.
+    height = heightM?.let { MeasureUi(it.toString(), "m") } ?: heightClass?.let { MeasureUi("$it m", unit = "") },
     circumference = circumferenceCm?.let { MeasureUi(it.toString(), "cm") },
     stage = stage,
     remarkable = remarkable,
@@ -42,6 +43,7 @@ fun Tree.toDetailUi(
             )
         },
     flowering = flowering,
+    source = source,
 )
 
 fun FloweringSeason.toFloweringUi(now: Month) =

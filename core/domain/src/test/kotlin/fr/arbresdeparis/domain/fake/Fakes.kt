@@ -5,6 +5,7 @@ import fr.arbresdeparis.domain.model.FavoriteSnapshot
 import fr.arbresdeparis.domain.model.GeoBounds
 import fr.arbresdeparis.domain.model.GeoPoint
 import fr.arbresdeparis.domain.model.Tree
+import fr.arbresdeparis.domain.model.TreeCluster
 import fr.arbresdeparis.domain.repository.FavoritesRepository
 import fr.arbresdeparis.domain.repository.LocationRepository
 import fr.arbresdeparis.domain.repository.TreeRepository
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlin.math.floor
 
 fun tree(
     id: Long,
@@ -56,6 +58,19 @@ class FakeTreeRepository(
     override suspend fun getTreesByIds(ids: List<Long>) = ids.mapNotNull { byId[it] }.shuffled()
 
     override suspend fun getRemarkableTrees() = byId.values.filter { it.remarkable }
+
+    override suspend fun getTreeClusters(
+        bounds: GeoBounds,
+        cellLat: Double,
+        cellLon: Double,
+    ) = byId.values
+        .filter { bounds.contains(it.location) }
+        .groupBy { floor(it.location.lat / cellLat) to floor(it.location.lon / cellLon) }
+        .values
+        .map { group ->
+            val lat = group.map { it.location.lat }.average()
+            TreeCluster(GeoPoint(lat, group.map { it.location.lon }.average()), group.size)
+        }
 }
 
 class FakeFavoritesRepository(

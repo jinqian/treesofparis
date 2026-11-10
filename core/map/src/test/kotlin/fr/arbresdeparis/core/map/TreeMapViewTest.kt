@@ -30,10 +30,12 @@ class TreeMapViewTest {
             initialCamera: MapCamera,
             cameraRequest: CameraRequest?,
             markers: List<MapMarker>,
+            clusters: List<MapCluster>,
             userLocation: GeoPoint?,
             config: MapConfig,
             palette: MapPalette,
             onMarkerClick: (Long) -> Unit,
+            onClusterClick: (MapCluster) -> Unit,
             onCameraChange: (MapCamera, GeoBounds) -> Unit,
             modifier: Modifier,
         ) {
@@ -47,7 +49,8 @@ class TreeMapViewTest {
     fun treeMapView_delegatesToProvidedMapProvider() {
         val provider = FakeProvider()
         val markers = listOf(MapMarker(id = 1, position = GeoPoint.PARIS_CENTER))
-        val palette = MapPalette(Color.Green, Color.Yellow, Color.Black, Color.White, Color.Blue)
+        val palette =
+            MapPalette(Color.Green, Color.Yellow, Color.Black, Color.White, Color.Blue, Color.DarkGray, Color.White)
         compose.setContent {
             CompositionLocalProvider(LocalMapProvider provides provider) {
                 TreeMapView(

@@ -3,7 +3,9 @@ package fr.arbresdeparis.core.data.repository
 import fr.arbresdeparis.core.data.db.TreeDao
 import fr.arbresdeparis.core.data.mapper.toDomain
 import fr.arbresdeparis.domain.model.GeoBounds
+import fr.arbresdeparis.domain.model.GeoPoint
 import fr.arbresdeparis.domain.model.Tree
+import fr.arbresdeparis.domain.model.TreeCluster
 import fr.arbresdeparis.domain.repository.TreeRepository
 import javax.inject.Inject
 
@@ -32,6 +34,15 @@ internal class TreeRepositoryImpl
 
         override suspend fun getTreesByIds(ids: List<Long>): List<Tree> =
             ids.chunked(SQLITE_MAX_VARIABLES).flatMap { chunk -> dao.byIds(chunk) }.map { it.toDomain() }
+
+        override suspend fun getTreeClusters(
+            bounds: GeoBounds,
+            cellLat: Double,
+            cellLon: Double,
+        ): List<TreeCluster> =
+            dao
+                .clusters(bounds.south, bounds.west, bounds.north, bounds.east, cellLat, cellLon)
+                .map { TreeCluster(GeoPoint(it.lat, it.lon), it.count) }
 
         private companion object {
             /** SQLite's bound-parameter limit on older Android versions. */

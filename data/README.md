@@ -1,16 +1,21 @@
 # Tree data
 
-The app ships the [Paris Open Data « Les arbres »](https://opendata.paris.fr/explore/dataset/les-arbres/information/)
-dataset (ODbL) as a pre-packaged SQLite database: `core/data/src/main/assets/trees.db`.
+The app ships open tree datasets as a pre-packaged SQLite database, `core/data/src/main/assets/trees.db` (ADR 0008):
 
-`scripts/update_trees.py` downloads the dataset, cleans it and builds that file. It uses only the Python standard
-library (Python 3.10+).
+| Source | Trees | Licence | Module |
+|--------|-------|---------|--------|
+| [« Les arbres », Ville de Paris](https://opendata.paris.fr/explore/dataset/les-arbres/information/) | 220,339 | ODbL | `update_trees.py` |
+| [« Arbres », Grand Paris Seine Ouest](https://data.seineouest.fr/explore/dataset/arbres-v2/information/) (8 towns) | 32,636 | Licence Ouverte 2.0 | `gpso.py` |
+
+`scripts/update_trees.py` downloads them, cleans them, gives every tree its town (`city`) and its dataset
+(`source`), and builds that file. It uses only the Python standard library (Python 3.10+). Other towns that publish
+tree data, and the plan to add them: `docs/roadmap/grand-paris-trees.md`.
 
 ## Refreshing the data
 
 ```bash
 python3 data/scripts/update_trees.py                  # download + build
-python3 data/scripts/update_trees.py --skip-download  # rebuild from data/raw/les-arbres.csv
+python3 data/scripts/update_trees.py --skip-download  # rebuild from data/raw/les-arbres.csv and gpso-arbres.csv
 python3 data/scripts/update_trees.py --skip-download --no-wikipedia-lookup  # offline: cached Wikipedia titles only
 ./gradlew :core:data:testDebugUnitTest                # opens the new asset through Room
 ```
@@ -31,7 +36,8 @@ the data changed.
 
 ## Data provenance
 
-`core/data/trees-db-meta.json` records which extraction the app ships. The script rewrites it on every run:
+`core/data/trees-db-meta.json` records which extraction the app ships. The script rewrites it on every run. The
+top-level fields describe the Paris data:
 
 | Field | Meaning |
 |-------|---------|
@@ -41,12 +47,15 @@ the data changed.
 | `dataVersion` | The data version, as in `trees-db-version.txt`. |
 | `wikipediaLinks` | How many genus + species pairs have a French Wikipedia article (see below). |
 | `source`, `sourceExport`, `license` | The dataset page, the export URL used, and its licence (ODbL). |
+| `otherSources` | The same fields for each other source (`id`: `gpso`), its `dropped` counts (stumps, trees already in the Paris data). |
+| `treesKept` | All the trees shipped, every source together. |
 
 The app shows the extraction date and the number of trees in À propos (« Extraction du 6 novembre 2026 · 220 339
 arbres »): `:core:data` reads the file at build time into `BuildConfig` and provides it as `DatasetInfo`.
 
-**Current extraction:** downloaded on 2026-11-06 at 16:30 UTC from the dataset last modified on 2026-11-06 at
-09:34 UTC; 220,339 records read and kept, none dropped; data version 1.
+**Current extraction:** Paris downloaded on 2026-11-06 at 16:30 UTC (dataset last modified 2026-11-06 09:34 UTC),
+220,339 records read and kept; GPSO downloaded on 2026-11-10 (dataset last modified 2026-11-10 11:49 UTC), 32,684
+read, 32,636 kept (48 stumps dropped). 252,975 trees in all; data version 3.
 
 ## What the script does
 
@@ -63,6 +72,13 @@ arbres »): `:core:data` reads the file at build time into `BuildConfig` and pro
    - Missing common name → genus → « Arbre ».
    - Development stage: « Jeune (arbre) » → « Jeune », « Jeune (arbre)Adulte » → « Jeune adulte ».
    - Cultivar quotes removed (`''Kanzan''` → `Kanzan`).
+   - **GPSO** (`gpso.py`): ids become `10¹¹ + INSEE × 10⁶ + number` (a second tree sharing a GPSO id gets
+     500,000 more); stumps (« Souche ») are dropped; « Acer platanoides 'Crimson King' » is split into genus,
+     species and cultivar like the Paris data; height ranges go to `height_class` (« 5 à 10 »); « Remarquable » and
+     « Majeur » trees are remarkable; a tree already in the Paris data (same genus within 1 m) is dropped.
+   - **Town** (`city`): « Paris » for an arrondissement or a Bois, the source's own town for GPSO, otherwise the town
+     whose boundary holds the tree, from `data/communes.geojson` (geo.api.gouv.fr, départements 75, 92, 93, 94;
+     refresh with `--refresh-communes`).
 4. **Link to Wikipedia**: for every distinct genus + species, find its French Wikipedia article through Wikidata
    (taxon name, property P225; `x hispanica` is looked up as `× hispanica`, forms and subspecies are dropped, `sp.`
    means genus only). When the species has no article, the genus article is used (plant genera only: rank genus with

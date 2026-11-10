@@ -13,6 +13,9 @@ fun treeEntity(
     heightM: Int? = null,
     circumferenceCm: Int? = null,
     arrondissement: String = "PARIS 5E ARRDT",
+    city: String = "Paris",
+    source: String = "paris",
+    heightClass: String? = null,
 ) = TreeEntity(
     id = id,
     commonName = commonName,
@@ -27,6 +30,9 @@ fun treeEntity(
     arrondissement = arrondissement,
     lat = lat,
     lon = lon,
+    city = city,
+    source = source,
+    heightClass = heightClass,
 )
 
 /** The production DAO is read-only (the data ships pre-packaged), so tests insert through raw SQL. */
@@ -35,7 +41,8 @@ fun TreeDatabase.insert(vararg trees: TreeEntity) {
     trees.forEach { t ->
         db.execSQL(
             "INSERT INTO trees (id, common_name, genus, species, cultivar, circumference_cm, height_m, stage, " +
-                "remarkable, address, arrondissement, lat, lon) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "remarkable, address, arrondissement, lat, lon, city, source, height_class) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             arrayOf<Any?>(
                 t.id,
                 t.commonName,
@@ -50,6 +57,9 @@ fun TreeDatabase.insert(vararg trees: TreeEntity) {
                 t.arrondissement,
                 t.lat,
                 t.lon,
+                t.city,
+                t.source,
+                t.heightClass,
             ),
         )
     }

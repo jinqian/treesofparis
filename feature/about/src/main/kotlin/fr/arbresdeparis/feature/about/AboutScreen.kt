@@ -45,6 +45,7 @@ import java.util.Locale
 
 const val ABOUT_LIST_TAG = "about_list"
 private const val DATASET_URL = "https://opendata.paris.fr/explore/dataset/les-arbres/information/"
+private const val GPSO_DATASET_URL = "https://data.seineouest.fr/explore/dataset/arbres-v2/information/"
 private const val GUIDE_URL =
     "https://opendata.paris.fr/explore/dataset/fiches-essences-du-guide-des-essences-de-paris/information/"
 private const val ODBL_URL = "https://opendatacommons.org/licenses/odbl/"
@@ -160,6 +161,13 @@ private fun LazyListScope.dataSections(
             title = stringResource(R.string.about_data_license),
             trailing = InfoRowTrailing.EXTERNAL,
             onClick = { onOpenUrl(ODBL_URL) },
+        )
+        TreesDivider()
+        InfoRow(
+            title = stringResource(R.string.about_data_gpso_credit),
+            subtitle = stringResource(R.string.about_data_gpso_detail),
+            trailing = InfoRowTrailing.EXTERNAL,
+            onClick = { onOpenUrl(GPSO_DATASET_URL) },
         )
     }
     section(R.string.about_section_flowering) {

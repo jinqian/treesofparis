@@ -18,15 +18,19 @@ fun TreeMapView(
     onMarkerClick: (Long) -> Unit,
     onCameraChange: (MapCamera, GeoBounds) -> Unit,
     modifier: Modifier = Modifier,
+    clusters: List<MapCluster> = emptyList(),
+    onClusterClick: (MapCluster) -> Unit = {},
 ) {
     LocalMapProvider.current.Content(
         initialCamera = initialCamera,
         cameraRequest = cameraRequest,
         markers = markers,
+        clusters = clusters,
         userLocation = userLocation,
         config = config,
         palette = palette,
         onMarkerClick = onMarkerClick,
+        onClusterClick = onClusterClick,
         onCameraChange = onCameraChange,
         modifier = modifier,
     )

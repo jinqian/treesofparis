@@ -29,6 +29,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.core.locationbutton.compose.LocationButton
+import androidx.core.locationbutton.compose.LocationButtonTextType
 import fr.arbresdeparis.core.designsystem.icon.TreesIcons
 import fr.arbresdeparis.core.designsystem.leaf.LeafDrawing
 import fr.arbresdeparis.core.designsystem.leaf.TreeLeaf
@@ -64,6 +66,35 @@ internal fun NearestTreeButton(
             Icon(TreesIcons.Leaf, contentDescription = null, modifier = Modifier.size(20.dp))
         }
         Text(label, modifier = Modifier.padding(start = TreesSpacing.s), style = MaterialTheme.typography.titleSmall)
+    }
+}
+
+/**
+ * « Arbre le plus proche » before precise location is shared: the system location button, a pill in the same green,
+ * reading « Près de ma position exacte » (its text can only be one of the system's). A tap shares the location for
+ * this session ([onResult] true) and the search goes on at once.
+ */
+@Composable
+internal fun NearestTreeLocationButton(
+    onResult: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.height(48.dp),
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primary,
+        shadowElevation = 4.dp,
+    ) {
+        LocationButton(
+            backgroundColor = MaterialTheme.colorScheme.primary,
+            iconTint = MaterialTheme.colorScheme.onPrimary,
+            textColor = MaterialTheme.colorScheme.onPrimary,
+            textType = LocationButtonTextType.NearMyPreciseLocation,
+            cornerRadius = 24.dp,
+            pressedCornerRadius = 24.dp,
+            onError = { onResult(false) },
+            onPermissionResult = onResult,
+        )
     }
 }
 

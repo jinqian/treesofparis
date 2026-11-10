@@ -15,7 +15,15 @@ import org.junit.Test
 
 class HerbierMapStyleTest {
     private val pins =
-        PinColors(tree = "#4F7556", remarkable = "#C9962E", selected = "#1E2620", ring = "#FBFAF6", user = "#4A7FA8")
+        PinColors(
+            tree = "#4F7556",
+            remarkable = "#C9962E",
+            selected = "#1E2620",
+            ring = "#FBFAF6",
+            user = "#4A7FA8",
+            treeGroup = "#3F5F45",
+            treeGroupLabel = "#F4F3EC",
+        )
 
     private fun style(basemap: BasemapColors = BasemapColors.Light) =
         Json.parseToJsonElement(herbierStyle(basemap, pins)).jsonObject
@@ -74,7 +82,8 @@ class HerbierMapStyleTest {
 
     @Test
     fun labelsAreInFrench() {
-        val labels = style().layers().filter { it.string("type") == "symbol" }
+        // The basemap's labels; the tree groups' counts are numbers, not names.
+        val labels = style().layers().filter { it.string("type") == "symbol" && it.string("source") == "openmaptiles" }
         assertTrue(labels.isNotEmpty())
         labels.forEach { layer ->
             val field =
@@ -85,6 +94,25 @@ class HerbierMapStyleTest {
                     .toString()
             assertTrue("${layer.string("id")}: $field", field.contains("name:fr"))
         }
+    }
+
+    @Test
+    fun treeGroups_areDrawnUnderThePins_withTheirCount() {
+        val ids = style().layers().map { it.string("id") }
+        assertTrue(ids.indexOf(CLUSTER_LAYER) in 0 until ids.indexOf(PIN_LAYER_TREE))
+        assertTrue(ids.indexOf(CLUSTER_COUNT_LAYER) in ids.indexOf(CLUSTER_LAYER) until ids.indexOf(PIN_LAYER_TREE))
+        val disc = style().layers().first { it.string("id") == CLUSTER_LAYER }
+        assertEquals("#3F5F45", disc.getValue("paint").jsonObject.string("circle-color"))
+        val count = style().layers().first { it.string("id") == CLUSTER_COUNT_LAYER }
+        assertEquals("#F4F3EC", count.getValue("paint").jsonObject.string("text-color"))
+        assertTrue(
+            count
+                .getValue("layout")
+                .jsonObject
+                .getValue("text-field")
+                .toString()
+                .contains("label"),
+        )
     }
 
     /** Every « #RRGGBB » or « rgba(…) » string anywhere in [element]. */

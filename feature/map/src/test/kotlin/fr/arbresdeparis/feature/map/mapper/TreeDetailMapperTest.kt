@@ -2,6 +2,7 @@ package fr.arbresdeparis.feature.map.mapper
 
 import fr.arbresdeparis.core.designsystem.leaf.TreeLeaf
 import fr.arbresdeparis.domain.model.FloweringSeason
+import fr.arbresdeparis.domain.model.TreeSource
 import fr.arbresdeparis.domain.model.WikipediaArticle
 import fr.arbresdeparis.feature.map.MeasureUi
 import fr.arbresdeparis.feature.map.WikipediaUi
@@ -51,6 +52,29 @@ class TreeDetailMapperTest {
         assertEquals(11, ui.currentMonth)
         assertEquals(4, ui.monthsUntilFlowering)
         assertEquals(0, cherry.toFloweringUi(now = Month.APRIL).monthsUntilFlowering)
+    }
+
+    @Test
+    fun toDetailUi_aNeighbouringTownsTree_showsItsTownHeightRangeAndSource() {
+        val detail =
+            tree(1)
+                .copy(
+                    arrondissement = "Ville-d'Avray",
+                    city = "Ville-d'Avray",
+                    source = TreeSource.GPSO,
+                    heightM = null,
+                    heightClass = "5 à 10",
+                ).toDetailUi(isFavorite = false)
+        assertEquals("Ville-d'Avray", detail.area)
+        assertEquals(MeasureUi("5 à 10 m", unit = ""), detail.height)
+        assertEquals(TreeSource.GPSO, detail.source)
+    }
+
+    @Test
+    fun toDetailUi_aParisTreeInAnotherTown_showsTheTown() {
+        val detail = tree(1).copy(arrondissement = "SEINE-SAINT-DENIS", city = "Pantin").toDetailUi(isFavorite = false)
+        assertEquals("Pantin", detail.area)
+        assertEquals(TreeSource.PARIS, detail.source)
     }
 
     @Test

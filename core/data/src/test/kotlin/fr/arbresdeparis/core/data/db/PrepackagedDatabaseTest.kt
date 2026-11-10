@@ -53,7 +53,7 @@ class PrepackagedDatabaseTest {
         }
 
     @Test
-    fun prepackagedAsset_has181RemarkableTrees() =
+    fun prepackagedAsset_has181RemarkableParisTrees_andTheGpsoOnes() =
         runTest {
             val db = buildTreeDatabase(context, name = "remarkable.db").also(opened::add)
             val c = fr.arbresdeparis.domain.model.GeoBounds.COVERAGE
@@ -67,8 +67,22 @@ class PrepackagedDatabaseTest {
                     genus = null,
                     limit = 1_000,
                 )
-            assertEquals(181, remarkable.size)
+            assertEquals(181, remarkable.count { it.source == "paris" })
+            assertEquals(true, remarkable.any { it.source == "gpso" })
             assertEquals(true, remarkable.all { it.remarkable })
+        }
+
+    @Test
+    fun prepackagedAsset_namesTheTownOfEveryTree() =
+        runTest {
+            val db = buildTreeDatabase(context, name = "towns.db").also(opened::add)
+            // Square near the Issy-les-Moulineaux town hall, then the Parisian cemetery of Pantin.
+            val issy = db.treeDao().inBounds(48.822, 2.268, 48.826, 2.274, false, null, 50)
+            assertEquals(true, issy.isNotEmpty())
+            assertEquals(true, issy.all { it.city == "Issy-les-Moulineaux" && it.source == "gpso" })
+            val pantin = db.treeDao().inBounds(48.900, 2.405, 48.903, 2.410, false, null, 50)
+            assertEquals(true, pantin.isNotEmpty())
+            assertEquals(true, pantin.all { it.city == "Pantin" && it.source == "paris" })
         }
 
     @Test

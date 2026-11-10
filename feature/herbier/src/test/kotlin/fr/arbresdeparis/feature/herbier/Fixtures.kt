@@ -10,6 +10,7 @@ import fr.arbresdeparis.domain.model.GeoPoint
 import fr.arbresdeparis.domain.model.RemarkableStatistics
 import fr.arbresdeparis.domain.model.StageCount
 import fr.arbresdeparis.domain.model.Tree
+import fr.arbresdeparis.domain.model.TreeCluster
 import fr.arbresdeparis.domain.model.TreeStatistics
 import fr.arbresdeparis.domain.repository.FloweringRepository
 import fr.arbresdeparis.domain.repository.TreeRepository
@@ -166,4 +167,10 @@ class FakeTreeRepository(
     override suspend fun getTreesByIds(ids: List<Long>) = trees.filter { it.id in ids }
 
     override suspend fun getRemarkableTrees() = trees
+
+    override suspend fun getTreeClusters(
+        bounds: GeoBounds,
+        cellLat: Double,
+        cellLon: Double,
+    ) = emptyList<TreeCluster>()
 }

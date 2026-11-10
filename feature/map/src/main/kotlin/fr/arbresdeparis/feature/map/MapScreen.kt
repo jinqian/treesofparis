@@ -36,11 +36,13 @@ import androidx.compose.ui.unit.dp
 import androidx.core.locationbutton.compose.LocationButton
 import androidx.core.locationbutton.compose.LocationButtonTextType
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.arbresdeparis.core.designsystem.component.TreesBottomSheet
 import fr.arbresdeparis.core.designsystem.theme.TreesSpacing
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.core.map.MapCamera
+import fr.arbresdeparis.core.map.MapCluster
 import fr.arbresdeparis.core.map.MapPalette
 import fr.arbresdeparis.core.map.TreeMapView
 import fr.arbresdeparis.domain.model.GeoBounds
@@ -66,6 +68,12 @@ fun MapRoute(
             if (context.hasLocationPermission()) viewModel.onLocationPermissionResult(true, userInitiated = false)
         }
     }
+    // The system grants precise location for a session: check again whenever the screen comes back.
+    var preciseLocation by remember { mutableStateOf(context.hasPreciseLocationPermission()) }
+    LifecycleResumeEffect(Unit) {
+        preciseLocation = context.hasPreciseLocationPermission()
+        onPauseOrDispose {}
+    }
     LaunchedEffect(treeId) { treeId?.let(viewModel::onOpenTree) }
     LaunchedEffect(genus) { genus?.let(viewModel::onGenusFilterRequest) }
 
@@ -75,14 +83,16 @@ fun MapRoute(
         onMarkerClick = viewModel::onMarkerClick,
         onDetailDismiss = viewModel::onDetailDismissed,
         onFavoriteToggle = viewModel::onFavoriteToggle,
-        onLocateResult = { granted -> viewModel.onLocationPermissionResult(granted, userInitiated = true) },
+        onLocateResult = { granted ->
+            preciseLocation = context.hasPreciseLocationPermission()
+            viewModel.onLocationPermissionResult(granted, userInitiated = true)
+        },
         onMessageDismiss = viewModel::onMessageShown,
         onOpenSettings = { context.openAppSettings() },
         onRemarkableFilterChange = viewModel::onRemarkableFilterChange,
         onRemarkableInfoOpen = viewModel::onRemarkableInfoOpen,
         onRemarkableInfoDismiss = viewModel::onRemarkableInfoDismiss,
         onOpenWikipedia = { url -> context.openInCustomTab(url) },
-        onReportError = { tree -> context.reportTreeError(tree, state.reportContact) },
         onGenusFilterClear = viewModel::onGenusFilterClear,
         onGenusPickerOpen = viewModel::onGenusPickerOpen,
         onGenusPick = viewModel::onGenusPick,
@@ -92,6 +102,12 @@ fun MapRoute(
         onNearbyOpen = viewModel::onNearbyOpen,
         onNearbyDismiss = viewModel::onNearbyDismiss,
         modifier = modifier,
+        onClusterClick = viewModel::onClusterClick,
+        preciseLocation = preciseLocation,
+        onNearestLocationResult = { granted ->
+            preciseLocation = context.hasPreciseLocationPermission()
+            viewModel.onNearestTreeRequest(granted)
+        },
     )
 }
 
@@ -109,7 +125,6 @@ fun MapScreen(
     onRemarkableInfoOpen: () -> Unit,
     onRemarkableInfoDismiss: () -> Unit,
     onOpenWikipedia: (String) -> Unit,
-    onReportError: (TreeDetailUi) -> Unit,
     onGenusFilterClear: () -> Unit,
     onGenusPickerOpen: () -> Unit,
     onGenusPick: (GenusChoiceUi) -> Unit,
@@ -119,6 +134,9 @@ fun MapScreen(
     onNearbyOpen: () -> Unit,
     onNearbyDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    onClusterClick: (MapCluster) -> Unit = {},
+    preciseLocation: Boolean = true,
+    onNearestLocationResult: (Boolean) -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     MessageEffect(state.message, snackbarHostState, onMessageDismiss, onOpenSettings)
@@ -127,6 +145,8 @@ fun MapScreen(
             initialCamera = state.initialCamera,
             cameraRequest = state.cameraRequest,
             markers = state.markers,
+            clusters = state.clusters,
+            onClusterClick = onClusterClick,
             userLocation = state.userLocation,
             config = MapViewModel.MAP_CONFIG,
             palette = mapPalette(),
@@ -146,6 +166,8 @@ fun MapScreen(
             state = state,
             onLocateResult = onLocateResult,
             onFindNearestTree = onFindNearestTree,
+            preciseLocation = preciseLocation,
+            onNearestLocationResult = onNearestLocationResult,
             onNearbyNext = onNearbyNext,
             onNearbyOpen = onNearbyOpen,
             onNearbyDismiss = onNearbyDismiss,
@@ -155,7 +177,7 @@ fun MapScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = TreesSpacing.xl * 2),
         )
-        TreeSheet(state.selectedTree, onDetailDismiss, onFavoriteToggle, onOpenWikipedia, onReportError)
+        TreeSheet(state.selectedTree, onDetailDismiss, onFavoriteToggle, onOpenWikipedia)
         state.genusPicker?.let { picker ->
             TreesBottomSheet(onDismiss = onGenusPickerDismiss) {
                 GenusPickerContent(picker = picker, onPick = onGenusPick)
@@ -172,14 +194,13 @@ fun MapScreen(
     }
 }
 
-/** The open tree's sheet: its details, favorite, Wikipédia link and « Signaler une erreur ». */
+/** The open tree's sheet: its details, favorite and Wikipédia link. */
 @Composable
 private fun TreeSheet(
     detail: TreeDetailUi?,
     onDismiss: () -> Unit,
     onFavoriteToggle: () -> Unit,
     onOpenWikipedia: (String) -> Unit,
-    onReportError: (TreeDetailUi) -> Unit,
 ) {
     if (detail == null) return
     TreesBottomSheet(onDismiss = onDismiss) {
@@ -187,13 +208,17 @@ private fun TreeSheet(
             detail = detail,
             onFavoriteToggle = onFavoriteToggle,
             onOpenWikipedia = onOpenWikipedia,
-            onReportError = { onReportError(detail) },
         )
     }
 }
 
-/** « Arbre le plus proche » over « Me localiser »; the nearby tree's card takes the button's place under them. */
+/**
+ * « Arbre le plus proche » over « Me localiser »; the nearby tree's card takes the button's place under them. Until
+ * precise location is shared ([preciseLocation] false), « Arbre le plus proche » is the system location button itself
+ * (« Près de ma position exacte »): one tap shares the location and finds the tree, like « Me localiser ».
+ */
 @Composable
+@Suppress("LongParameterList") // the controls' state and events
 private fun LocationControls(
     state: MapUiState,
     onLocateResult: (Boolean) -> Unit,
@@ -202,6 +227,8 @@ private fun LocationControls(
     onNearbyOpen: () -> Unit,
     onNearbyDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    preciseLocation: Boolean = true,
+    onNearestLocationResult: (Boolean) -> Unit = {},
 ) {
     Column(
         modifier = modifier.padding(TreesSpacing.m),
@@ -209,7 +236,11 @@ private fun LocationControls(
         verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
     ) {
         if (state.nearby == null) {
-            NearestTreeButton(isSearching = state.isFindingNearest, onClick = onFindNearestTree)
+            if (preciseLocation || state.isFindingNearest) {
+                NearestTreeButton(isSearching = state.isFindingNearest, onClick = onFindNearestTree)
+            } else {
+                NearestTreeLocationButton(onResult = onNearestLocationResult)
+            }
         }
         LocateButton(isLocating = state.isLocating, onResult = onLocateResult)
         state.nearby?.let {
@@ -271,6 +302,8 @@ private fun mapPalette() =
         selected = MaterialTheme.colorScheme.onSurface,
         ring = TreesTheme.colors.pinRing,
         userLocation = TreesTheme.colors.userLocation,
+        treeGroup = TreesTheme.colors.treeGroup,
+        treeGroupLabel = TreesTheme.colors.treeGroupLabel,
     )
 
 /** A paper pill floating over the map, softly shadowed. */
@@ -370,7 +403,6 @@ private val MapMessage.textRes: Int
             MapMessage.OUT_OF_AREA -> R.string.map_location_outside
             MapMessage.LOCATION_UNAVAILABLE -> R.string.map_location_unavailable
             MapMessage.PERMISSION_DENIED -> R.string.map_location_denied
-            MapMessage.LOCATE_FIRST -> R.string.map_nearest_locate_first
             MapMessage.NO_TREE_NEARBY -> R.string.map_nearest_none
         }
 

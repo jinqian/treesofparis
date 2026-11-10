@@ -26,6 +26,7 @@ import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.core.map.CameraRequest
 import fr.arbresdeparis.core.map.LocalMapProvider
 import fr.arbresdeparis.core.map.MapCamera
+import fr.arbresdeparis.core.map.MapCluster
 import fr.arbresdeparis.core.map.MapConfig
 import fr.arbresdeparis.core.map.MapMarker
 import fr.arbresdeparis.core.map.MapPalette
@@ -51,10 +52,12 @@ class MapScreenTest {
             initialCamera: MapCamera,
             cameraRequest: CameraRequest?,
             markers: List<MapMarker>,
+            clusters: List<MapCluster>,
             userLocation: GeoPoint?,
             config: MapConfig,
             palette: MapPalette,
             onMarkerClick: (Long) -> Unit,
+            onClusterClick: (MapCluster) -> Unit,
             onCameraChange: (MapCamera, GeoBounds) -> Unit,
             modifier: Modifier,
         ) = Box(modifier)
@@ -73,36 +76,38 @@ class MapScreenTest {
     private var nearbyOpens = 0
     private var nearbyDismisses = 0
 
-    private fun show(state: MapUiState) =
-        compose.setContent {
-            CompositionLocalProvider(LocalMapProvider provides StubMap) {
-                TreesTheme {
-                    MapScreen(
-                        state = state,
-                        onCameraChange = { _, _ -> },
-                        onMarkerClick = {},
-                        onDetailDismiss = {},
-                        onFavoriteToggle = {},
-                        onLocateResult = { locateResults += it },
-                        onMessageDismiss = { messagesShown++ },
-                        onOpenSettings = { settingsOpened++ },
-                        onRemarkableFilterChange = { filterChanges += it },
-                        onRemarkableInfoOpen = { infoOpens++ },
-                        onRemarkableInfoDismiss = {},
-                        onOpenWikipedia = {},
-                        onReportError = {},
-                        onGenusFilterClear = { genusClears++ },
-                        onGenusPickerOpen = { genusPickerOpens++ },
-                        onGenusPick = { genusPicks += it.genus },
-                        onGenusPickerDismiss = {},
-                        onFindNearestTree = { nearestClicks++ },
-                        onNearbyNext = { nearbyNexts++ },
-                        onNearbyOpen = { nearbyOpens++ },
-                        onNearbyDismiss = { nearbyDismisses++ },
-                    )
-                }
+    private fun show(
+        state: MapUiState,
+        preciseLocation: Boolean = true,
+    ) = compose.setContent {
+        CompositionLocalProvider(LocalMapProvider provides StubMap) {
+            TreesTheme {
+                MapScreen(
+                    state = state,
+                    onCameraChange = { _, _ -> },
+                    onMarkerClick = {},
+                    onDetailDismiss = {},
+                    onFavoriteToggle = {},
+                    onLocateResult = { locateResults += it },
+                    onMessageDismiss = { messagesShown++ },
+                    onOpenSettings = { settingsOpened++ },
+                    onRemarkableFilterChange = { filterChanges += it },
+                    onRemarkableInfoOpen = { infoOpens++ },
+                    onRemarkableInfoDismiss = {},
+                    onOpenWikipedia = {},
+                    onGenusFilterClear = { genusClears++ },
+                    onGenusPickerOpen = { genusPickerOpens++ },
+                    onGenusPick = { genusPicks += it.genus },
+                    onGenusPickerDismiss = {},
+                    onFindNearestTree = { nearestClicks++ },
+                    onNearbyNext = { nearbyNexts++ },
+                    onNearbyOpen = { nearbyOpens++ },
+                    onNearbyDismiss = { nearbyDismisses++ },
+                    preciseLocation = preciseLocation,
+                )
             }
         }
+    }
 
     private val base = MapUiState(initialCamera = MapViewModel.DEFAULT_CAMERA)
 
@@ -255,12 +260,16 @@ class MapScreenTest {
     }
 
     @Test
-    fun locateFirstMessage_pointsToTheLocationButton() {
-        show(base.copy(message = MapMessage.LOCATE_FIRST))
-        compose
-            .onNodeWithText(
-                "Touchez le bouton de localisation pour partager votre position, puis cherchez l’arbre le plus proche.",
-            ).assertIsDisplayed()
+    fun nearestTree_beforeLocationIsShared_isTheSystemLocationButton() {
+        show(base, preciseLocation = false)
+        // Our pill gives way to the system button, which shares the location and finds the tree in one tap.
+        compose.onNodeWithText("Arbre le plus proche").assertDoesNotExist()
+    }
+
+    @Test
+    fun nearestTree_whileSearching_showsThePillWithItsProgress() {
+        show(base.copy(isFindingNearest = true), preciseLocation = false)
+        compose.onNodeWithText("Arbre le plus proche").assertIsDisplayed()
     }
 
     @Test

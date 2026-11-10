@@ -84,8 +84,24 @@ class TreeStatisticsRepositoryTest {
                 heightM = 20,
             ),
             treeEntity(8, genus = null),
+            neighbouringTownTree(),
         )
     }
+
+    /** A tall, remarkable plane tree in Issy: the Herbier counts the Paris data only, so no figure includes it. */
+    private fun neighbouringTownTree() =
+        treeEntity(
+            192_040_000_001,
+            genus = "Platanus",
+            species = "x hispanica",
+            stage = "Adulte",
+            remarkable = true,
+            heightM = 45,
+            circumferenceCm = 900,
+            arrondissement = "Issy-les-Moulineaux",
+            city = "Issy-les-Moulineaux",
+            source = "gpso",
+        )
 
     @After
     fun tearDown() = db.close()
