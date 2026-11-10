@@ -1,6 +1,7 @@
 # Trees of Paris — agent guide
 
-Android app showing the trees of Paris (Paris Open Data `les-arbres`) on an OpenStreetMap map.
+Android app showing the trees of Paris and its neighbouring towns (Paris Open Data `les-arbres`, Grand Paris Seine
+Ouest; ADR 0008) on an OpenStreetMap map.
 UI language: **French**. Read `docs/adr/` for decisions and `docs/roadmap/` for ideas and plans.
 
 ## Modules

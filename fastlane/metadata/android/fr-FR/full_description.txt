@@ -1,8 +1,9 @@
-Platanes, tilleuls, marronniers, ginkgos : Arbres de Paris montre les 220 339 arbres gérés par la Ville de Paris sur une carte, un par un. Ouvrez l’application et découvrez l’arbre juste à côté de vous.
+Platanes, tilleuls, marronniers, ginkgos : Arbres de Paris montre sur une carte, un par un, les 252 975 arbres de Paris et de huit villes voisines, de Boulogne-Billancourt à Meudon. Ouvrez l’application et découvrez l’arbre juste à côté de vous.
 
 LA CARTE
-• Tous les arbres des rues, squares, parcs et cimetières de Paris, sur un fond de carte sobre aux couleurs d’un herbier, clair ou sombre.
-• Les arbres remarquables, distingués par la Ville pour leur âge, leur taille ou leur histoire, en doré.
+• Tous les arbres des rues, squares, parcs et cimetières de Paris, de Boulogne-Billancourt, Chaville, Issy-les-Moulineaux, Marnes-la-Coquette, Meudon, Sèvres, Vanves et Ville-d’Avray, sur un fond de carte sobre aux couleurs d’un herbier, clair ou sombre.
+• Vue de loin, la carte regroupe les arbres par quartier, avec leur nombre.
+• Les arbres remarquables, distingués par leur ville pour leur âge, leur taille ou leur histoire, en doré.
 • Un filtre par essence : n’affichez que les ginkgos, les magnolias ou les chênes.
 • « Arbre le plus proche » : trouvez en un geste l’arbre le plus proche de vous, puis le suivant.
 
@@ -10,7 +11,6 @@ LA FICHE DE L’ARBRE
 • Son nom en français et en latin, sa hauteur, sa circonférence et son stade de développement.
 • La feuille de son genre, dessinée au trait.
 • Sa période de floraison et un lien vers Wikipédia.
-• Un arbre abattu, mal placé ou mal nommé ? Signalez-le en un message.
 
 L’HERBIER
 • Les essences les plus plantées à Paris, l’âge des arbres et les records : le plus haut, le plus large.
@@ -25,7 +25,7 @@ RESPECTUEUSE DE VOTRE VIE PRIVÉE
 • Votre position sert seulement à centrer la carte et à trouver l’arbre le plus proche. Elle n’est ni enregistrée ni partagée.
 
 LES DONNÉES
-Les arbres viennent du jeu de données « Les arbres » de Paris Data, publié par la Ville de Paris sous licence ODbL. La carte utilise les données © OpenStreetMap et © OpenMapTiles, servies par OpenFreeMap.
+Les arbres viennent du jeu de données « Les arbres » de Paris Data, publié par la Ville de Paris sous licence ODbL, et du jeu « Arbres » de Grand Paris Seine Ouest, sous Licence Ouverte. La carte utilise les données © OpenStreetMap et © OpenMapTiles, servies par OpenFreeMap.
 
 Arbres de Paris est une application indépendante. Elle n’est pas affiliée à la Ville de Paris et n’en est pas une publication officielle.
 
