@@ -1,17 +1,24 @@
 package fr.arbresdeparis.feature.map
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.dp
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.domain.model.FloweringSeason
+import fr.arbresdeparis.domain.model.GeoPoint
 import fr.arbresdeparis.domain.model.WikipediaArticle
 import fr.arbresdeparis.feature.map.mapper.toDetailUi
 import fr.arbresdeparis.feature.map.mapper.toFloweringUi
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,7 +35,9 @@ class TreeDetailContentTest {
         val detail = tree(1).copy(genus = null, species = null, heightM = null).toDetailUi(isFavorite = false)
         compose.setContent { TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}) } }
         compose.onNodeWithText("Espèce inconnue").assertIsDisplayed()
-        compose.onNodeWithText("Hauteur inconnue").assertIsDisplayed()
+        // Under the « Hauteur » label, « inconnue » alone is enough.
+        compose.onNodeWithText("inconnue").assertIsDisplayed()
+        compose.onNodeWithText("Hauteur inconnue").assertDoesNotExist()
         compose.onNodeWithText("Quai de la Seine · Paris 19e").assertIsDisplayed()
     }
 
@@ -114,6 +123,47 @@ class TreeDetailContentTest {
         compose.onNodeWithText("Platane commun · fr.wikipedia.org").assertIsDisplayed()
         compose.onNodeWithText("En savoir plus sur Wikipédia").performClick()
         assertEquals("https://fr.wikipedia.org/wiki/Platane_commun", opened)
+    }
+
+    @Test
+    fun addressRow_opensTheTreeLocation_fromAnywhereOnTheRow() {
+        var opened: GeoPoint? = null
+        val detail = tree(1).toDetailUi(isFavorite = false)
+        compose.setContent {
+            TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}, onOpenDirections = { opened = it }) }
+        }
+        compose.onNodeWithText("Quai de la Seine", substring = true).performClick()
+        assertEquals(detail.location, opened)
+    }
+
+    @Test
+    fun addressRow_isATouchTarget_withoutMakingTheSheetTaller() {
+        val detail = tree(1).toDetailUi(isFavorite = false)
+        compose.setContent { TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}) } }
+        val header = compose.onNodeWithTag(DETAIL_HEADER_TAG).getUnclippedBoundsInRoot()
+        val row = compose.onNodeWithTag(DETAIL_LOCATION_TAG).getUnclippedBoundsInRoot()
+        val stats = compose.onNodeWithTag(DETAIL_STATS_TAG).getUnclippedBoundsInRoot()
+        assertTrue("touch target ${row.bottom - row.top}", row.bottom - row.top >= 48.dp)
+        // Before: 20 dp, a 22 dp address line, 20 dp. The sheet keeps that height.
+        assertEquals(62f, (stats.top - header.bottom).value, 0.5f)
+    }
+
+    @Test
+    fun longAddress_takesAtMostTwoLines() {
+        val address =
+            "Decoration de la Place de l'Hôtel de Ville / Esplanade de la Libération, Fontaine Côté Rivoli"
+        val detail = tree(1).toDetailUi(isFavorite = false).copy(address = address)
+        compose.setContent { TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}) } }
+        val layouts = mutableListOf<TextLayoutResult>()
+        compose
+            .onNodeWithText(address, substring = true)
+            .fetchSemanticsNode()
+            .config[SemanticsActions.GetTextLayoutResult]
+            .action
+            ?.invoke(layouts)
+        assertTrue("lines: ${layouts.single().lineCount}", layouts.single().lineCount <= 2)
+        val row = compose.onNodeWithTag(DETAIL_LOCATION_TAG).getUnclippedBoundsInRoot()
+        assertEquals(48f, (row.bottom - row.top).value, 0.5f) // still the 48 dp row: the sheet does not grow
     }
 
     @Test

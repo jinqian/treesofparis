@@ -32,11 +32,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -59,6 +61,7 @@ fun TreeDetailContent(
     onFavoriteToggle: () -> Unit,
     modifier: Modifier = Modifier,
     onOpenWikipedia: (String) -> Unit = {},
+    onOpenDirections: (GeoPoint) -> Unit = {},
 ) {
     Box(modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
         LeafDrawing(
@@ -76,9 +79,12 @@ fun TreeDetailContent(
                     .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            Header(detail, onFavoriteToggle)
-            Location(detail)
-            Stats(detail)
+            // The address line is a 48 dp touch target: the gaps around it shrink so the sheet keeps its height.
+            Column(verticalArrangement = Arrangement.spacedBy(LOCATION_GAP)) {
+                Header(detail, onFavoriteToggle)
+                Location(detail, onOpenDirections = { onOpenDirections(detail.location) })
+                Stats(detail)
+            }
             detail.flowering?.let { FloweringSection(it) }
             detail.wikipedia?.let { WikipediaRow(it, onOpenWikipedia) }
             Text(
@@ -101,7 +107,11 @@ private fun Header(
     detail: TreeDetailUi,
     onFavoriteToggle: () -> Unit,
 ) {
-    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(TreesSpacing.m)) {
+    Row(
+        modifier = Modifier.testTag(DETAIL_HEADER_TAG),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(TreesSpacing.m),
+    ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             if (detail.remarkable) RemarkableEyebrow()
             Text(detail.name, style = MaterialTheme.typography.displaySmall)
@@ -155,16 +165,35 @@ private fun FavoriteButton(
     }
 }
 
+/**
+ * « Quai de la Seine · Paris 19e ↗ »: tapping the address opens the tree in the user's Maps app, to walk or drive there
+ * (issue #38). A 48 dp touch target; [LOCATION_GAP] keeps the sheet no taller than before.
+ */
 @Composable
-private fun Location(detail: TreeDetailUi) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+private fun Location(
+    detail: TreeDetailUi,
+    onOpenDirections: () -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    val openLabel = stringResource(R.string.map_directions_open)
+    Row(
+        modifier =
+            Modifier
+                .testTag(DETAIL_LOCATION_TAG)
+                .fillMaxWidth()
+                .heightIn(min = 48.dp)
+                .clip(MaterialTheme.shapes.small)
+                .clickable(onClickLabel = openLabel, role = Role.Button, onClick = onOpenDirections),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
         Icon(
             imageVector = TreesIcons.Place,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = colors.primary,
             modifier = Modifier.size(18.dp),
         )
-        val area = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
+        val area = SpanStyle(color = colors.primary, fontWeight = FontWeight.Medium)
         Text(
             text =
                 buildAnnotatedString {
@@ -173,13 +202,32 @@ private fun Location(detail: TreeDetailUi) {
                     withStyle(area) { append(detail.area) }
                 },
             style = MaterialTheme.typography.bodyMedium,
+            maxLines = ADDRESS_MAX_LINES,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        Icon(
+            TreesIcons.OpenExternal,
+            contentDescription = null,
+            tint = colors.onSurfaceVariant,
+            modifier = Modifier.size(16.dp),
         )
     }
 }
 
+/** The longest Paris addresses (« site / street, detail ») end with « … »; screen readers still read them in full. */
+private const val ADDRESS_MAX_LINES = 2
+
+/** Before: 20 dp gaps around a 22 dp address line. With the 48 dp line, 7 dp keeps the same 62 dp. */
+private val LOCATION_GAP = 7.dp
+
+internal const val DETAIL_HEADER_TAG = "detail_header"
+internal const val DETAIL_LOCATION_TAG = "detail_location"
+internal const val DETAIL_STATS_TAG = "detail_stats"
+
 @Composable
 private fun Stats(detail: TreeDetailUi) {
-    Column {
+    Column(modifier = Modifier.testTag(DETAIL_STATS_TAG)) {
         TreesDivider()
         Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
             Stat(
