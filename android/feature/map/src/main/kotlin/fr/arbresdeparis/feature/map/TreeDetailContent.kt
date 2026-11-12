@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
@@ -77,10 +78,12 @@ fun TreeDetailContent(
                     .navigationBarsPadding(),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            Header(detail, onFavoriteToggle)
-            Location(detail)
-            DirectionsButton(onClick = { onOpenDirections(detail.location) })
-            Stats(detail)
+            // The address line is a 48 dp touch target: the gaps around it shrink so the sheet keeps its height.
+            Column(verticalArrangement = Arrangement.spacedBy(LOCATION_GAP)) {
+                Header(detail, onFavoriteToggle)
+                Location(detail, onOpenDirections = { onOpenDirections(detail.location) })
+                Stats(detail)
+            }
             detail.flowering?.let { FloweringSection(it) }
             detail.wikipedia?.let { WikipediaRow(it, onOpenWikipedia) }
             Text(
@@ -103,7 +106,11 @@ private fun Header(
     detail: TreeDetailUi,
     onFavoriteToggle: () -> Unit,
 ) {
-    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(TreesSpacing.m)) {
+    Row(
+        modifier = Modifier.testTag(DETAIL_HEADER_TAG),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.spacedBy(TreesSpacing.m),
+    ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             if (detail.remarkable) RemarkableEyebrow()
             Text(detail.name, style = MaterialTheme.typography.displaySmall)
@@ -157,16 +164,35 @@ private fun FavoriteButton(
     }
 }
 
+/**
+ * « Quai de la Seine · Paris 19e    Itinéraire ↗ »: the whole line opens the tree in the user's Maps app, to walk or
+ * drive there (issue #38). A 48 dp touch target; [LOCATION_GAP] keeps the sheet as tall as before the button.
+ */
 @Composable
-private fun Location(detail: TreeDetailUi) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+private fun Location(
+    detail: TreeDetailUi,
+    onOpenDirections: () -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    val openLabel = stringResource(R.string.map_directions_open)
+    Row(
+        modifier =
+            Modifier
+                .testTag(DETAIL_LOCATION_TAG)
+                .fillMaxWidth()
+                .heightIn(min = 48.dp)
+                .clip(MaterialTheme.shapes.small)
+                .clickable(onClickLabel = openLabel, role = Role.Button, onClick = onOpenDirections),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
         Icon(
             imageVector = TreesIcons.Place,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = colors.primary,
             modifier = Modifier.size(18.dp),
         )
-        val area = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
+        val area = SpanStyle(color = colors.primary, fontWeight = FontWeight.Medium)
         Text(
             text =
                 buildAnnotatedString {
@@ -175,41 +201,35 @@ private fun Location(detail: TreeDetailUi) {
                     withStyle(area) { append(detail.area) }
                 },
             style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f),
         )
-    }
-}
-
-/** Hands the tree's position to the user's Maps app, to walk or drive there. */
-@Composable
-private fun DirectionsButton(onClick: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    val openLabel = stringResource(R.string.map_directions_open)
-    Surface(
-        shape = CircleShape,
-        color = colors.primaryContainer,
-        modifier =
-            Modifier
-                .clip(CircleShape)
-                .clickable(onClickLabel = openLabel, role = Role.Button, onClick = onClick),
-    ) {
-        Row(
-            modifier = Modifier.heightIn(min = 48.dp).padding(horizontal = TreesSpacing.l),
-            horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(TreesIcons.Place, contentDescription = null, tint = colors.primary, modifier = Modifier.size(18.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = stringResource(R.string.map_directions),
                 style = MaterialTheme.typography.labelLarge,
                 color = colors.primary,
+                maxLines = 1,
+            )
+            Icon(
+                TreesIcons.OpenExternal,
+                contentDescription = null,
+                tint = colors.primary,
+                modifier = Modifier.size(16.dp),
             )
         }
     }
 }
 
+/** Before « Itinéraire »: 20 dp gaps around a 22 dp address line. With the 48 dp line, 7 dp keeps the same 62 dp. */
+private val LOCATION_GAP = 7.dp
+
+internal const val DETAIL_HEADER_TAG = "detail_header"
+internal const val DETAIL_LOCATION_TAG = "detail_location"
+internal const val DETAIL_STATS_TAG = "detail_stats"
+
 @Composable
 private fun Stats(detail: TreeDetailUi) {
-    Column {
+    Column(modifier = Modifier.testTag(DETAIL_STATS_TAG)) {
         TreesDivider()
         Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
             Stat(

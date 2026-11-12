@@ -1,11 +1,14 @@
 package fr.arbresdeparis.feature.map
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.unit.dp
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.domain.model.FloweringSeason
 import fr.arbresdeparis.domain.model.GeoPoint
@@ -13,6 +16,7 @@ import fr.arbresdeparis.domain.model.WikipediaArticle
 import fr.arbresdeparis.feature.map.mapper.toDetailUi
 import fr.arbresdeparis.feature.map.mapper.toFloweringUi
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -118,14 +122,28 @@ class TreeDetailContentTest {
     }
 
     @Test
-    fun directionsButton_opensTheTreeLocation() {
+    fun addressRow_opensTheTreeLocation_fromAnywhereOnTheRow() {
         var opened: GeoPoint? = null
         val detail = tree(1).toDetailUi(isFavorite = false)
         compose.setContent {
             TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}, onOpenDirections = { opened = it }) }
         }
-        compose.onNodeWithText("Itinéraire").performClick()
+        compose.onNodeWithText("Itinéraire", substring = true).assertIsDisplayed()
+        // The address itself is part of the button, not only the « Itinéraire » label.
+        compose.onNodeWithText("Quai de la Seine", substring = true).performClick()
         assertEquals(detail.location, opened)
+    }
+
+    @Test
+    fun addressRow_isATouchTarget_withoutMakingTheSheetTaller() {
+        val detail = tree(1).toDetailUi(isFavorite = false)
+        compose.setContent { TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}) } }
+        val header = compose.onNodeWithTag(DETAIL_HEADER_TAG).getUnclippedBoundsInRoot()
+        val row = compose.onNodeWithTag(DETAIL_LOCATION_TAG).getUnclippedBoundsInRoot()
+        val stats = compose.onNodeWithTag(DETAIL_STATS_TAG).getUnclippedBoundsInRoot()
+        assertTrue("touch target ${row.bottom - row.top}", row.bottom - row.top >= 48.dp)
+        // Before « Itinéraire »: 20 dp, a 22 dp address line, 20 dp. The sheet keeps that height.
+        assertEquals(62f, (stats.top - header.bottom).value, 0.5f)
     }
 
     @Test
