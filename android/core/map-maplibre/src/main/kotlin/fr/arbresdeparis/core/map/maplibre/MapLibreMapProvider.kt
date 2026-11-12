@@ -83,9 +83,10 @@ class MapLibreMapProvider
             val tapRadiusPx = TAP_RADIUS_DP * LocalDensity.current.density
             // Retained, not remembered: while another tab is shown the map is only stopped, so coming back to the
             // Carte tab shows it at once instead of rebuilding it (and flashing) from nothing. It is destroyed when
-            // its screen leaves the back stack, or with the activity (keyed on the context).
+            // its screen leaves the back stack. The app's retained store lives no longer than the activity, so the
+            // view never outlives the window it was made for.
             val state =
-                retain(context) {
+                retain {
                     MapLibreState(
                         context = context,
                         initialCamera = initialCamera,
