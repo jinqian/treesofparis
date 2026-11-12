@@ -1,8 +1,5 @@
-Première version publique d'Arbres de Paris :
-• les 252 975 arbres de Paris et de huit villes voisines sur une carte aux couleurs d'un herbier, claire ou sombre ;
-• les arbres remarquables en doré et un filtre par essence ;
-• l'arbre le plus proche de vous, en un geste ;
-• une fiche par arbre : feuille dessinée, floraison, Wikipédia ;
-• l'Herbier : essences, âges et records ;
-• vos favoris.
-Données : Paris Data (ODbL), Grand Paris Seine Ouest (Licence Ouverte).
+Première version d'Arbres de Paris, en test fermé :
+• les arbres de Paris et de huit villes voisines sur une carte, les remarquables en doré ;
+• une fiche par arbre : taille, floraison, Wikipédia ;
+• l'arbre le plus proche, l'Herbier et vos favoris.
+Une remarque, un bug ? « À propos » → « Nous écrire ».
