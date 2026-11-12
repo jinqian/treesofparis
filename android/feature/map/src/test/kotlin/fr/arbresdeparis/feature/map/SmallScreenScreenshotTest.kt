@@ -12,6 +12,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.text.TextLayoutResult
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -19,6 +20,7 @@ import fr.arbresdeparis.core.designsystem.leaf.TreeLeaf
 import fr.arbresdeparis.core.designsystem.theme.TreesSpacing
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.domain.model.GeoPoint
+import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
@@ -127,6 +129,13 @@ class SmallScreenScreenshotTest {
             GenusPickerContent(picker = GenusPickerUi(drawn, others = emptyList(), remarkableOnly = false), onPick = {})
         }
         check("genus_picker_$variant")
+        val heights =
+            compose
+                .onAllNodesWithTag(LEAF_CARD_TAG)
+                .fetchSemanticsNodes()
+                .map { it.size.height }
+                .toSet()
+        assertEquals("every leaf card has the same height", 1, heights.size)
     }
 
     private fun show(content: @Composable () -> Unit) {

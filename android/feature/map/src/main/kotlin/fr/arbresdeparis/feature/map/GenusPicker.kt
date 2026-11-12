@@ -2,6 +2,7 @@ package fr.arbresdeparis.feature.map
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -54,6 +55,8 @@ import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.feature.map.mapper.matches
 
 internal const val GENUS_PILL_TAG = "genus_pill"
+
+internal const val LEAF_CARD_TAG = "leaf_card"
 
 /** Both genus pills (« Toutes les essences » and « Seulement : Tilleul ») share this height, the touch-target size. */
 internal val GENUS_PILL_HEIGHT = 48.dp
@@ -209,7 +212,10 @@ private fun NoMatch(query: String) {
     )
 }
 
-/** A drawn genus: its leaf, name and number of trees. The current filter is outlined. */
+/**
+ * A drawn genus: its leaf, name and number of trees. The current filter is outlined. The name always takes two lines,
+ * centred, so « Cerisier, prunier » does not make its card taller than the others.
+ */
 @Composable
 private fun LeafCard(
     choice: GenusChoiceUi,
@@ -222,7 +228,9 @@ private fun LeafCard(
         border =
             if (choice.selected) BorderStroke(1.5.dp, colors.primary) else BorderStroke(1.dp, colors.outlineVariant),
         modifier =
-            Modifier.selectable(selected = choice.selected, role = Role.RadioButton, onClick = { onPick(choice) }),
+            Modifier
+                .testTag(LEAF_CARD_TAG)
+                .selectable(selected = choice.selected, role = Role.RadioButton, onClick = { onPick(choice) }),
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 10.dp, start = 6.dp, end = 6.dp),
@@ -230,13 +238,19 @@ private fun LeafCard(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             LeafDrawing(choice.leaf, Modifier.size(44.dp), strokeWidth = 1.3.dp)
-            Text(
-                text = choice.displayName(),
-                style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, lineHeight = 20.sp),
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            val nameStyle = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, lineHeight = 20.sp)
+            Box(
+                modifier = Modifier.height(with(LocalDensity.current) { (nameStyle.lineHeight * 2).toDp() }),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = choice.displayName(),
+                    style = nameStyle,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             Text(
                 text = treeCount(choice),
                 style = MaterialTheme.typography.labelSmall,
