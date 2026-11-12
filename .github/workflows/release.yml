@@ -1,7 +1,7 @@
 name: Release
 
 # Builds the signed App Bundle on a version tag (or by hand), keeps it with its R8 mapping file, and uploads both to
-# Google Play with fastlane supply, as a draft release on the chosen track. See RELEASING.md.
+# Google Play with fastlane supply, as a draft release on the chosen track. See android/RELEASING.md.
 on:
   push:
     tags: ["v*"]
@@ -30,6 +30,10 @@ jobs:
     name: Signed App Bundle
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    # Every command runs in the Android build; only the artifact paths below start from the repository root.
+    defaults:
+      run:
+        working-directory: android
     steps:
       - uses: actions/checkout@v7
         with:
@@ -67,6 +71,7 @@ jobs:
             fi
           done
           echo "Version $version_name, code $version_code"
+          echo "VERSION_NAME=$version_name" >> "$GITHUB_ENV"
           echo "VERSION_CODE=$version_code" >> "$GITHUB_ENV"
 
       # The upload key lives in repository secrets (base64 of the .jks file); it is written outside the workspace and
@@ -76,7 +81,7 @@ jobs:
           TREES_KEYSTORE_BASE64: ${{ secrets.TREES_KEYSTORE_BASE64 }}
         run: |
           if [ -z "$TREES_KEYSTORE_BASE64" ]; then
-            echo "::error::The TREES_KEYSTORE_BASE64 secret is not set (see RELEASING.md)."
+            echo "::error::The TREES_KEYSTORE_BASE64 secret is not set (see android/RELEASING.md)."
             exit 1
           fi
           echo "$TREES_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload-keystore.jks"
@@ -88,7 +93,7 @@ jobs:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           if [ -z "$GOOGLE_SERVICES_JSON" ]; then
-            echo "::error::The GOOGLE_SERVICES_JSON secret is not set (see RELEASING.md)."
+            echo "::error::The GOOGLE_SERVICES_JSON secret is not set (see android/RELEASING.md)."
             exit 1
           fi
           echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
@@ -106,10 +111,11 @@ jobs:
       - name: Upload the bundle and mapping file
         uses: actions/upload-artifact@v7
         with:
-          name: arbres-de-paris-${{ github.ref_name }}
+          # Named after the version: a branch name (« chore/x ») may hold a « / », which artifact names refuse.
+          name: arbres-de-paris-${{ env.VERSION_NAME }}
           path: |
-            app/build/outputs/bundle/release/app-release.aab
-            app/build/outputs/mapping/release/mapping.txt
+            android/app/build/outputs/bundle/release/app-release.aab
+            android/app/build/outputs/mapping/release/mapping.txt
           retention-days: 90
 
       # fastlane supply uploads the bundle, its R8 mapping file and the French « Nouveautés » text
@@ -128,12 +134,12 @@ jobs:
           STATUS: ${{ inputs.status || 'draft' }}
         run: |
           if [ -z "$PLAY_SERVICE_ACCOUNT_JSON" ]; then
-            echo "::error::The PLAY_SERVICE_ACCOUNT_JSON secret is not set (see RELEASING.md)."
+            echo "::error::The PLAY_SERVICE_ACCOUNT_JSON secret is not set (see android/RELEASING.md)."
             exit 1
           fi
           changelog="fastlane/metadata/android/fr-FR/changelogs/$VERSION_CODE.txt"
           if [ ! -f "$changelog" ]; then
-            echo "::error::$changelog is missing: write the French release note first (see RELEASING.md)."
+            echo "::error::$changelog is missing: write the French release note first (see android/RELEASING.md)."
             exit 1
           fi
           echo "$PLAY_SERVICE_ACCOUNT_JSON" | base64 --decode > "$RUNNER_TEMP/play-service-account.json"

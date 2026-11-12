@@ -44,14 +44,17 @@ rules for agents and humans alike.
 
 ```bash
 git clone git@github.com:jinqian/treesofparis.git && cd treesofparis
-cp local.properties.example local.properties   # then set sdk.dir, or export ANDROID_HOME
-lefthook install                                # pre-commit + commit-msg hooks
+lefthook install                                        # pre-commit + commit-msg hooks
+cd android
+cp local.properties.example local.properties           # then set sdk.dir, or export ANDROID_HOME
 ./gradlew assembleDebug
 ```
 
-Open the project in Android Studio and run the `app` configuration on an emulator or device.
+Open the `android/` folder in Android Studio and run the `app` configuration on an emulator or device.
 
 ## Everyday commands
+
+Gradle commands run in `android/`; the others from the repository root.
 
 | Task | Command |
 |------|---------|
@@ -66,17 +69,22 @@ Open the project in Android Studio and run the `app` configuration on an emulato
 ## Project layout
 
 ```
-app/                    application, navigation, wiring
-core/domain/            pure Kotlin: models, repository interfaces, use cases
-core/data/              Room databases, repositories
-core/designsystem/      theme and reusable components
-core/map/               provider-neutral map contract
-core/map-maplibre/      MapLibre implementation: OpenFreeMap vector tiles, « Herbier » map style
-feature/{map,herbier,favorites,about}/
-build-logic/            Gradle convention plugins
-data/                   dataset update script
-website/                arbresdeparis.fr, published with GitHub Pages
-docs/                   spec, plans, architecture decision records, roadmap
+android/                the Android app: one Gradle build (open this folder in Android Studio)
+  app/                  application, navigation, wiring
+  core/domain/          pure Kotlin: models, repository interfaces, use cases
+  core/data/            Room databases, repositories, the packaged trees.db
+  core/designsystem/    theme and reusable components
+  core/map/             provider-neutral map contract
+  core/map-maplibre/    MapLibre implementation: OpenFreeMap vector tiles, « Herbier » map style
+  feature/{map,herbier,favorites,about}/
+  build-logic/          Gradle convention plugins
+  config/               Detekt and Robolectric settings
+  fastlane/             Google Play listing texts, images and release notes
+  RELEASING.md          versioning, release notes, signing, Google Play upload
+data/                   dataset update scripts (build android/core/data/…/trees.db and the web map's tree files)
+website/                arbresdeparis.fr and its web map, published with GitHub Pages
+docs/                   architecture decision records, roadmap
+scripts/                commit message check
 ```
 
 ## Continuous integration
@@ -98,7 +106,7 @@ Commits follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.
 (`feat(map): show remarkable trees`). The `commit-msg` hook checks this locally and CI checks PR titles.
 
 Commit subjects become the changelog: [`CHANGELOG.md`](CHANGELOG.md) is generated from them, and
-[`RELEASING.md`](RELEASING.md) describes versioning, release notes and tagging.
+[`android/RELEASING.md`](android/RELEASING.md) describes versioning, release notes and tagging.
 
 ## License
 

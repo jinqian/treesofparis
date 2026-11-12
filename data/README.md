@@ -1,6 +1,6 @@
 # Tree data
 
-The app ships open tree datasets as a pre-packaged SQLite database, `core/data/src/main/assets/trees.db` (ADR 0008):
+The app ships open tree datasets as a pre-packaged SQLite database, `android/core/data/src/main/assets/trees.db` (ADR 0008):
 
 | Source | Trees | Licence | Module |
 |--------|-------|---------|--------|
@@ -17,26 +17,26 @@ tree data, and the plan to add them: `docs/roadmap/grand-paris-trees.md`.
 python3 data/scripts/update_trees.py                  # download + build
 python3 data/scripts/update_trees.py --skip-download  # rebuild from data/raw/les-arbres.csv and gpso-arbres.csv
 python3 data/scripts/update_trees.py --skip-download --no-wikipedia-lookup  # offline: cached Wikipedia titles only
-./gradlew :core:data:testDebugUnitTest                # opens the new asset through Room
+(cd android && ./gradlew :core:data:testDebugUnitTest)  # opens the new asset through Room
 ```
 
 The script prints a report such as:
 
 ```
 220339 records read, 220339 kept; dropped: 0 invalid coordinates, 0 outside the coverage area, 0 duplicate ids
-Wrote core/data/src/main/assets/trees.db (33.2 MB), data version 1 (unchanged)
+Wrote android/core/data/src/main/assets/trees.db (33.2 MB), data version 1 (unchanged)
 ```
 
-Then commit `trees.db`, `core/data/trees-db-version.txt`, `core/data/trees-db-content.sha256`,
-`core/data/trees-db-meta.json`, `data/wikipedia-titles.json` and, if the version went up, the new Room schema JSON
-that the next Gradle build exports to `core/data/schemas/`.
+Then commit `trees.db`, `android/core/data/trees-db-version.txt`, `android/core/data/trees-db-content.sha256`,
+`android/core/data/trees-db-meta.json`, `data/wikipedia-titles.json` and, if the version went up, the new Room schema JSON
+that the next Gradle build exports to `android/core/data/schemas/`.
 
 A scheduled GitHub Actions workflow (`.github/workflows/update-data.yml`) does this and opens a pull request when
 the data changed.
 
 ## Data provenance
 
-`core/data/trees-db-meta.json` records which extraction the app ships. The script rewrites it on every run. The
+`android/core/data/trees-db-meta.json` records which extraction the app ships. The script rewrites it on every run. The
 top-level fields describe the Paris data:
 
 | Field | Meaning |
@@ -86,13 +86,13 @@ read, 32,636 kept (48 stumps dropped). 252,975 trees in all; data version 3.
    so a monthly run only asks Wikidata about new names; a failed request is logged and retried next run, it never
    fails the build. The links go to the `taxon_links` table (Room entity `TaxonLinkEntity`). Delete an entry from the
    cache to look it up again.
-5. **Build** `trees.db` from Room's exported schema JSON (`core/data/schemas/…TreeDatabase/<n>.json`): the same
+5. **Build** `trees.db` from Room's exported schema JSON (`android/core/data/schemas/…TreeDatabase/<n>.json`): the same
    `CREATE TABLE`/index statements and Room's identity hash, so Room accepts the file as is. The Room entity
    `TreeEntity` owns the schema — to add a column, change the entity, build `:core:data` so Room exports the new
    schema, update `COLUMNS` in the script, then re-run it.
-6. **Version** the data: `PRAGMA user_version` = `core/data/trees-db-version.txt`, which also becomes
+6. **Version** the data: `PRAGMA user_version` = `android/core/data/trees-db-version.txt`, which also becomes
    `TreeDatabase`'s Room version through `BuildConfig.TREES_DB_VERSION`. The version goes up only when the content
-   hash of the cleaned trees and their Wikipedia links (`core/data/trees-db-content.sha256`) changed. A higher version
+   hash of the cleaned trees and their Wikipedia links (`android/core/data/trees-db-content.sha256`) changed. A higher version
    makes the app drop its old copy and copy the new asset; favorites live in a separate database and are kept.
 
 ## Tests

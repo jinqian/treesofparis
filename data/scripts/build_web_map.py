@@ -26,8 +26,9 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
-DB = REPO / "core" / "data" / "src" / "main" / "assets" / "trees.db"
-META = REPO / "core" / "data" / "trees-db-meta.json"
+ANDROID_DATA = REPO / "android" / "core" / "data"
+DB = ANDROID_DATA / "src" / "main" / "assets" / "trees.db"
+META = ANDROID_DATA / "trees-db-meta.json"
 OUT = REPO / "website" / "maps" / "data"
 
 # Must match GeoBounds.COVERAGE in :core:domain and COVERAGE in update_trees.py: south, west, north, east.

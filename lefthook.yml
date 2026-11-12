@@ -4,9 +4,11 @@ pre-commit:
   commands:
     spotless:
       glob: "*.{kt,kts}"
+      root: android/
       run: ./gradlew spotlessCheck --quiet
     detekt:
       glob: "*.{kt,kts}"
+      root: android/
       run: ./gradlew detekt checkModuleBoundaries --quiet
     commit-msg-tests:
       glob: "scripts/commit-msg-check*.sh"

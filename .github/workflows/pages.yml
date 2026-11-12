@@ -7,8 +7,8 @@ on:
     branches: [main]
     paths:
       - "website/**"
-      - "core/data/src/main/assets/trees.db"
-      - "core/data/trees-db-meta.json"
+      - "android/core/data/src/main/assets/trees.db"
+      - "android/core/data/trees-db-meta.json"
       - "data/scripts/build_web_map.py"
       - ".github/workflows/pages.yml"
   workflow_dispatch:

@@ -3,6 +3,9 @@
 How to cut a release of Arbres de Paris: versioning, release notes, tagging and the signed bundle. CI builds and
 signs the bundle on each tag and uploads it to Google Play as a draft on the closed testing track.
 
+Paths and `./gradlew` commands here are relative to `android/`, where the Gradle build lives; git commands work from
+anywhere in the repository.
+
 ## Versioning
 
 - The version is `appVersionName` at the top of `app/build.gradle.kts`, in [SemVer](https://semver.org): `0.y.z`
@@ -67,7 +70,7 @@ git-ignored) and back them up:
 keytool -genkeypair -v -keystore upload-keystore.jks -alias upload -keyalg RSA -keysize 4096 -validity 10000
 ```
 
-Then create `keystore.properties` at the repository root:
+Then create `keystore.properties` in `android/`, next to the key:
 
 ```properties
 storeFile=upload-keystore.jks

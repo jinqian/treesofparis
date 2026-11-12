@@ -1,12 +1,12 @@
 # git-cliff configuration: builds CHANGELOG.md from the Conventional Commits history.
-# Usage: git cliff --tag v<versionName> -o CHANGELOG.md   (see RELEASING.md)
+# Usage: git cliff --tag v<versionName> -o CHANGELOG.md   (see android/RELEASING.md)
 
 [changelog]
 header = """
 # Changelog
 
 All notable changes to Arbres de Paris. Generated from the commit history with [git-cliff](https://git-cliff.org);
-see `RELEASING.md`. User-facing release notes, in French, are in `fastlane/metadata/android/fr-FR/changelogs/`.
+see `android/RELEASING.md`. User-facing release notes, in French, are in `android/fastlane/metadata/android/fr-FR/changelogs/`.
 
 """
 body = """
