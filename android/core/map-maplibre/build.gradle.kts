@@ -12,4 +12,5 @@ dependencies {
     implementation(libs.maplibre.android)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.compose.runtime.retain)
 }

@@ -4,6 +4,8 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.retain.RetainObserver
+import androidx.compose.runtime.retain.retain
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.StateRestorationTester
@@ -13,6 +15,7 @@ import androidx.compose.ui.test.performClick
 import fr.arbresdeparis.TreesApp
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.feature.herbier.HerbierSection
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,7 +31,11 @@ class TreesAppTest {
         TreesTheme {
             TreesApp(
                 mapContent = { key, inFront ->
-                    Text("map tree=${key.treeId} genus=${key.genus}" + if (inFront) "" else " behind")
+                    val map = retain { StubMap(created = mapsCreated++) }
+                    Column {
+                        Text("map tree=${key.treeId} genus=${key.genus}" + if (inFront) "" else " behind")
+                        Text("map instance ${map.created}")
+                    }
                 },
                 favoritesContent = { onTreeClick, onExploreMap ->
                     Column {
@@ -104,6 +111,23 @@ class TreesAppTest {
         compose.mainClock.advanceTimeBy(TAB_SWITCH_BUDGET_MS)
         compose.onNodeWithText("map tree=null genus=null").assertIsDisplayed()
         compose.onNodeWithText("herbier screen").assertDoesNotExist()
+    }
+
+    @Test
+    fun theMap_isKeptWhileAnotherTabIsShown_andReleasedWhenItsEntryIsPopped() {
+        compose.setContent(app)
+        compose.onNodeWithText("map instance 0").assertIsDisplayed()
+        compose.onNodeWithText("Herbier").performClick()
+        compose.onNodeWithText("herbier screen").assertIsDisplayed()
+        compose.onNodeWithText("Carte").performClick()
+        // Same map, not rebuilt: no reload (and no flash) when coming back to Carte.
+        compose.onNodeWithText("map instance 0").assertIsDisplayed()
+        assertEquals(0, mapsRetired)
+        // Opening a tree from Favoris restarts the Carte stack: the old map entry is popped and its map released.
+        compose.onNodeWithText("Favoris").performClick()
+        compose.onNodeWithText("open 42").performClick()
+        compose.onNodeWithText("map instance 1").assertIsDisplayed()
+        compose.waitUntil(timeoutMillis = 5_000) { mapsRetired == 1 }
     }
 
     @Test
@@ -228,6 +252,26 @@ class TreesAppTest {
         compose.onNodeWithText("Favoris").performClick()
         restoration.emulateSavedInstanceStateRestore()
         compose.onNodeWithText("open 42").assertIsDisplayed()
+    }
+
+    private var mapsCreated = 0
+    private var mapsRetired = 0
+
+    /** Stands in for the retained MapLibre state: counts how many are made and released. */
+    private inner class StubMap(
+        val created: Int,
+    ) : RetainObserver {
+        override fun onRetained() = Unit
+
+        override fun onEnteredComposition() = Unit
+
+        override fun onExitedComposition() = Unit
+
+        override fun onRetired() {
+            mapsRetired++
+        }
+
+        override fun onUnused() = Unit
     }
 
     private companion object {

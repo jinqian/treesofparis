@@ -12,9 +12,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.retain.RetainObserver
+import androidx.compose.runtime.retain.retain
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -50,6 +51,7 @@ import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.sources.GeoJsonSource
 import javax.inject.Inject
+import android.graphics.Color as AndroidColor
 
 /**
  * [MapProvider] backed by MapLibre Native: OpenFreeMap vector tiles drawn in the Herbier colours (light or dark with
@@ -73,27 +75,38 @@ class MapLibreMapProvider
             modifier: Modifier,
         ) {
             val context = LocalContext.current
-            val currentOnCameraChange by rememberUpdatedState(onCameraChange)
-            val currentOnMarkerClick by rememberUpdatedState(onMarkerClick)
-            val currentOnClusterClick by rememberUpdatedState(onClusterClick)
             val dark = isSystemInDarkTheme()
             val style =
                 remember(dark, palette) {
                     herbierStyle(if (dark) BasemapColors.Dark else BasemapColors.Light, palette.toPinColors())
                 }
             val tapRadiusPx = TAP_RADIUS_DP * LocalDensity.current.density
+            // Retained, not remembered: while another tab is shown the map is only stopped, so coming back to the
+            // Carte tab shows it at once instead of rebuilding it (and flashing) from nothing. It is destroyed when
+            // its screen leaves the back stack. The app's retained store lives no longer than the activity, so the
+            // view never outlives the window it was made for.
             val state =
-                remember {
+                retain {
                     MapLibreState(
                         context = context,
                         initialCamera = initialCamera,
                         config = config,
                         tapRadiusPx = tapRadiusPx,
-                        onCameraChange = { camera, bounds -> currentOnCameraChange(camera, bounds) },
-                        onMarkerClick = { id -> currentOnMarkerClick(id) },
-                        onClusterClick = { cluster -> currentOnClusterClick(cluster) },
+                        loadColor =
+                            (if (dark) BasemapColors.Dark else BasemapColors.Light).land.let(
+                                AndroidColor::parseColor,
+                            ),
+                        onCameraChange = onCameraChange,
+                        onMarkerClick = onMarkerClick,
+                        onClusterClick = onClusterClick,
                     )
                 }
+            // The retained map outlives this composition: always call the latest callbacks.
+            SideEffect {
+                state.onCameraChange = onCameraChange
+                state.onMarkerClick = onMarkerClick
+                state.onClusterClick = onClusterClick
+            }
             MapViewLifecycle(state.mapView)
             Box(modifier = modifier) {
                 AndroidView(
@@ -119,18 +132,22 @@ class MapLibreMapProvider
     }
 
 /**
- * The map view and what it shows, kept across recompositions. MapLibre loads asynchronously (map, then style), so
- * every input is stored and pushed to the map once it is ready.
+ * The map view and what it shows, retained while its screen is in the back stack. MapLibre loads asynchronously (map,
+ * then style), so every input is stored and pushed to the map once it is ready. Until the first frame, the view is
+ * painted [loadColor] (the land colour) rather than MapLibre's near-white default.
  */
 private class MapLibreState(
     context: Context,
     initialCamera: MapCamera,
     private var config: MapConfig,
     private val tapRadiusPx: Float,
-    private val onCameraChange: (MapCamera, GeoBounds) -> Unit,
-    private val onMarkerClick: (Long) -> Unit,
-    private val onClusterClick: (MapCluster) -> Unit,
-) {
+    loadColor: Int,
+    var onCameraChange: (MapCamera, GeoBounds) -> Unit,
+    var onMarkerClick: (Long) -> Unit,
+    var onClusterClick: (MapCluster) -> Unit,
+) : RetainObserver {
+    private var destroyed = false
+
     val mapView: MapView
     private var map: MapLibreMap? = null
     private var style: Style? = null
@@ -158,6 +175,7 @@ private class MapLibreState(
                 .compassEnabled(false)
                 .logoEnabled(false)
                 .attributionEnabled(false)
+                .foregroundLoadColor(loadColor)
         mapView = MapView(context, options)
         mapView.onCreate(null)
         mapView.getMapAsync { ready ->
@@ -169,6 +187,29 @@ private class MapLibreState(
             applyPendingRequest()
             reportCamera(ready)
         }
+    }
+
+    override fun onRetained() = Unit
+
+    /**
+     * Back on screen after another tab: Android gives the view a new surface, and MapLibre only draws on request, so
+     * ask for a frame (posted, so it runs once the view is attached again).
+     */
+    override fun onEnteredComposition() {
+        mapView.post { map?.triggerRepaint() }
+    }
+
+    override fun onExitedComposition() = Unit
+
+    /** No longer kept (its screen left the back stack, or nothing retains it): free the map. */
+    override fun onRetired() = destroy()
+
+    override fun onUnused() = destroy()
+
+    private fun destroy() {
+        if (destroyed) return
+        destroyed = true
+        mapView.onDestroy()
     }
 
     fun setStyle(json: String) {
@@ -323,7 +364,10 @@ private fun MapCamera.toCameraPosition(): CameraPosition =
 
 private fun GeoBounds.toLatLngBounds(): LatLngBounds = LatLngBounds.from(north, east, south, west)
 
-/** Forwards the screen lifecycle to the map view (rendering, tile loading) and destroys it when it leaves. */
+/**
+ * Forwards the screen lifecycle to the map view (rendering, tile loading) while it is on screen, and stops it when it
+ * leaves. [MapLibreState] destroys it once it is no longer retained.
+ */
 @Composable
 private fun MapViewLifecycle(mapView: MapView) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -345,7 +389,6 @@ private fun MapViewLifecycle(mapView: MapView) {
             lifecycle.removeObserver(observer)
             if (resumed) mapView.onPause()
             if (started) mapView.onStop()
-            mapView.onDestroy()
         }
     }
 }

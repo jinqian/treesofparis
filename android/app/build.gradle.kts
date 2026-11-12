@@ -118,6 +118,7 @@ aboutLibraries {
 }
 
 dependencies {
+    implementation(libs.compose.runtime.retain)
     implementation(projects.core.domain)
     implementation(projects.core.data)
     implementation(projects.core.designsystem)

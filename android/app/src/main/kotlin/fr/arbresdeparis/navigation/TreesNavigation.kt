@@ -44,6 +44,7 @@ class TreesNavigationState(
                         listOf(
                             rememberSaveableStateHolderNavEntryDecorator(),
                             rememberViewModelStoreNavEntryDecorator(),
+                            rememberRetainedValuesNavEntryDecorator(),
                         ),
                     entryProvider = entryProvider,
                 )
