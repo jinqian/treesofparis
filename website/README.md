@@ -14,7 +14,7 @@ published with the site too; it holds nothing private.
 | `404.html` | Shown by GitHub Pages for unknown paths (absolute links, as it can be served from any path). |
 | `fonts/` | Inter and Newsreader from `:core:designsystem`, subset to Latin + French punctuation and weights 400–600, WOFF2, with their OFL licences. Self-hosted: no request to Google Fonts. |
 | `images/` | App screenshots (debug build on an emulator, demo-mode status bar), 490 × 1100 JPEG. |
-| `favicon.svg` | The launcher icon, « Pastille mousse ». |
+| `favicon.svg` | The app logo, « Goutte » (same drawing as the launcher icon). |
 | `CNAME` | The custom domain. |
 
 ## Preview
