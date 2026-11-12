@@ -32,7 +32,12 @@ class MainActivity : ComponentActivity() {
             TreesTheme {
                 CompositionLocalProvider(LocalMapProvider provides mapProvider) {
                     TreesApp(
-                        mapContent = { key -> MapRoute(treeId = key.treeId, genus = key.genus) },
+                        mapContent = {
+                            key,
+                            inFront,
+                            ->
+                            MapRoute(treeId = key.treeId, genus = key.genus, inFront = inFront)
+                        },
                         favoritesContent = { onTreeClick, onExploreMap ->
                             FavoritesRoute(onTreeClick = onTreeClick, onExploreMap = onExploreMap)
                         },
