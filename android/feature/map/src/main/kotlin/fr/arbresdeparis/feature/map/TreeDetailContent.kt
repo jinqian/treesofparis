@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -165,8 +166,8 @@ private fun FavoriteButton(
 }
 
 /**
- * « Quai de la Seine · Paris 19e    Itinéraire ↗ »: the whole line opens the tree in the user's Maps app, to walk or
- * drive there (issue #38). A 48 dp touch target; [LOCATION_GAP] keeps the sheet as tall as before the button.
+ * « Quai de la Seine · Paris 19e ↗ »: tapping the address opens the tree in the user's Maps app, to walk or drive there
+ * (issue #38). A 48 dp touch target; [LOCATION_GAP] keeps the sheet no taller than before.
  */
 @Composable
 private fun Location(
@@ -201,26 +202,23 @@ private fun Location(
                     withStyle(area) { append(detail.area) }
                 },
             style = MaterialTheme.typography.bodyMedium,
+            maxLines = ADDRESS_MAX_LINES,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = stringResource(R.string.map_directions),
-                style = MaterialTheme.typography.labelLarge,
-                color = colors.primary,
-                maxLines = 1,
-            )
-            Icon(
-                TreesIcons.OpenExternal,
-                contentDescription = null,
-                tint = colors.primary,
-                modifier = Modifier.size(16.dp),
-            )
-        }
+        Icon(
+            TreesIcons.OpenExternal,
+            contentDescription = null,
+            tint = colors.onSurfaceVariant,
+            modifier = Modifier.size(16.dp),
+        )
     }
 }
 
-/** Before « Itinéraire »: 20 dp gaps around a 22 dp address line. With the 48 dp line, 7 dp keeps the same 62 dp. */
+/** The longest Paris addresses (« site / street, detail ») end with « … »; screen readers still read them in full. */
+private const val ADDRESS_MAX_LINES = 2
+
+/** Before: 20 dp gaps around a 22 dp address line. With the 48 dp line, 7 dp keeps the same 62 dp. */
 private val LOCATION_GAP = 7.dp
 
 internal const val DETAIL_HEADER_TAG = "detail_header"

@@ -3,8 +3,8 @@
     <string name="map_zoom_hint">Zoomez pour voir les arbres</string>
     <string name="map_locate_me">Me localiser</string>
     <string name="map_detail_unknown_species">Espèce inconnue</string>
-    <string name="map_detail_unknown_height">Hauteur inconnue</string>
-    <string name="map_detail_unknown_circumference">Circonférence inconnue</string>
+    <string name="map_detail_unknown_height">inconnue</string>
+    <string name="map_detail_unknown_circumference">inconnue</string>
     <string name="map_detail_unknown_stage">Stade inconnu</string>
     <string name="map_detail_height">Hauteur</string>
     <string name="map_detail_circumference">Circonférence</string>
@@ -27,8 +27,7 @@
     <string name="map_remarkable_info_body">La Ville de Paris et Grand Paris Seine Ouest distinguent certains arbres pour leur âge, leurs dimensions, leur rareté ou leur histoire. Sur la carte, ils se reconnaissent à leur point doré.</string>
     <string name="map_remarkable_info_show">Voir seulement les remarquables</string>
     <string name="map_remarkable_info_close">Fermer</string>
-    <string name="map_directions">Itinéraire</string>
-    <string name="map_directions_open">Ouvrir l’itinéraire dans l’application de cartes</string>
+    <string name="map_directions_open">Ouvrir dans l’application de cartes</string>
     <string name="map_wikipedia_more">En savoir plus sur Wikipédia</string>
     <string name="map_wikipedia_genus">Le genre %1$s sur Wikipédia</string>
     <string name="map_wikipedia_site">%1$s · fr.wikipedia.org</string>
