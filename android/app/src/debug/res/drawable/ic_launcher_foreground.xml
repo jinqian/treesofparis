@@ -1,36 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Debug build icon foreground: the leaf, raised, over a gold « DEBUG » band, so the debug build is easy to tell
-     apart from the release build on the home screen. The background colour is overridden in values/colors.xml. -->
+<!-- Debug build icon foreground: the tree, raised and smaller (no gold dot, it would touch the band), over a gold
+     « DEBUG » band, so the debug build is easy to tell apart from the release build on the home screen. The background colour is overridden in values/colors.xml. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <group
-        android:scaleX="0.74"
-        android:scaleY="0.74"
-        android:translateX="54"
-        android:translateY="48">
-        <group
-            android:translateX="-50"
-            android:translateY="-40">
-            <path
-                android:pathData="M50,52C40,50 26,54 14,46C22,44 26,36 22,26C32,30 38,26 40,16C44,22 48,22 50,10C52,22 56,22 60,16C62,26 68,30 78,26C74,36 78,44 86,46C74,54 60,50 50,52Z"
-                android:strokeWidth="3.4"
-                android:strokeColor="@color/icon_leaf"
-                android:strokeLineCap="round"
-                android:strokeLineJoin="round" />
-            <path
-                android:pathData="M50,52L30,30M50,52L50,18M50,52L70,30M50,52L22,44M50,52L78,44"
-                android:strokeWidth="2.2"
-                android:strokeColor="@color/icon_leaf"
-                android:strokeLineCap="round" />
-            <path
-                android:pathData="M50,52L50,70"
-                android:strokeWidth="3.4"
-                android:strokeColor="@color/icon_leaf"
-                android:strokeLineCap="round" />
-        </group>
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="0.7"
+        android:scaleY="0.7"
+        android:translateY="-6">
+        <path
+            android:pathData="M60,72.5C72,70.5 80,59.5 78,47.5C76,35.5 64,25.5 54,17.5C44,25.5 32,35.5 30,47.5C28,59.5 36,70.5 48,72.5"
+            android:strokeWidth="3.2"
+            android:strokeColor="@color/icon_leaf"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M54,89.5V33.5M54,63.5L42,51.5M54,63.5L66,51.5M54,53.5L44,43.5M54,53.5L64,43.5M54,43.5L47,36.5M54,43.5L61,36.5"
+            android:strokeWidth="3.2"
+            android:strokeColor="@color/icon_leaf"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
     </group>
     <path
         android:fillColor="@color/icon_gold"

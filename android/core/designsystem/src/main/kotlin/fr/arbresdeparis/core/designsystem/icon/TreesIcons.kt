@@ -45,7 +45,34 @@ object TreesIcons {
             "M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z",
         )
     val Flag: ImageVector = line("Flag", "M5 21V4", "M5 4h11l-2 4 2 4H5")
+
+    /**
+     * The app logo, « Goutte »: a drop-shaped crown open at the base, the trunk with three pairs of branches, and the
+     * gold dot of remarkable trees. Same drawing and 108 grid as the launcher icon (`ic_launcher_foreground.xml`) and
+     * `website/favicon.svg`; tinted as one colour by `Icon`.
+     */
+    val AppLogo: ImageVector =
+        builder("AppLogo", LOGO_GRID, LOGO_GRID)
+            .apply {
+                listOf(LOGO_CROWN, LOGO_TREE).forEach { path ->
+                    addPath(
+                        pathData = addPathNodes(path),
+                        stroke = SolidColor(Color.Black),
+                        strokeLineWidth = LOGO_STROKE,
+                        strokeLineCap = StrokeCap.Round,
+                        strokeLineJoin = StrokeJoin.Round,
+                    )
+                }
+                addPath(pathData = addPathNodes(circle(77f, 83.5f, 4.5f)), fill = SolidColor(Color.Black))
+            }.build()
 }
+
+private const val LOGO_GRID = 108f
+private const val LOGO_STROKE = 3.2f
+private const val LOGO_CROWN =
+    "M60 72.5C72 70.5 80 59.5 78 47.5C76 35.5 64 25.5 54 17.5C44 25.5 32 35.5 30 47.5C28 59.5 36 70.5 48 72.5"
+private const val LOGO_TREE =
+    "M54 89.5V33.5M54 63.5L42 51.5M54 63.5L66 51.5M54 53.5L44 43.5M54 53.5L64 43.5M54 43.5L47 36.5M54 43.5L61 36.5"
 
 private const val HEART = "M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"
 private const val STAR = "M12 3l2.6 6 6.4.5-4.9 4.3 1.5 6.2L12 16.6 6.4 20l1.5-6.2L3 9.5 9.4 9z"
