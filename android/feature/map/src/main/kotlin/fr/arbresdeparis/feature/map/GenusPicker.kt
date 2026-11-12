@@ -31,6 +31,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -40,6 +41,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import fr.arbresdeparis.core.designsystem.component.TreesDivider
@@ -102,7 +104,7 @@ internal fun GenusPickerContent(
     val drawn = picker.drawn.filter { it.matches(query, it.displayName()) }
     val others = picker.others.filter { it.matches(query, it.displayName()) }
     LazyVerticalGrid(
-        columns = GridCells.Fixed(GRID_COLUMNS),
+        columns = GridCells.Adaptive(minSize = leafCardMinWidth()),
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(start = TreesSpacing.l, end = TreesSpacing.l, bottom = TreesSpacing.l),
         horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s),
@@ -126,7 +128,14 @@ internal fun GenusPickerContent(
     }
 }
 
-private const val GRID_COLUMNS = 3
+/**
+ * Three leaf cards a row on most phones, two on a narrow screen or with large text, so a long name (« Micocoulier »)
+ * stays on one line instead of breaking mid-word. Grows with the font scale.
+ */
+@Composable
+private fun leafCardMinWidth(): Dp = LEAF_CARD_MIN_WIDTH * LocalDensity.current.fontScale.coerceAtLeast(1f)
+
+private val LEAF_CARD_MIN_WIDTH = 96.dp
 
 private fun LazyGridScope.fullWidth(content: @Composable () -> Unit) =
     item(span = { GridItemSpan(maxLineSpan) }) { content() }
@@ -232,6 +241,7 @@ private fun LeafCard(
                 text = treeCount(choice),
                 style = MaterialTheme.typography.labelSmall,
                 color = colors.onSurfaceVariant,
+                textAlign = TextAlign.Center,
             )
         }
     }

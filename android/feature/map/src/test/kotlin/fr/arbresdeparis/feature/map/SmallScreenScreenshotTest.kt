@@ -1,0 +1,191 @@
+package fr.arbresdeparis.feature.map
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.text.TextLayoutResult
+import com.github.takahirom.roborazzi.captureRoboImage
+import fr.arbresdeparis.core.designsystem.leaf.TreeLeaf
+import fr.arbresdeparis.core.designsystem.theme.TreesSpacing
+import fr.arbresdeparis.core.designsystem.theme.TreesTheme
+import fr.arbresdeparis.domain.model.GeoPoint
+import org.junit.Assert.fail
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+
+/**
+ * The map controls and sheets on the smallest phones testers use: a 320 dp wide screen, and a 360 dp one with the
+ * system text at 130 %. Every text must fit (no ellipsis, no overflow) and no word may be cut across two lines.
+ *
+ * The 360 dp phone at normal text size is checked for the leaf grid too (three cards a row). The checks run with the
+ * unit tests. The screenshots are taken with `./gradlew :feature:map:recordRoborazziDebug`
+ * (written to `src/test/screenshots/`) and compared with `verifyRoborazziDebug`.
+ */
+@RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+class SmallScreenScreenshotTest {
+    @get:Rule
+    val compose = createComposeRule()
+
+    @Test
+    @Config(qualifiers = NARROW)
+    fun filterBar_narrow() = filterBar("narrow")
+
+    @Test
+    @Config(qualifiers = LARGE_TEXT)
+    fun filterBar_largeText() {
+        RuntimeEnvironment.setFontScale(LARGE_FONT_SCALE)
+        filterBar("large_text")
+    }
+
+    @Test
+    @Config(qualifiers = NARROW)
+    fun treeDetail_narrow() = treeDetail("narrow")
+
+    @Test
+    @Config(qualifiers = LARGE_TEXT)
+    fun treeDetail_largeText() {
+        RuntimeEnvironment.setFontScale(LARGE_FONT_SCALE)
+        treeDetail("large_text")
+    }
+
+    @Test
+    @Config(qualifiers = NARROW_TALL)
+    fun genusPicker_narrow() = genusPicker("narrow")
+
+    /** A common 360 dp phone keeps three leaf cards a row: the names must still fit there. */
+    @Test
+    @Config(qualifiers = REGULAR_TALL)
+    fun genusPicker_regular() = genusPicker("regular")
+
+    @Test
+    @Config(qualifiers = LARGE_TEXT_TALL)
+    fun genusPicker_largeText() {
+        RuntimeEnvironment.setFontScale(LARGE_FONT_SCALE)
+        genusPicker("large_text")
+    }
+
+    private fun filterBar(variant: String) {
+        show {
+            Column(Modifier.padding(TreesSpacing.m), verticalArrangement = Arrangement.spacedBy(TreesSpacing.s)) {
+                RemarkableFilterBar(remarkableOnly = false, onRemarkableFilterChange = {}, onInfoClick = {})
+                RemarkableFilterBar(remarkableOnly = true, onRemarkableFilterChange = {}, onInfoClick = {})
+                RemarkableOnlyCaption()
+                GenusFilterButton(onClick = {})
+                GenusFilterPill(filter = GenusFilterUi("Celtis", TreeLeaf.CELTIS), onOpen = {}, onClear = {})
+            }
+        }
+        check("filter_bar_$variant")
+    }
+
+    private fun treeDetail(variant: String) {
+        show {
+            TreeDetailContent(
+                detail =
+                    TreeDetailUi(
+                        id = 1,
+                        location = GeoPoint.PARIS_CENTER,
+                        name = "Micocoulier de Provence",
+                        scientificName = "Celtis australis",
+                        area = "Paris 19e",
+                        address = "Quai de la Seine",
+                        height = MeasureUi("16", "m"),
+                        circumference = MeasureUi("165", "cm"),
+                        stage = "Jeune (arbre)",
+                        remarkable = true,
+                        isFavorite = false,
+                        leaf = TreeLeaf.CELTIS,
+                    ),
+                onFavoriteToggle = {},
+            )
+        }
+        check("tree_detail_$variant")
+    }
+
+    @Suppress("MagicNumber") // sample counts
+    private fun genusPicker(variant: String) {
+        val drawn =
+            TreeLeaf.entries.filter { it != TreeLeaf.GENERIC }.mapIndexed { i, leaf ->
+                GenusChoiceUi(leaf.genus!!, leaf.name, leaf, 42_591 - i, "42 591", selected = i == 0)
+            }
+        show {
+            GenusPickerContent(picker = GenusPickerUi(drawn, others = emptyList(), remarkableOnly = false), onPick = {})
+        }
+        check("genus_picker_$variant")
+    }
+
+    private fun show(content: @Composable () -> Unit) {
+        compose.setContent {
+            TreesTheme { Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) { content() } }
+        }
+    }
+
+    private fun check(name: String) {
+        val root = compose.onRoot()
+        root.captureRoboImage("src/test/screenshots/$name.png")
+        assertEveryTextFits(root)
+    }
+
+    /**
+     * Fails on a text that is ellipsized, needs more lines than it may use, or breaks a word across two lines.
+     * (`didOverflowWidth` is not reliable under Robolectric: a word too wide for its box shows up as a split word.)
+     */
+    private fun assertEveryTextFits(root: SemanticsNodeInteraction) {
+        val problems = mutableListOf<String>()
+
+        fun visit(node: androidx.compose.ui.semantics.SemanticsNode) {
+            val layout = node.textLayout()
+            if (layout != null) {
+                val text = layout.layoutInput.text.text
+                when {
+                    layout.didOverflowHeight -> problems += "« $text » is cut (needs more lines)"
+                    (0 until layout.lineCount).any { layout.isLineEllipsized(it) } -> problems += "« $text » is cut"
+                    layout.splitsAWord(text) -> problems += "« $text » breaks a word across lines"
+                }
+            }
+            node.children.forEach(::visit)
+        }
+        visit(root.fetchSemanticsNode())
+        if (problems.isNotEmpty()) fail(problems.joinToString("\n"))
+    }
+
+    private fun androidx.compose.ui.semantics.SemanticsNode.textLayout(): TextLayoutResult? {
+        val action =
+            config.getOrNull(SemanticsActions.GetTextLayoutResult)?.takeIf {
+                config.getOrNull(SemanticsProperties.Text) != null
+            }
+        val results = mutableListOf<TextLayoutResult>()
+        action?.action?.invoke(results)
+        return results.firstOrNull()
+    }
+
+    private fun TextLayoutResult.splitsAWord(text: String): Boolean =
+        (0 until lineCount - 1).any { line ->
+            val end = getLineEnd(line)
+            end in 1 until text.length && text[end - 1].isLetterOrDigit() && text[end].isLetterOrDigit()
+        }
+
+    private companion object {
+        const val NARROW = "w320dp-h640dp-xhdpi"
+        const val NARROW_TALL = "w320dp-h1400dp-xhdpi"
+        const val REGULAR_TALL = "w360dp-h1100dp-xxhdpi"
+        const val LARGE_TEXT = "w360dp-h640dp-xxhdpi"
+        const val LARGE_TEXT_TALL = "w360dp-h1600dp-xxhdpi"
+        const val LARGE_FONT_SCALE = 1.3f
+    }
+}

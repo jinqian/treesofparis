@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +38,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import fr.arbresdeparis.core.designsystem.component.TreesDivider
 import fr.arbresdeparis.core.designsystem.icon.TreesIcons
 import fr.arbresdeparis.core.designsystem.leaf.LeafDrawing
@@ -137,9 +139,17 @@ private fun Segment(
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             color = if (selected) colors.onSurface else colors.onSurfaceVariant,
             maxLines = 1,
+            // On a narrow screen or with large text, shrink a little rather than cut « Tous les arbres ».
+            autoSize =
+                TextAutoSize.StepBased(
+                    minFontSize = SEGMENT_MIN_FONT_SIZE,
+                    maxFontSize = MaterialTheme.typography.labelLarge.fontSize,
+                ),
         )
     }
 }
+
+private val SEGMENT_MIN_FONT_SIZE = 11.sp
 
 internal const val LEGEND_DOT_TAG = "legend_dot"
 
