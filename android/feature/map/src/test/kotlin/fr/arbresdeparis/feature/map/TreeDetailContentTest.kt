@@ -8,6 +8,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.domain.model.FloweringSeason
+import fr.arbresdeparis.domain.model.GeoPoint
 import fr.arbresdeparis.domain.model.WikipediaArticle
 import fr.arbresdeparis.feature.map.mapper.toDetailUi
 import fr.arbresdeparis.feature.map.mapper.toFloweringUi
@@ -114,6 +115,17 @@ class TreeDetailContentTest {
         compose.onNodeWithText("Platane commun · fr.wikipedia.org").assertIsDisplayed()
         compose.onNodeWithText("En savoir plus sur Wikipédia").performClick()
         assertEquals("https://fr.wikipedia.org/wiki/Platane_commun", opened)
+    }
+
+    @Test
+    fun directionsButton_opensTheTreeLocation() {
+        var opened: GeoPoint? = null
+        val detail = tree(1).toDetailUi(isFavorite = false)
+        compose.setContent {
+            TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}, onOpenDirections = { opened = it }) }
+        }
+        compose.onNodeWithText("Itinéraire").performClick()
+        assertEquals(detail.location, opened)
     }
 
     @Test

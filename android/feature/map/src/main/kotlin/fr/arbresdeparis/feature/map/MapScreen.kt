@@ -49,6 +49,7 @@ import fr.arbresdeparis.core.map.MapCluster
 import fr.arbresdeparis.core.map.MapPalette
 import fr.arbresdeparis.core.map.TreeMapView
 import fr.arbresdeparis.domain.model.GeoBounds
+import fr.arbresdeparis.domain.model.GeoPoint
 
 /**
  * The Carte tab. [treeId] opens a tree coming from another screen (Favoris); [genus] shows only that genus (from
@@ -100,6 +101,7 @@ fun MapRoute(
         onRemarkableInfoOpen = viewModel::onRemarkableInfoOpen,
         onRemarkableInfoDismiss = viewModel::onRemarkableInfoDismiss,
         onOpenWikipedia = { url -> context.openInCustomTab(url) },
+        onOpenDirections = { location -> context.openInMapsApp(location) },
         onGenusFilterClear = viewModel::onGenusFilterClear,
         onGenusPickerOpen = viewModel::onGenusPickerOpen,
         onGenusPick = viewModel::onGenusPick,
@@ -146,6 +148,7 @@ fun MapScreen(
     preciseLocation: Boolean = true,
     onNearestLocationResult: (Boolean) -> Unit = {},
     showSystemLocationButtons: Boolean = true,
+    onOpenDirections: (GeoPoint) -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     MessageEffect(state.message, snackbarHostState, onMessageDismiss, onOpenSettings)
@@ -187,7 +190,7 @@ fun MapScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = TreesSpacing.xl * 2),
         )
-        TreeSheet(state.selectedTree, onDetailDismiss, onFavoriteToggle, onOpenWikipedia)
+        TreeSheet(state.selectedTree, onDetailDismiss, onFavoriteToggle, onOpenWikipedia, onOpenDirections)
         state.genusPicker?.let { picker ->
             TreesBottomSheet(onDismiss = onGenusPickerDismiss) {
                 GenusPickerContent(picker = picker, onPick = onGenusPick)
@@ -211,6 +214,7 @@ private fun TreeSheet(
     onDismiss: () -> Unit,
     onFavoriteToggle: () -> Unit,
     onOpenWikipedia: (String) -> Unit,
+    onOpenDirections: (GeoPoint) -> Unit,
 ) {
     if (detail == null) return
     TreesBottomSheet(onDismiss = onDismiss) {
@@ -218,6 +222,7 @@ private fun TreeSheet(
             detail = detail,
             onFavoriteToggle = onFavoriteToggle,
             onOpenWikipedia = onOpenWikipedia,
+            onOpenDirections = onOpenDirections,
         )
     }
 }

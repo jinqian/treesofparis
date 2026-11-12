@@ -59,6 +59,7 @@ fun TreeDetailContent(
     onFavoriteToggle: () -> Unit,
     modifier: Modifier = Modifier,
     onOpenWikipedia: (String) -> Unit = {},
+    onOpenDirections: (GeoPoint) -> Unit = {},
 ) {
     Box(modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
         LeafDrawing(
@@ -78,6 +79,7 @@ fun TreeDetailContent(
         ) {
             Header(detail, onFavoriteToggle)
             Location(detail)
+            DirectionsButton(onClick = { onOpenDirections(detail.location) })
             Stats(detail)
             detail.flowering?.let { FloweringSection(it) }
             detail.wikipedia?.let { WikipediaRow(it, onOpenWikipedia) }
@@ -174,6 +176,34 @@ private fun Location(detail: TreeDetailUi) {
                 },
             style = MaterialTheme.typography.bodyMedium,
         )
+    }
+}
+
+/** Hands the tree's position to the user's Maps app, to walk or drive there. */
+@Composable
+private fun DirectionsButton(onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val openLabel = stringResource(R.string.map_directions_open)
+    Surface(
+        shape = CircleShape,
+        color = colors.primaryContainer,
+        modifier =
+            Modifier
+                .clip(CircleShape)
+                .clickable(onClickLabel = openLabel, role = Role.Button, onClick = onClick),
+    ) {
+        Row(
+            modifier = Modifier.heightIn(min = 48.dp).padding(horizontal = TreesSpacing.l),
+            horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(TreesIcons.Place, contentDescription = null, tint = colors.primary, modifier = Modifier.size(18.dp))
+            Text(
+                text = stringResource(R.string.map_directions),
+                style = MaterialTheme.typography.labelLarge,
+                color = colors.primary,
+            )
+        }
     }
 }
 
