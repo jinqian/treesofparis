@@ -1,6 +1,0 @@
-Première version d'Arbres de Paris :
-• la carte des 220 339 arbres gérés par la Ville de Paris, avec les arbres remarquables en doré ;
-• une fiche par arbre, illustrée par la feuille de son genre ;
-• l'onglet Herbier : les essences les plus plantées, l'âge des arbres et les records ;
-• vos arbres favoris, à retrouver en un geste.
-Données « Les arbres » de Paris Data (ODbL), extraction du 6 novembre 2026.
