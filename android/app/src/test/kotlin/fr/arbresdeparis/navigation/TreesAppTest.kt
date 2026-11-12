@@ -27,7 +27,9 @@ class TreesAppTest {
     private val app = @androidx.compose.runtime.Composable {
         TreesTheme {
             TreesApp(
-                mapContent = { key -> Text("map tree=${key.treeId} genus=${key.genus}") },
+                mapContent = { key, inFront ->
+                    Text("map tree=${key.treeId} genus=${key.genus}" + if (inFront) "" else " behind")
+                },
                 favoritesContent = { onTreeClick, onExploreMap ->
                     Column {
                         Button(onClick = { onTreeClick(42) }) { Text("open 42") }
@@ -87,6 +89,37 @@ class TreesAppTest {
         compose.onNodeWithText("Herbier").performClick()
         compose.onNodeWithText("herbier screen").assertIsDisplayed()
         compose.onNodeWithText("Herbier").assertIsSelected()
+    }
+
+    @Test
+    fun switchingTabs_isImmediate_soTheMapsSystemButtonsDoNotLinger() {
+        // The system location buttons sit above the window: a cross-fade would leave them over the next tab.
+        compose.setContent(app)
+        compose.mainClock.autoAdvance = false
+        compose.onNodeWithText("Herbier").performClick()
+        compose.mainClock.advanceTimeBy(TAB_SWITCH_BUDGET_MS)
+        compose.onNodeWithText("herbier screen").assertIsDisplayed()
+        compose.onNodeWithText("map tree=null genus=null", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("Carte").performClick()
+        compose.mainClock.advanceTimeBy(TAB_SWITCH_BUDGET_MS)
+        compose.onNodeWithText("map tree=null genus=null").assertIsDisplayed()
+        compose.onNodeWithText("herbier screen").assertDoesNotExist()
+    }
+
+    @Test
+    fun herbierSection_stillSlidesIn_andTheMapIsInFrontOnceBack() {
+        compose.setContent(app)
+        compose.onNodeWithText("Herbier").performClick()
+        compose.onNodeWithText("herbier screen").assertIsDisplayed()
+        compose.mainClock.autoAdvance = false
+        compose.onNodeWithText("essences").performClick()
+        compose.mainClock.advanceTimeBy(TAB_SWITCH_BUDGET_MS)
+        // Inside a tab, screens keep their transition: the Herbier home is still on its way out.
+        compose.onNodeWithText("herbier screen").assertExists()
+        compose.mainClock.autoAdvance = true
+        compose.onNodeWithText("herbier screen").assertDoesNotExist()
+        compose.onNodeWithText("Carte").performClick()
+        compose.onNodeWithText("map tree=null genus=null").assertIsDisplayed()
     }
 
     @Test
@@ -195,5 +228,10 @@ class TreesAppTest {
         compose.onNodeWithText("Favoris").performClick()
         restoration.emulateSavedInstanceStateRestore()
         compose.onNodeWithText("open 42").assertIsDisplayed()
+    }
+
+    private companion object {
+        /** Well under the 700 ms cross-fade Navigation 3 uses by default. */
+        const val TAB_SWITCH_BUDGET_MS = 100L
     }
 }

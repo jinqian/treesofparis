@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
@@ -79,6 +80,7 @@ class MapScreenTest {
     private fun show(
         state: MapUiState,
         preciseLocation: Boolean = true,
+        showSystemLocationButtons: Boolean = true,
     ) = compose.setContent {
         CompositionLocalProvider(LocalMapProvider provides StubMap) {
             TreesTheme {
@@ -104,6 +106,7 @@ class MapScreenTest {
                     onNearbyOpen = { nearbyOpens++ },
                     onNearbyDismiss = { nearbyDismisses++ },
                     preciseLocation = preciseLocation,
+                    showSystemLocationButtons = showSystemLocationButtons,
                 )
             }
         }
@@ -264,6 +267,17 @@ class MapScreenTest {
         show(base, preciseLocation = false)
         // Our pill gives way to the system button, which shares the location and finds the tree in one tap.
         compose.onNodeWithText("Arbre le plus proche").assertDoesNotExist()
+        compose.onAllNodesWithTag(SYSTEM_LOCATION_BUTTON_TAG, useUnmergedTree = true).assertCountEquals(2)
+    }
+
+    @Test
+    fun systemLocationButtons_whileTheMapIsNotInFront_giveWayToLookAlikes() {
+        // The system draws its buttons on a layer above the whole window: they would stay on screen while the map
+        // fades out behind another tab. Until the map is settled, our own buttons stand in for them.
+        show(base, preciseLocation = false, showSystemLocationButtons = false)
+        compose.onAllNodesWithTag(SYSTEM_LOCATION_BUTTON_TAG, useUnmergedTree = true).assertCountEquals(0)
+        compose.onNodeWithText("Arbre le plus proche").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Me localiser").assertIsDisplayed()
     }
 
     @Test

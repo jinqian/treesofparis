@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -29,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -39,6 +41,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.arbresdeparis.core.designsystem.component.TreesBottomSheet
+import fr.arbresdeparis.core.designsystem.icon.TreesIcons
 import fr.arbresdeparis.core.designsystem.theme.TreesSpacing
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.core.map.MapCamera
@@ -51,12 +54,16 @@ import fr.arbresdeparis.domain.model.GeoBounds
  * The Carte tab. [treeId] opens a tree coming from another screen (Favoris); [genus] shows only that genus (from
  * Herbier). Never asks for location by itself: the user shares it with the location button (ADR 0006), and the map
  * centres on them at launch only when location is already granted.
+ *
+ * [inFront] is false while the Carte screen is not settled on screen (a tab transition): the system location buttons
+ * are drawn by Android on a layer above the whole window, so they give way to look-alikes until then.
  */
 @Composable
 fun MapRoute(
     treeId: Long?,
     modifier: Modifier = Modifier,
     genus: String? = null,
+    inFront: Boolean = true,
     viewModel: MapViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -104,6 +111,7 @@ fun MapRoute(
         modifier = modifier,
         onClusterClick = viewModel::onClusterClick,
         preciseLocation = preciseLocation,
+        showSystemLocationButtons = inFront,
         onNearestLocationResult = { granted ->
             preciseLocation = context.hasPreciseLocationPermission()
             viewModel.onNearestTreeRequest(granted)
@@ -137,6 +145,7 @@ fun MapScreen(
     onClusterClick: (MapCluster) -> Unit = {},
     preciseLocation: Boolean = true,
     onNearestLocationResult: (Boolean) -> Unit = {},
+    showSystemLocationButtons: Boolean = true,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     MessageEffect(state.message, snackbarHostState, onMessageDismiss, onOpenSettings)
@@ -168,6 +177,7 @@ fun MapScreen(
             onFindNearestTree = onFindNearestTree,
             preciseLocation = preciseLocation,
             onNearestLocationResult = onNearestLocationResult,
+            showSystemLocationButtons = showSystemLocationButtons,
             onNearbyNext = onNearbyNext,
             onNearbyOpen = onNearbyOpen,
             onNearbyDismiss = onNearbyDismiss,
@@ -216,6 +226,7 @@ private fun TreeSheet(
  * « Arbre le plus proche » over « Me localiser »; the nearby tree's card takes the button's place under them. Until
  * precise location is shared ([preciseLocation] false), « Arbre le plus proche » is the system location button itself
  * (« Près de ma position exacte »): one tap shares the location and finds the tree, like « Me localiser ».
+ * Without [showSystemLocationButtons], our own buttons take the system ones' place (same size, no effect).
  */
 @Composable
 @Suppress("LongParameterList") // the controls' state and events
@@ -229,6 +240,7 @@ private fun LocationControls(
     modifier: Modifier = Modifier,
     preciseLocation: Boolean = true,
     onNearestLocationResult: (Boolean) -> Unit = {},
+    showSystemLocationButtons: Boolean = true,
 ) {
     Column(
         modifier = modifier.padding(TreesSpacing.m),
@@ -238,11 +250,17 @@ private fun LocationControls(
         if (state.nearby == null) {
             if (preciseLocation || state.isFindingNearest) {
                 NearestTreeButton(isSearching = state.isFindingNearest, onClick = onFindNearestTree)
+            } else if (!showSystemLocationButtons) {
+                NearestTreeButton(isSearching = false, onClick = {})
             } else {
                 NearestTreeLocationButton(onResult = onNearestLocationResult)
             }
         }
-        LocateButton(isLocating = state.isLocating, onResult = onLocateResult)
+        LocateButton(
+            isLocating = state.isLocating,
+            onResult = onLocateResult,
+            systemButton = showSystemLocationButtons,
+        )
         state.nearby?.let {
             NearbyTreeCard(
                 nearby = it,
@@ -324,13 +342,15 @@ private fun FloatingPill(
 /**
  * « Me localiser »: the system location button (Android 17+), icon only, in the round paper look of the map controls.
  * It shares the precise location for this session; on Android 16 and lower the same button shows the usual permission
- * prompt. [onResult] tells whether location was granted. While locating, a spinner takes its place.
+ * prompt. [onResult] tells whether location was granted. While locating, a spinner takes its place. Without
+ * [systemButton], the same circle shows our own location icon and does nothing.
  */
 @Composable
 private fun LocateButton(
     isLocating: Boolean,
     onResult: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    systemButton: Boolean = true,
 ) {
     val description = stringResource(if (isLocating) R.string.map_locating else R.string.map_locate_me)
     Surface(
@@ -347,9 +367,16 @@ private fun LocateButton(
         Box(contentAlignment = Alignment.Center) {
             if (isLocating) {
                 CircularProgressIndicator(modifier = Modifier.size(TreesSpacing.l), strokeWidth = 2.dp)
+            } else if (!systemButton) {
+                Icon(
+                    TreesIcons.MyLocation,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(LOCATE_ICON_SIZE),
+                )
             } else {
                 LocationButton(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().testTag(SYSTEM_LOCATION_BUTTON_TAG),
                     backgroundColor = MaterialTheme.colorScheme.surfaceContainerLow,
                     iconTint = MaterialTheme.colorScheme.primary,
                     textType = LocationButtonTextType.None,
@@ -364,6 +391,10 @@ private fun LocateButton(
 }
 
 private val LOCATE_BUTTON_SIZE = 52.dp
+private val LOCATE_ICON_SIZE = 24.dp
+
+/** Marks the system location buttons, which Android 17 draws above the window (see [MapRoute]). */
+internal const val SYSTEM_LOCATION_BUTTON_TAG = "system_location_button"
 
 /**
  * Shows [message] once in a snackbar, then reports it consumed. A refused permission offers « Réglages » on Android 16
