@@ -288,6 +288,23 @@ class MapViewModelTest {
         }
 
     @Test
+    fun onZoomHintClick_zoomsInOnTheSameCentre_toJustPastWhereTreesShow() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            vm.onCameraChange(MapCamera(center, zoom = 12.0), GeoBounds.COVERAGE)
+            advanceUntilIdle()
+            assertTrue(vm.uiState.value.showZoomHint)
+
+            vm.onZoomHintClick()
+
+            assertEquals(
+                MapCamera(center, zoom = 16.0),
+                vm.uiState.value.cameraRequest
+                    ?.camera,
+            )
+        }
+
+    @Test
     fun remarkableFilter_showsOnlyRemarkableTreesAtAnyZoom() =
         runTest(main.dispatcher) {
             val vm = viewModel()

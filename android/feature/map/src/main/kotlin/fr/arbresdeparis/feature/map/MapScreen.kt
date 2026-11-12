@@ -4,8 +4,10 @@ import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -104,6 +106,7 @@ fun MapRoute(
         onGenusPickerOpen = viewModel::onGenusPickerOpen,
         onGenusPick = viewModel::onGenusPick,
         onGenusPickerDismiss = viewModel::onGenusPickerDismiss,
+        onZoomHintClick = viewModel::onZoomHintClick,
         onFindNearestTree = { viewModel.onNearestTreeRequest(context.hasLocationPermission()) },
         onNearbyNext = viewModel::onNearbyNext,
         onNearbyOpen = viewModel::onNearbyOpen,
@@ -146,6 +149,7 @@ fun MapScreen(
     preciseLocation: Boolean = true,
     onNearestLocationResult: (Boolean) -> Unit = {},
     showSystemLocationButtons: Boolean = true,
+    onZoomHintClick: () -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     MessageEffect(state.message, snackbarHostState, onMessageDismiss, onOpenSettings)
@@ -169,6 +173,7 @@ fun MapScreen(
             onRemarkableInfoOpen = onRemarkableInfoOpen,
             onGenusFilterClear = onGenusFilterClear,
             onGenusPickerOpen = onGenusPickerOpen,
+            onZoomHintClick = onZoomHintClick,
             modifier = Modifier.align(Alignment.TopStart),
         )
         LocationControls(
@@ -284,6 +289,7 @@ private fun MapFilters(
     onRemarkableInfoOpen: () -> Unit,
     onGenusFilterClear: () -> Unit,
     onGenusPickerOpen: () -> Unit,
+    onZoomHintClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -307,7 +313,12 @@ private fun MapFilters(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
         }
-        if (state.showZoomHint) ZoomHint(Modifier.align(Alignment.CenterHorizontally))
+        if (state.showZoomHint) {
+            ZoomHint(
+                onClick = onZoomHintClick,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
+        }
     }
 }
 
@@ -437,13 +448,36 @@ private val MapMessage.textRes: Int
             MapMessage.NO_TREE_NEARBY -> R.string.map_nearest_none
         }
 
+/** « Zoomez pour voir les arbres » with a magnifier: a tap zooms in until the trees show (issue #42). */
 @Composable
-private fun ZoomHint(modifier: Modifier = Modifier) {
-    FloatingPill(modifier) {
-        Text(
-            text = stringResource(R.string.map_zoom_hint),
-            modifier = Modifier.padding(horizontal = TreesSpacing.m, vertical = 10.dp),
-            style = MaterialTheme.typography.labelLarge,
-        )
+private fun ZoomHint(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.heightIn(min = ZOOM_HINT_MIN_HEIGHT),
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shadowElevation = 4.dp,
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 12.dp, end = TreesSpacing.m),
+            horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                TreesIcons.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp).testTag(ZOOM_HINT_ICON_TAG),
+            )
+            Text(text = stringResource(R.string.map_zoom_hint), style = MaterialTheme.typography.labelLarge)
+        }
     }
 }
+
+/** A touch target, like the other map controls. */
+private val ZOOM_HINT_MIN_HEIGHT = 48.dp
+
+internal const val ZOOM_HINT_ICON_TAG = "zoom_hint_icon"
