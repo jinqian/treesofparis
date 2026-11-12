@@ -76,6 +76,7 @@ class MapScreenTest {
     private var nearbyNexts = 0
     private var nearbyOpens = 0
     private var nearbyDismisses = 0
+    private var zoomHintClicks = 0
 
     private fun show(
         state: MapUiState,
@@ -107,6 +108,7 @@ class MapScreenTest {
                     onNearbyDismiss = { nearbyDismisses++ },
                     preciseLocation = preciseLocation,
                     showSystemLocationButtons = showSystemLocationButtons,
+                    onZoomHintClick = { zoomHintClicks++ },
                 )
             }
         }
@@ -260,6 +262,18 @@ class MapScreenTest {
         show(base.copy(message = MapMessage.OUT_OF_AREA))
         compose.onNodeWithText("Vous êtes en dehors de la zone couverte par la carte.").assertIsDisplayed()
         compose.waitUntil(timeoutMillis = 10_000) { messagesShown == 1 }
+    }
+
+    @Test
+    fun zoomHint_isAButton_thatZoomsIn() {
+        show(base.copy(showZoomHint = true))
+        compose
+            .onNodeWithText("Zoomez pour voir les arbres")
+            .assertIsDisplayed()
+            .assertHasClickAction()
+            .performClick()
+        assertEquals(1, zoomHintClicks)
+        compose.onNodeWithTag(ZOOM_HINT_ICON_TAG, useUnmergedTree = true).assertIsDisplayed()
     }
 
     @Test

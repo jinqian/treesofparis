@@ -109,6 +109,12 @@ class MapViewModel
             state.update { it.copy(cameraRequest = request(cluster.position, target)) }
         }
 
+        /** « Zoomez pour voir les arbres »: zooms in on the same spot, just past the level where trees show. */
+        fun onZoomHintClick() {
+            val center = cameraChanges.value?.first?.center ?: DEFAULT_CAMERA.center
+            state.update { it.copy(cameraRequest = request(center, MIN_TREE_ZOOM + CLUSTER_ZOOM_PAST_STREET_LEVEL)) }
+        }
+
         fun onDetailDismissed() {
             selectionJob?.cancel()
             savedState.remove<Long>(KEY_SELECTED)
