@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import fr.arbresdeparis.core.designsystem.component.TreesDivider
 import fr.arbresdeparis.core.designsystem.icon.TreesIcons
 import fr.arbresdeparis.core.designsystem.leaf.LeafDrawing
@@ -191,7 +193,8 @@ private fun Stats(detail: TreeDetailUi) {
                 label = stringResource(R.string.map_detail_circumference),
                 measure = detail.circumference,
                 placeholder = stringResource(R.string.map_detail_unknown_circumference),
-                modifier = Modifier.weight(1f).padding(start = TreesSpacing.m),
+                // « Circonférence » is the longest label: a little more room keeps it on one line on small phones.
+                modifier = Modifier.weight(CIRCUMFERENCE_WEIGHT).padding(start = TreesSpacing.m),
             )
             StatSeparator()
             Stat(
@@ -258,6 +261,9 @@ private fun WikipediaRow(
     }
 }
 
+private const val CIRCUMFERENCE_WEIGHT = 1.25f
+private val STAT_LABEL_MIN_FONT_SIZE = 9.sp
+
 @Composable
 private fun StatSeparator() {
     VerticalDivider(
@@ -278,7 +284,17 @@ private fun Stat(
         modifier = modifier.padding(vertical = TreesSpacing.m),
         verticalArrangement = Arrangement.spacedBy(TreesSpacing.xs),
     ) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            autoSize =
+                TextAutoSize.StepBased(
+                    minFontSize = STAT_LABEL_MIN_FONT_SIZE,
+                    maxFontSize = MaterialTheme.typography.labelSmall.fontSize,
+                ),
+        )
         when {
             measure == null -> {
                 Text(

@@ -2,6 +2,7 @@ package fr.arbresdeparis.feature.map
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -31,6 +32,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -40,6 +42,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import fr.arbresdeparis.core.designsystem.component.TreesDivider
@@ -52,6 +55,8 @@ import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.feature.map.mapper.matches
 
 internal const val GENUS_PILL_TAG = "genus_pill"
+
+internal const val LEAF_CARD_TAG = "leaf_card"
 
 /** Both genus pills (« Toutes les essences » and « Seulement : Tilleul ») share this height, the touch-target size. */
 internal val GENUS_PILL_HEIGHT = 48.dp
@@ -102,7 +107,7 @@ internal fun GenusPickerContent(
     val drawn = picker.drawn.filter { it.matches(query, it.displayName()) }
     val others = picker.others.filter { it.matches(query, it.displayName()) }
     LazyVerticalGrid(
-        columns = GridCells.Fixed(GRID_COLUMNS),
+        columns = GridCells.Adaptive(minSize = leafCardMinWidth()),
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(start = TreesSpacing.l, end = TreesSpacing.l, bottom = TreesSpacing.l),
         horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s),
@@ -126,7 +131,14 @@ internal fun GenusPickerContent(
     }
 }
 
-private const val GRID_COLUMNS = 3
+/**
+ * Three leaf cards a row on most phones, two on a narrow screen or with large text, so a long name (« Micocoulier »)
+ * stays on one line instead of breaking mid-word. Grows with the font scale.
+ */
+@Composable
+private fun leafCardMinWidth(): Dp = LEAF_CARD_MIN_WIDTH * LocalDensity.current.fontScale.coerceAtLeast(1f)
+
+private val LEAF_CARD_MIN_WIDTH = 96.dp
 
 private fun LazyGridScope.fullWidth(content: @Composable () -> Unit) =
     item(span = { GridItemSpan(maxLineSpan) }) { content() }
@@ -200,7 +212,10 @@ private fun NoMatch(query: String) {
     )
 }
 
-/** A drawn genus: its leaf, name and number of trees. The current filter is outlined. */
+/**
+ * A drawn genus: its leaf, name and number of trees. The current filter is outlined. The name always takes two lines,
+ * centred, so « Cerisier, prunier » does not make its card taller than the others.
+ */
 @Composable
 private fun LeafCard(
     choice: GenusChoiceUi,
@@ -213,7 +228,9 @@ private fun LeafCard(
         border =
             if (choice.selected) BorderStroke(1.5.dp, colors.primary) else BorderStroke(1.dp, colors.outlineVariant),
         modifier =
-            Modifier.selectable(selected = choice.selected, role = Role.RadioButton, onClick = { onPick(choice) }),
+            Modifier
+                .testTag(LEAF_CARD_TAG)
+                .selectable(selected = choice.selected, role = Role.RadioButton, onClick = { onPick(choice) }),
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 10.dp, start = 6.dp, end = 6.dp),
@@ -221,17 +238,24 @@ private fun LeafCard(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             LeafDrawing(choice.leaf, Modifier.size(44.dp), strokeWidth = 1.3.dp)
-            Text(
-                text = choice.displayName(),
-                style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, lineHeight = 20.sp),
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+            val nameStyle = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, lineHeight = 20.sp)
+            Box(
+                modifier = Modifier.height(with(LocalDensity.current) { (nameStyle.lineHeight * 2).toDp() }),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = choice.displayName(),
+                    style = nameStyle,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             Text(
                 text = treeCount(choice),
                 style = MaterialTheme.typography.labelSmall,
                 color = colors.onSurfaceVariant,
+                textAlign = TextAlign.Center,
             )
         }
     }

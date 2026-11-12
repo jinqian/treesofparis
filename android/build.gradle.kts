@@ -12,6 +12,7 @@ plugins {
     alias(libs.plugins.aboutlibraries) apply false
     alias(libs.plugins.google.services) apply false
     alias(libs.plugins.firebase.crashlytics) apply false
+    alias(libs.plugins.roborazzi) apply false
     id("trees.module.boundaries") apply false
 }
 

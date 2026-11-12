@@ -23,6 +23,8 @@ aboutLibraries = "15.3.0"
 mockk = "1.14.11"
 turbine = "1.2.1"
 robolectric = "4.17"
+# Screenshot tests on Robolectric (:feature:map small-screen layouts).
+roborazzi = "1.77.0"
 junit = "4.13.2"
 # Firebase: Crashlytics only (ADR 0007). The plugins apply only when app/google-services.json exists.
 firebaseBom = "35.1.0"
@@ -84,6 +86,8 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 androidx-test-core = { module = "androidx.test:core-ktx", version = "1.7.0" }
+roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
+roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }
 
 # firebase
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
@@ -103,3 +107,4 @@ spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 aboutlibraries = { id = "com.mikepenz.aboutlibraries.plugin.android", version.ref = "aboutLibraries" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }
+roborazzi = { id = "io.github.takahirom.roborazzi", version.ref = "roborazzi" }
