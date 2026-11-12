@@ -1,6 +1,9 @@
 # Website — arbresdeparis.fr
 
-The app's site, in the same « Herbier » look: plain HTML, CSS and JavaScript, no framework, no tracking, no cookies.
+The app's site, in the same « Herbier » look: plain HTML, CSS and JavaScript, no framework, no cookies. Visits are counted by
+[GoatCounter](https://arbresdeparis.goatcounter.com) (cookieless, no IP stored; one `<script>` at the end of each page's
+`<head>`, and `data-goatcounter-click` on the map, group and Google Play links). The privacy policy describes it
+(`confidentialite/#audience`): update it when the counted clicks change.
 GitHub Pages serves this folder (`.github/workflows/pages.yml` deploys it when it, `trees.db` or the map script change on
 `main`). This README is
 published with the site too; it holds nothing private.
