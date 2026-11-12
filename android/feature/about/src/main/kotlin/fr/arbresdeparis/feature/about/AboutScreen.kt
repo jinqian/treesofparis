@@ -272,10 +272,10 @@ private fun AppCard(state: AboutUiState) {
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = TreesIcons.Leaf,
+                    imageVector = TreesIcons.AppLogo,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(26.dp),
+                    modifier = Modifier.size(44.dp),
                 )
             }
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
