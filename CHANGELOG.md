@@ -3,6 +3,35 @@
 All notable changes to Arbres de Paris. Generated from the commit history with [git-cliff](https://git-cliff.org);
 see `android/RELEASING.md`. User-facing release notes, in French, are in `android/fastlane/metadata/android/fr-FR/changelogs/`.
 
+## [0.2.0] - 2026-11-13
+
+### Added
+
+- **website**: Explain how to join the closed test
+- **website**: Count visits with GoatCounter
+- **website**: Explain why the app needs a closed test
+- **map**: Tap « Zoomez pour voir les arbres » to zoom in
+- **map**: Open a tree's location in the Maps app
+- **map**: Open the route from the tree's address line
+- **map**: Tap the address to open Maps; shorter address and placeholders
+- **about**: Ask before sending crash reports
+
+### Fixed
+
+- **map**: Fit labels on small screens and large text
+- **map**: Give every leaf card the same height
+- **map**: Keep the system location buttons from lingering over other tabs
+- **website**: Say which personal data « Vos droits » covers
+- **map**: Keep the map alive across tab switches, no white flash
+- **map**: Scope retained values to the activity, no Context key
+- **website**: Warn testers that Play access can take a few hours
+- **app**: Show the system location button in French
+- **map**: Show « Arbre le plus proche » once location is shared
+
+### Documentation
+
+- **release**: Closed test release notes for v0.1.0
+
 ## [0.1.0] - 2026-11-12
 
 ### Added
