@@ -11,6 +11,7 @@ import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.core.map.LocalMapProvider
 import fr.arbresdeparis.core.map.MapProvider
 import fr.arbresdeparis.feature.about.AboutRoute
+import fr.arbresdeparis.feature.about.CrashReportingQuestionRoute
 import fr.arbresdeparis.feature.about.FloweringSourcesRoute
 import fr.arbresdeparis.feature.about.LibrariesRoute
 import fr.arbresdeparis.feature.favorites.FavoritesRoute
@@ -61,6 +62,8 @@ class MainActivity : ComponentActivity() {
                         },
                         floweringSourcesContent = { onBack -> FloweringSourcesRoute(onBack = onBack) },
                     )
+                    // Asked once, over whatever screen opens first (ADR 0007).
+                    CrashReportingQuestionRoute()
                 }
             }
         }

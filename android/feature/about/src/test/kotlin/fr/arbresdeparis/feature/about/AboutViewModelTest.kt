@@ -37,14 +37,19 @@ class MainDispatcherRule(
 }
 
 class FakeCrashReporting(
-    enabled: Boolean = true,
+    enabled: Boolean = false,
+    answered: Boolean = true,
 ) : CrashReportingRepository {
     val enabled = MutableStateFlow(enabled)
+    val answered = MutableStateFlow(answered)
 
     override fun observeEnabled() = enabled
 
+    override fun observeAnswered() = answered
+
     override suspend fun setEnabled(enabled: Boolean) {
         this.enabled.value = enabled
+        answered.value = true
     }
 }
 
@@ -82,9 +87,9 @@ class AboutViewModelTest {
     @Test
     fun crashReporting_showsTheSavedChoice() =
         runTest(main.dispatcher) {
-            viewModel(FakeCrashReporting(enabled = false)).uiState.test {
-                assertTrue(awaitItem().crashReportingEnabled)
+            viewModel(FakeCrashReporting(enabled = true)).uiState.test {
                 assertFalse(awaitItem().crashReportingEnabled)
+                assertTrue(awaitItem().crashReportingEnabled)
             }
         }
 
@@ -94,6 +99,7 @@ class AboutViewModelTest {
             val crashReporting = FakeCrashReporting(enabled = true)
             val viewModel = viewModel(crashReporting)
             viewModel.uiState.test {
+                skipItems(1)
                 assertTrue(awaitItem().crashReportingEnabled)
                 viewModel.onCrashReportingChange(false)
                 assertFalse(awaitItem().crashReportingEnabled)

@@ -41,6 +41,10 @@
     <string name="about_crash_reports">Envoyer les rapports de plantage</string>
     <string name="about_crash_reports_detail">Si l’application plante : le modèle du téléphone, les versions d’Android et de l’application, et l’erreur. Jamais votre position ni vos favoris.</string>
     <string name="about_privacy_policy">Politique de confidentialité</string>
+    <string name="crash_question_title">Envoyer les rapports de plantage ?</string>
+    <string name="crash_question_text">Si l’application plante, elle peut envoyer un rapport à Firebase Crashlytics, un service de Google, pour que nous corrigions l’erreur : l’erreur, le modèle du téléphone, les versions d’Android et de l’application, jamais votre position ni vos favoris.\n\nVous pourrez changer d’avis dans À propos.</string>
+    <string name="crash_question_yes">Envoyer</string>
+    <string name="crash_question_no">Ne pas envoyer</string>
     <string name="about_section_project">Projet</string>
     <string name="about_project_source">Code source</string>
     <string name="about_section_fonts">Polices</string>
