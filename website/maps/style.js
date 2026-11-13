@@ -36,9 +36,9 @@ export const COLORS = {
     group: "#3F5F45", groupLabel: "#F4F3EC",
   },
   dark: {
-    land: "#1A1F1B", green: "#20291E", water: "#1B2A2E", building: "#222823", road: "#272D28",
-    casing: "#2E352F", rail: "#2E352F", label: "#A3AB9F", labelHalo: "#1A1F1B", place: "#E6E8E1",
-    tree: "#7FA286", remarkable: "#D4A443", selected: "#E6E8E1", ring: "#141815", user: "#7FB0D6",
+    land: "#2B2924", green: "#343B2A", water: "#26363B", building: "#33302A", road: "#3F3B34",
+    casing: "#433F37", rail: "#433F37", label: "#BAB3A4", labelHalo: "#2B2924", place: "#EFEBE0",
+    tree: "#93AE84", remarkable: "#E0B252", selected: "#EFEBE0", ring: "#26241F", user: "#7FB0D6",
     // The night pins are a light green: groups use the day pin green, so the white count stays legible.
     group: "#4F7556", groupLabel: "#F4F3EC",
   },
