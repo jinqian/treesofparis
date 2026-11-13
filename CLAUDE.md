@@ -56,7 +56,8 @@ cd android                              # every ./gradlew command runs here
 ./gradlew assembleDebug                 # build the app
 ./gradlew test                          # all unit tests (JVM + Robolectric)
 ./gradlew :feature:map:testDebugUnitTest
-./gradlew :feature:map:recordRoborazziDebug   # re-record small-screen screenshots (src/test/screenshots/)
+./gradlew recordRoborazziDebug         # re-record every screenshot (each feature's src/test/screenshots/)
+./gradlew testDebugUnitTest -Proborazzi.test.verify=true   # what CI runs: tests + screenshot comparison
 ./gradlew detekt spotlessCheck checkModuleBoundaries
 ./gradlew spotlessApply                 # auto-format
 ./gradlew check                         # everything CI runs on Kotlin code
@@ -74,7 +75,11 @@ python3 -m http.server --directory website 8000   # preview the website (map at 
   plus `website`, `build`, `ci`, `deps`, `release` (`chore(release): v0.2.0`, see `android/RELEASING.md`).
 - TDD: write the failing test first. JUnit 4 + MockK + Turbine + coroutines-test; Robolectric for Android
   and Compose tests (`android/config/robolectric/robolectric.properties` pins the SDK).
+- Screenshots (Roborazzi, set up by `trees.android.feature`): each feature has a `<Feature>ScreenshotTest` with its
+  screens on a 411 dp phone, light and dark (`+night`). CI compares them pixel for pixel with the reference images in
+  `src/test/screenshots/`; a visual change fails until you record them again and commit the new images with it.
+  Add a case for any new screen or sheet.
 - Small screens: `SmallScreenScreenshotTest` (:feature:map) checks that no text is cut or splits a word at 320 dp and
-  at 130 % text size, and keeps Roborazzi reference images. Add a case there for any new map control or sheet.
+  at 130 % text size. Add a case there for any new map control or sheet.
 - Toolchain: JDK 25. Bytecode target 17 (Android) / 21 (JVM).
 - Android-specific guidance lives in `.claude/skills/` (from android/skills).
