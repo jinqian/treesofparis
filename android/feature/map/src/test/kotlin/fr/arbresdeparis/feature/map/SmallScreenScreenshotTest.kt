@@ -89,6 +89,14 @@ class SmallScreenScreenshotTest {
     }
 
     @Test
+    @Config(qualifiers = LARGE_TEXT)
+    fun remarkableStoryUnavailable_largeText() {
+        RuntimeEnvironment.setFontScale(LARGE_FONT_SCALE)
+        show { RemarkableStoryPage(RemarkableStoryUiState.Unavailable, onBack = {}, onOpenUrl = {}) }
+        check("remarkable_story_unavailable_large_text")
+    }
+
+    @Test
     @Config(qualifiers = NARROW_TALL)
     fun genusPicker_narrow() = genusPicker("narrow")
 

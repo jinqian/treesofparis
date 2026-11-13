@@ -2,6 +2,7 @@ package fr.arbresdeparis.feature.map
 
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -56,5 +57,24 @@ class RemarkableStoryScreenTest {
         assertEquals(listOf("https://capgeo.sig.paris.fr/PdfEtImages/ArbresRemarquables/PDF/124914.pdf"), opened)
         compose.onNodeWithContentDescription("Retour").performClick()
         assertEquals(1, backs)
+    }
+
+    @Test
+    fun whileLoading_showsThePageWithItsBackButton() {
+        compose.setContent {
+            TreesTheme { RemarkableStoryPage(RemarkableStoryUiState.Loading, onBack = { backs++ }, onOpenUrl = {}) }
+        }
+        compose.onNodeWithTag(STORY_LOADING_TAG).assertExists()
+        compose.onNodeWithContentDescription("Retour").performClick()
+        assertEquals(1, backs)
+    }
+
+    @Test
+    fun withoutStory_saysSo() {
+        compose.setContent {
+            TreesTheme { RemarkableStoryPage(RemarkableStoryUiState.Unavailable, onBack = {}, onOpenUrl = {}) }
+        }
+        compose.onNodeWithText("L’histoire de cet arbre n’est pas disponible.").assertExists()
+        compose.onNodeWithTag(STORY_LOADING_TAG).assertDoesNotExist()
     }
 }

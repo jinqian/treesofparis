@@ -93,6 +93,12 @@ class MapScreenshotTest {
     fun remarkableStory_dark() = snap("remarkable_story_dark") { RemarkableStoryScreen(STORY_TREE, {}, {}) }
 
     @Test
+    fun remarkableStoryUnavailable_light() =
+        snap("remarkable_story_unavailable_light") {
+            RemarkableStoryPage(RemarkableStoryUiState.Unavailable, onBack = {}, onOpenUrl = {})
+        }
+
+    @Test
     fun genusPicker_light() = sheet("genus_picker_light") { GenusPickerContent(PICKER, onPick = {}) }
 
     @Test
@@ -129,7 +135,7 @@ class MapScreenshotTest {
                 onNearbyOpen = {},
                 onNearbyDismiss = {},
                 // Our own buttons: the system location button is drawn by Android, outside the composition.
-                showSystemLocationButtons = false,
+                inFront = false,
             )
         }
     }

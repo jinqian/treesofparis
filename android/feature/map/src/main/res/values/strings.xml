@@ -47,6 +47,7 @@
     <string name="map_story_sign_detail">PDF · Ville de Paris</string>
     <string name="map_story_photo">Photo : %1$s</string>
     <string name="map_story_back">Retour</string>
+    <string name="map_story_unavailable">L’histoire de cet arbre n’est pas disponible.</string>
     <string name="map_story_planted_unknown">année inconnue</string>
     <string name="map_flowering_title">Floraison</string>
     <string name="map_flowering_showy">%1$s · fleurs voyantes</string>

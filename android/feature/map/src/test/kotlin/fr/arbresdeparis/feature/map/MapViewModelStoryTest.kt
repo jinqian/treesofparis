@@ -71,4 +71,14 @@ class MapViewModelStoryTest {
                     ?.story,
             )
         }
+
+    @Test
+    fun openingTheStory_closesTheSheet_soBackLandsOnTheMap() =
+        runTest(main.dispatcher) {
+            val vm = viewModel()
+            vm.onMarkerClick(9002)
+            advanceUntilIdle()
+            vm.onStoryOpen()
+            assertNull(vm.uiState.value.selectedTree)
+        }
 }

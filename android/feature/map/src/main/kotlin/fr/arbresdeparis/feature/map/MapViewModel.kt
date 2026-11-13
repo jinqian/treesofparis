@@ -124,6 +124,9 @@ class MapViewModel
             state.update { it.copy(markers = it.markers.withSelection(highlightedId)) }
         }
 
+        /** « Son histoire » opens over the map: the sheet closes, so coming back shows the map itself. */
+        fun onStoryOpen() = onDetailDismissed()
+
         fun onFavoriteToggle() {
             val id = selectedId ?: return
             viewModelScope.launch { toggleFavorite(id) }
