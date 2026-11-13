@@ -11,6 +11,8 @@ import fr.arbresdeparis.core.map.maplibre.MapLibreMapProvider
 import fr.arbresdeparis.crash.FirebaseCrashReporting
 import fr.arbresdeparis.domain.model.AppInfo
 import fr.arbresdeparis.domain.repository.CrashReportingRepository
+import fr.arbresdeparis.domain.repository.ThemeRepository
+import fr.arbresdeparis.theme.AppThemeSettings
 import java.time.Clock
 import java.time.ZoneId
 
@@ -23,6 +25,9 @@ abstract class AppModule {
 
     @Binds
     abstract fun bindCrashReporting(impl: FirebaseCrashReporting): CrashReportingRepository
+
+    @Binds
+    abstract fun bindTheme(impl: AppThemeSettings): ThemeRepository
 
     companion object {
         @Provides

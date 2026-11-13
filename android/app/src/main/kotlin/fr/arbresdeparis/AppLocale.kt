@@ -8,11 +8,17 @@ import java.util.Locale
 internal val APP_LOCALE: Locale = Locale.FRANCE
 
 /**
- * Gives this activity a French configuration and keeps every other setting from the system (dark mode, font size…).
- * Its strings are French anyway; what changes is what reads the configuration: the system location button, which
- * Android draws from the configuration the app hands it (ADR 0006), and the library's fallback button on Android 16
- * and lower. Call from `attachBaseContext`, after `super`.
+ * Gives this activity a French configuration and, when [uiMode] is given, the night mode the user chose (below
+ * Android 12, where the system cannot apply it). Every other setting comes from the system (font size, density…).
+ * Strings are French anyway; what changes is what reads the configuration: the system location button, which Android
+ * draws from the configuration the app hands it (ADR 0006), the library's fallback button on Android 16 and lower,
+ * and the map style, which follows the night mode. Call once, from `attachBaseContext`, after `super`.
  */
-internal fun ContextThemeWrapper.useAppLocale() {
-    applyOverrideConfiguration(Configuration().apply { setLocale(APP_LOCALE) })
+internal fun ContextThemeWrapper.useAppConfiguration(uiMode: Int? = null) {
+    applyOverrideConfiguration(
+        Configuration().apply {
+            setLocale(APP_LOCALE)
+            uiMode?.let { this.uiMode = it }
+        },
+    )
 }

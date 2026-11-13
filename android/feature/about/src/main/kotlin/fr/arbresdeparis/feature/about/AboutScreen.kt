@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import fr.arbresdeparis.core.designsystem.component.ChoiceRow
 import fr.arbresdeparis.core.designsystem.component.InfoRow
 import fr.arbresdeparis.core.designsystem.component.InfoRowTrailing
 import fr.arbresdeparis.core.designsystem.component.SectionHeader
@@ -41,6 +43,7 @@ import fr.arbresdeparis.core.designsystem.component.TreesScaffold
 import fr.arbresdeparis.core.designsystem.icon.TreesIcons
 import fr.arbresdeparis.core.designsystem.theme.TreesSpacing
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
+import fr.arbresdeparis.domain.model.ThemeMode
 import java.util.Locale
 
 const val ABOUT_LIST_TAG = "about_list"
@@ -74,6 +77,7 @@ fun AboutRoute(
         onOpenLibraries = onOpenLibraries,
         onOpenFloweringSources = onOpenFloweringSources,
         onCrashReportingChange = viewModel::onCrashReportingChange,
+        onThemeModeChange = viewModel::onThemeModeChange,
         modifier = modifier,
     )
 }
@@ -87,6 +91,7 @@ fun AboutScreen(
     onOpenFloweringSources: () -> Unit,
     onCrashReportingChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    onThemeModeChange: (ThemeMode) -> Unit = {},
 ) {
     TreesScaffold(title = stringResource(R.string.about_title), modifier = modifier) { padding ->
         LazyColumn(
@@ -114,6 +119,7 @@ fun AboutScreen(
             }
             dataSections(state, onOpenUrl, onOpenFloweringSources)
             mapSection(onOpenUrl)
+            appearanceSection(state.themeMode, onThemeModeChange)
             privacySection(state.crashReportingEnabled, onCrashReportingChange, onOpenUrl)
             section(R.string.about_section_project) {
                 InfoRow(
@@ -215,6 +221,35 @@ private fun LazyListScope.mapSection(onOpenUrl: (String) -> Unit) {
             trailing = InfoRowTrailing.EXTERNAL,
             onClick = { onOpenUrl(OPENFREEMAP_URL) },
         )
+    }
+}
+
+/** « Apparence »: like the phone, light or dark. */
+private fun LazyListScope.appearanceSection(
+    themeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
+) {
+    section(R.string.about_section_appearance) {
+        Column(modifier = Modifier.selectableGroup()) {
+            ChoiceRow(
+                title = stringResource(R.string.about_theme_system),
+                subtitle = stringResource(R.string.about_theme_system_detail),
+                selected = themeMode == ThemeMode.SYSTEM,
+                onClick = { onThemeModeChange(ThemeMode.SYSTEM) },
+            )
+            TreesDivider()
+            ChoiceRow(
+                title = stringResource(R.string.about_theme_light),
+                selected = themeMode == ThemeMode.LIGHT,
+                onClick = { onThemeModeChange(ThemeMode.LIGHT) },
+            )
+            TreesDivider()
+            ChoiceRow(
+                title = stringResource(R.string.about_theme_dark),
+                selected = themeMode == ThemeMode.DARK,
+                onClick = { onThemeModeChange(ThemeMode.DARK) },
+            )
+        }
     }
 }
 

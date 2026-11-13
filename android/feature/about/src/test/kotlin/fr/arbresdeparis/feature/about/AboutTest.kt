@@ -3,7 +3,9 @@ package fr.arbresdeparis.feature.about
 import android.app.Application
 import android.content.Intent
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsOn
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -14,6 +16,7 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ApplicationProvider
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.domain.model.DatasetInfo
+import fr.arbresdeparis.domain.model.ThemeMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -67,6 +70,30 @@ class AboutTest {
         compose.onNodeWithText("arbresdeparis.fr").performClick()
         assertEquals(1, writes)
         assertEquals(listOf("https://arbresdeparis.fr"), urls)
+    }
+
+    @Test
+    fun appearance_showsTheChoiceAndSavesANewOne() {
+        val choices = mutableListOf<ThemeMode>()
+        compose.setContent {
+            TreesTheme {
+                AboutScreen(
+                    state.copy(themeMode = ThemeMode.SYSTEM),
+                    onOpenUrl = {},
+                    onWriteToUs = {},
+                    onOpenLibraries = {},
+                    onOpenFloweringSources = {},
+                    onCrashReportingChange = {},
+                    onThemeModeChange = { choices += it },
+                )
+            }
+        }
+        compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText("Sombre"))
+        compose.onNodeWithText("APPARENCE").assertIsDisplayed()
+        compose.onNodeWithText("Comme le téléphone").assertIsSelected()
+        compose.onNodeWithText("Clair").assertIsNotSelected()
+        compose.onNodeWithText("Sombre").assertIsNotSelected().performClick()
+        assertEquals(listOf(ThemeMode.DARK), choices)
     }
 
     @Test
