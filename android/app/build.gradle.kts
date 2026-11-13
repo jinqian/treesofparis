@@ -29,7 +29,7 @@ if (file("google-services.json").exists()) {
  * The app version, in SemVer (see RELEASING.md). Change only this: the versionCode follows from it, so it goes up
  * whenever the version does.
  */
-val appVersionName = "0.2.0"
+val appVersionName = "0.3.0"
 
 /**
  * `major.minor.patch` → `major × 10,000 + minor × 100 + patch` (0.1.0 → 100, 1.2.3 → 10203). Minor and patch stay
