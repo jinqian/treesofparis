@@ -9,8 +9,8 @@ data class AboutUiState(
     val extraction: ExtractionUi? = null,
     /** How many « Guide des Essences de Paris » sheets the flowering months come from. */
     val floweringSheetCount: Int = 0,
-    /** « Envoyer les rapports de plantage »: on unless the user turned it off. */
-    val crashReportingEnabled: Boolean = true,
+    /** « Envoyer les rapports de plantage »: off until the user says yes (ADR 0007). */
+    val crashReportingEnabled: Boolean = false,
 )
 
 /** « arbresdeparis.fr »: the website address as shown, without its scheme. */
