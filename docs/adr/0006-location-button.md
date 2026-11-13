@@ -33,5 +33,9 @@ Status: accepted (2026-11-10).
 - The library is **1.0.0-alpha01** (experimental, the only release): pin it and expect API changes. It requires Compose
   `ui` 1.12 / `material3` 1.5 alphas or newer, which the Compose BOM already exceeds.
 - The icon-only button has no accessibility label of its own; the app sets « Me localiser » on its container.
+- The system draws the button's text in the language of the configuration the app hands it, the phone's language by
+  default. The app is French only, so `MainActivity` overrides its locale to French (`useAppLocale`, 2026-11-13,
+  [#58](https://github.com/jinqian/treesofparis/issues/58)): « Près de ma position exacte » on an English phone too.
+  The permission dialog the system opens after a tap stays in the phone's language.
 - Tested on an Android 17 emulator: system dialog on first tap, centring and nearest tree after it, no dialog on the
   second tap. The Android 16 fallback is covered by a Robolectric test.
