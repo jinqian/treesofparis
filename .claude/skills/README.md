@@ -1,6 +1,14 @@
 # Agent skills
 
-Skills in this folder are vendored from [android/skills](https://github.com/android/skills)
+## This project's own
+
+| Skill | What |
+|-------|------|
+| `release` | Prepare a release: version, French Google Play note, changelog, `chore(release)` PR, then the tag (follows `android/RELEASING.md`) |
+
+## Vendored from android/skills
+
+The other skills in this folder are vendored from [android/skills](https://github.com/android/skills)
 (commit `bf68e2d`, Apache License 2.0, see `LICENSE-android-skills.txt`). They are plain
 `SKILL.md` files that Claude Code (and other agents following the agent-skills standard) load
 on demand.
