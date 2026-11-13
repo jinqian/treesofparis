@@ -1,5 +1,6 @@
 """Tests for data/scripts/update_trees.py. Run: data/.venv/bin/python -I -m pytest data/tests"""
 
+import contextlib
 import json
 import os
 import re
@@ -12,6 +13,7 @@ import pytest
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "data" / "scripts"))
 
+import remarkable  # noqa: E402
 import update_trees as ut  # noqa: E402
 
 FIXTURE = Path(__file__).parent / "fixtures" / "sample.csv"
@@ -399,3 +401,26 @@ def test_build_db_refuses_links_without_a_taxon_links_table(tmp_path, cleaned, s
     database["entities"] = [e for e in database["entities"] if e["tableName"] == "trees"]
     with pytest.raises(ut.SchemaError):
         ut.build_db(rows, {"database": database}, tmp_path / "trees.db", 2, [{"genus": "A", "species": "", "wikipedia_title": "A", "genus_only": 1}])
+
+
+def test_build_db_writes_remarkable_trees(tmp_path, cleaned, schema):
+    rows = cleaned[0]
+    story = {column: None for column in remarkable.COLUMNS} | {
+        "tree_id": rows[0]["id"],
+        "site": "Square René Viviani",
+        "qualification": "Historique",
+        "story": "Le plus vieil arbre de Paris.",
+        "planting_year": 1601,
+    }
+    out = tmp_path / "trees.db"
+    ut.build_db(rows, schema, out, 4, remarkable_rows=[story])
+    with contextlib.closing(sqlite3.connect(out)) as db:
+        assert db.execute("SELECT site, qualification, planting_year FROM remarkable_trees").fetchall() == [
+            ("Square René Viviani", "Historique", 1601)
+        ]
+
+
+def test_content_hash_changes_with_remarkable_trees(cleaned):
+    rows = cleaned[0]
+    story = {column: None for column in remarkable.COLUMNS} | {"tree_id": rows[0]["id"], "site": "Square"}
+    assert ut.content_hash(rows, [], [story]) != ut.content_hash(rows, [], [])

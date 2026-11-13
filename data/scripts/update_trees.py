@@ -43,6 +43,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import communes as communes_module  # noqa: E402
 import gpso  # noqa: E402
+import remarkable  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 EXPORT_URL = (
@@ -295,10 +296,12 @@ def distance_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return 6_371_000 * math.hypot(x, y)
 
 
-def content_hash(rows: list[dict], links: list[dict] | None = None) -> str:
-    """Hash of the shipped content: the trees, plus the Wikipedia links when there are any."""
+def content_hash(rows: list[dict], links: list[dict] | None = None, remarkable_rows: list[dict] | None = None) -> str:
+    """Hash of the shipped content: the trees, plus the Wikipedia links and remarkable trees' stories if any."""
     ordered = sorted(rows, key=lambda r: r["id"])
     content = ordered if links is None else {"trees": ordered, "taxon_links": links}
+    if remarkable_rows:
+        content = {"trees": ordered, "taxon_links": links or [], "remarkable_trees": remarkable_rows}
     return hashlib.sha256(json.dumps(content, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
@@ -421,7 +424,9 @@ def removed_tree_ids(previous_db: Path, rows: list[dict]) -> list[int]:
     return sorted(previous - {row["id"] for row in rows})
 
 
-def build_db(rows: list[dict], schema: dict, out: Path, version: int, links: list[dict] = ()) -> None:
+def build_db(
+    rows: list[dict], schema: dict, out: Path, version: int, links: list[dict] = (), remarkable_rows: list[dict] = ()
+) -> None:
     """Builds [out] atomically with exactly Room's schema, Room's identity hash and `user_version` = [version]."""
     database = schema["database"]
     entity = next((e for e in database.get("entities", []) if e["tableName"] == "trees"), None)
@@ -435,6 +440,11 @@ def build_db(rows: list[dict], schema: dict, out: Path, version: int, links: lis
         raise SchemaError("Room schema has no `taxon_links` table; build :core:data first")
     if taxa is not None and {f["columnName"] for f in taxa["fields"]} != set(TAXON_COLUMNS):
         raise SchemaError(f"Room `taxon_links` columns differ from the script's {sorted(TAXON_COLUMNS)}")
+    stories = next((e for e in database.get("entities", []) if e["tableName"] == "remarkable_trees"), None)
+    if remarkable_rows and stories is None:
+        raise SchemaError("Room schema has no `remarkable_trees` table; build :core:data first")
+    if stories is not None and {f["columnName"] for f in stories["fields"]} != set(remarkable.COLUMNS):
+        raise SchemaError(f"Room `remarkable_trees` columns differ from the script's {sorted(remarkable.COLUMNS)}")
 
     out.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp_name = tempfile.mkstemp(dir=out.parent, suffix=".db")
@@ -456,6 +466,13 @@ def build_db(rows: list[dict], schema: dict, out: Path, version: int, links: lis
                 db.executemany(
                     f"INSERT INTO taxon_links ({', '.join(TAXON_COLUMNS)}) VALUES (?, ?, ?, ?)",
                     ([link[c] for c in TAXON_COLUMNS] for link in links),
+                )
+            if stories is not None:
+                db.execute(stories["createSql"].replace("${TABLE_NAME}", "remarkable_trees"))
+                db.executemany(
+                    f"INSERT INTO remarkable_trees ({', '.join(remarkable.COLUMNS)}) "
+                    f"VALUES ({', '.join('?' for _ in remarkable.COLUMNS)})",
+                    ([row[c] for c in remarkable.COLUMNS] for row in remarkable_rows),
                 )
             db.execute(f"PRAGMA user_version = {int(version)}")
         with contextlib.closing(sqlite3.connect(tmp_name, isolation_level=None)) as db:
@@ -531,6 +548,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--raw", type=Path, default=REPO / "data/raw/les-arbres.csv", help="downloaded CSV")
     parser.add_argument("--gpso-raw", type=Path, default=REPO / "data/raw/gpso-arbres.csv", help="GPSO CSV")
+    parser.add_argument(
+        "--remarkable-raw",
+        type=Path,
+        default=REPO / "data/raw/arbres-remarquables.json",
+        help="« Les arbres remarquables » JSON",
+    )
     parser.add_argument("--communes", type=Path, default=REPO / "data/communes.geojson", help="town boundaries")
     parser.add_argument(
         "--refresh-communes", action="store_true", help="download the town boundaries again (geo.api.gouv.fr)"
@@ -558,6 +581,8 @@ def main(argv: list[str] | None = None) -> int:
         download(args.raw)
         print(f"Downloading {gpso.EXPORT_URL}")
         download(args.gpso_raw, gpso.EXPORT_URL)
+        print(f"Downloading {remarkable.EXPORT_URL}")
+        download(args.remarkable_raw, remarkable.EXPORT_URL)
     paris_rows, report = clean(read_rows(args.raw), towns)
     print(report)
     gpso_rows, gpso_report = gpso.clean(gpso.read_rows(args.gpso_raw), towns, common_names(paris_rows), _in_coverage)
@@ -571,11 +596,18 @@ def main(argv: list[str] | None = None) -> int:
         update_wikipedia_cache(rows, cache)
         write_wikipedia_cache(args.wikipedia_cache, cache)
     links = taxon_links(rows, cache)
+    remarkable_records = json.loads(args.remarkable_raw.read_text())
+    paris_remarkable = {row["id"] for row in paris_rows if row["remarkable"]}
+    stories = remarkable.clean(remarkable_records, paris_remarkable)
+    print(
+        f"Remarkable trees: {len(remarkable_records)} records read, {len(stories)} stories kept "
+        f"for the {len(paris_remarkable)} remarkable trees of Paris"
+    )
     linked_pairs = {(link["genus"], link["species"]) for link in links}
     linked = sum(1 for r in rows if (r["genus"], r["species"] or "") in linked_pairs)
     print(f"Wikipedia: {len(links)} species/genus links, covering {linked} of {len(rows)} trees")
 
-    new_hash = content_hash(rows, links)
+    new_hash = content_hash(rows, links, stories)
     previous_hash = args.hash_file.read_text().strip() if args.hash_file.exists() else None
     current = int(args.version_file.read_text().strip())
     version = next_version(current, previous_hash, new_hash)
@@ -586,7 +618,7 @@ def main(argv: list[str] | None = None) -> int:
             f"{len(removed)} trees of the previous data are gone (felled or replaced); "
             "users' favorites of these trees will show as « Retiré des données de la Ville »."
         )
-    build_db(rows, latest_schema(args.schema_dir, version), args.output, version, links)
+    build_db(rows, latest_schema(args.schema_dir, version), args.output, version, links, stories)
     args.version_file.write_text(f"{version}\n")
     args.hash_file.write_text(f"{new_hash}\n")
 
@@ -613,7 +645,22 @@ def main(argv: list[str] | None = None) -> int:
             "recordsRead": gpso_report.total,
             "source": gpso.DATASET_PAGE,
             "sourceExport": gpso.EXPORT_URL,
-        }
+        },
+        {
+            "id": remarkable.SOURCE,
+            "datasetModifiedAt": (
+                next((s.get("datasetModifiedAt") for s in previous.get("otherSources", []) if s.get("id") == remarkable.SOURCE), None)
+                if args.skip_download
+                else None
+            )
+            or dataset_modified_at(fetch_metadata(remarkable.METADATA_URL)),
+            "extractedAt": extracted_at(args.remarkable_raw),
+            "license": remarkable.LICENSE,
+            "recordsKept": len(stories),
+            "recordsRead": len(remarkable_records),
+            "source": remarkable.DATASET_PAGE,
+            "sourceExport": remarkable.EXPORT_URL,
+        },
     ]
     meta["treesKept"] = len(rows)
     write_meta(args.meta_file, meta)

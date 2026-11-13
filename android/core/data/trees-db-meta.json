@@ -1,5 +1,5 @@
 {
-  "dataVersion": 3,
+  "dataVersion": 4,
   "datasetModifiedAt": "2026-11-06T09:34:19+00:00",
   "dropped": {
     "duplicateIds": 0,
@@ -24,6 +24,16 @@
       "recordsRead": 32684,
       "source": "https://data.seineouest.fr/explore/dataset/arbres-v2/information/",
       "sourceExport": "https://data.seineouest.fr/api/explore/v2.1/catalog/datasets/arbres-v2/exports/csv?delimiter=%3B"
+    },
+    {
+      "datasetModifiedAt": "2026-11-13T11:45:05+00:00",
+      "extractedAt": "2026-11-13T20:39:43Z",
+      "id": "remarquables",
+      "license": "ODbL",
+      "recordsKept": 181,
+      "recordsRead": 183,
+      "source": "https://opendata.paris.fr/explore/dataset/arbresremarquablesparis/information/",
+      "sourceExport": "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/arbresremarquablesparis/exports/json"
     }
   ],
   "recordsKept": 220339,

@@ -117,4 +117,27 @@ class PrepackagedDatabaseTest {
         const val KNOWN_TREE_ID = 243_481L // Platane, quai de la Seine
         const val OLD_ONLY_TREE_ID = 999_999_999L
     }
+
+    @Test
+    fun everyRemarkableTreeOfParis_hasItsStory() =
+        runTest {
+            val db = buildTreeDatabase(context, name = "stories.db").also(opened::add)
+            val remarkable =
+                db
+                    .treeDao()
+                    .remarkable()
+                    .map { it.id }
+                    .toSet()
+            val stories =
+                db
+                    .remarkableStoryDao()
+                    .all()
+                    .map { it.treeId }
+                    .toSet()
+            assertEquals(remarkable, stories)
+            // The Noisetier de Byzance of square Maurice Gardette, the oldest hazel of Paris.
+            val noisetier = db.remarkableStoryDao().byTreeId(124914)
+            assertEquals("Square Maurice Gardette", noisetier?.site)
+            assertEquals(1882, noisetier?.plantingYear)
+        }
 }
