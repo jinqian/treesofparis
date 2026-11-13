@@ -1,5 +1,6 @@
 package fr.arbresdeparis
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,6 +25,11 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var mapProvider: MapProvider
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(newBase)
+        useAppLocale()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
