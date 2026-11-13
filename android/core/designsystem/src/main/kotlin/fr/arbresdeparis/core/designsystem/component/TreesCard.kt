@@ -35,13 +35,14 @@ import fr.arbresdeparis.core.designsystem.theme.TreesSpacing
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 
 /**
- * A light card with a hairline border that groups rows; separate rows with [TreesDivider]. Pass no [contentPadding]
- * when the first or last row has its own background (e.g. a coloured header) so it reaches the rounded edge.
+ * A light card with a hairline border that groups rows; separate rows with [TreesDivider]. By default the rows reach
+ * the card's edges, so a clickable row's ripple fills it up to the rounded corners, which the card clips (#67); rows
+ * bring their own vertical padding.
  */
 @Composable
 fun TreesCardGroup(
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(vertical = TreesSpacing.xs),
+    contentPadding: PaddingValues = PaddingValues(),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Surface(

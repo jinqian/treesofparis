@@ -76,6 +76,7 @@ class HerbierSectionScreenTest {
     fun remarkable_listsEveryTreeByArea_andOpensItOnTheMap() {
         show(HerbierSection.REMARKABLE)
         scrollTo("BOIS DE BOULOGNE")
+        scrollTo("PARIS 6E")
         compose.onNodeWithText("PARIS 6E").assertExists()
         scrollTo("Jardin du Luxembourg")
         compose.onNodeWithText("Marronnier").performClick()
