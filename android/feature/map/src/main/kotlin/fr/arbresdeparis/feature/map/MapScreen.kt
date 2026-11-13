@@ -117,10 +117,6 @@ fun MapRoute(
         onClusterClick = viewModel::onClusterClick,
         preciseLocation = preciseLocation,
         showSystemLocationButtons = inFront,
-        onNearestLocationResult = { granted ->
-            preciseLocation = context.hasPreciseLocationPermission()
-            viewModel.onNearestTreeRequest(granted)
-        },
     )
 }
 
@@ -149,7 +145,6 @@ fun MapScreen(
     modifier: Modifier = Modifier,
     onClusterClick: (MapCluster) -> Unit = {},
     preciseLocation: Boolean = true,
-    onNearestLocationResult: (Boolean) -> Unit = {},
     showSystemLocationButtons: Boolean = true,
     onZoomHintClick: () -> Unit = {},
     onOpenDirections: (GeoPoint) -> Unit = {},
@@ -184,7 +179,6 @@ fun MapScreen(
             onLocateResult = onLocateResult,
             onFindNearestTree = onFindNearestTree,
             preciseLocation = preciseLocation,
-            onNearestLocationResult = onNearestLocationResult,
             showSystemLocationButtons = showSystemLocationButtons,
             onNearbyNext = onNearbyNext,
             onNearbyOpen = onNearbyOpen,
@@ -233,10 +227,11 @@ private fun TreeSheet(
 }
 
 /**
- * « Arbre le plus proche » over « Me localiser »; the nearby tree's card takes the button's place under them. Until
- * precise location is shared ([preciseLocation] false), « Arbre le plus proche » is the system location button itself
- * (« Près de ma position exacte »): one tap shares the location and finds the tree, like « Me localiser ».
- * Without [showSystemLocationButtons], our own buttons take the system ones' place (same size, no effect).
+ * « Arbre le plus proche » over « Me localiser »; the nearby tree's card takes the button's place under them.
+ * « Arbre le plus proche » only shows once precise location is shared ([preciseLocation]): before that it could only
+ * be a second system location button (« Près de ma position exacte »), which read like « Me localiser » again
+ * (#58). Without [showSystemLocationButtons], our own « Me localiser » takes the system one's place (same size, no
+ * effect).
  */
 @Composable
 @Suppress("LongParameterList") // the controls' state and events
@@ -249,7 +244,6 @@ private fun LocationControls(
     onNearbyDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     preciseLocation: Boolean = true,
-    onNearestLocationResult: (Boolean) -> Unit = {},
     showSystemLocationButtons: Boolean = true,
 ) {
     Column(
@@ -257,14 +251,8 @@ private fun LocationControls(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
     ) {
-        if (state.nearby == null) {
-            if (preciseLocation || state.isFindingNearest) {
-                NearestTreeButton(isSearching = state.isFindingNearest, onClick = onFindNearestTree)
-            } else if (!showSystemLocationButtons) {
-                NearestTreeButton(isSearching = false, onClick = {})
-            } else {
-                NearestTreeLocationButton(onResult = onNearestLocationResult)
-            }
+        if (state.nearby == null && (preciseLocation || state.isFindingNearest)) {
+            NearestTreeButton(isSearching = state.isFindingNearest, onClick = onFindNearestTree)
         }
         LocateButton(
             isLocating = state.isLocating,

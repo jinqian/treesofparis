@@ -277,20 +277,26 @@ class MapScreenTest {
     }
 
     @Test
-    fun nearestTree_beforeLocationIsShared_isTheSystemLocationButton() {
+    fun nearestTree_beforeLocationIsShared_isHidden() {
         show(base, preciseLocation = false)
-        // Our pill gives way to the system button, which shares the location and finds the tree in one tap.
+        // Only « Me localiser » (the system button) until the location is shared: no second location button.
         compose.onNodeWithText("Arbre le plus proche").assertDoesNotExist()
-        compose.onAllNodesWithTag(SYSTEM_LOCATION_BUTTON_TAG, useUnmergedTree = true).assertCountEquals(2)
+        compose.onAllNodesWithTag(SYSTEM_LOCATION_BUTTON_TAG, useUnmergedTree = true).assertCountEquals(1)
+    }
+
+    @Test
+    fun nearestTree_onceLocationIsShared_appears() {
+        show(base, preciseLocation = true)
+        compose.onNodeWithText("Arbre le plus proche").assertIsDisplayed()
     }
 
     @Test
     fun systemLocationButtons_whileTheMapIsNotInFront_giveWayToLookAlikes() {
         // The system draws its buttons on a layer above the whole window: they would stay on screen while the map
-        // fades out behind another tab. Until the map is settled, our own buttons stand in for them.
+        // fades out behind another tab. Until the map is settled, our own button stands in for « Me localiser ».
         show(base, preciseLocation = false, showSystemLocationButtons = false)
         compose.onAllNodesWithTag(SYSTEM_LOCATION_BUTTON_TAG, useUnmergedTree = true).assertCountEquals(0)
-        compose.onNodeWithText("Arbre le plus proche").assertIsDisplayed()
+        compose.onNodeWithText("Arbre le plus proche").assertDoesNotExist()
         compose.onNodeWithContentDescription("Me localiser").assertIsDisplayed()
     }
 
