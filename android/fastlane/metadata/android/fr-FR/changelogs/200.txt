@@ -1,0 +1,6 @@
+• Touchez l'adresse d'un arbre pour l'ouvrir dans votre application de cartes.
+• « Zoomez pour voir les arbres » se touche pour zoomer.
+• Au premier lancement, l'application vous demande si elle peut envoyer des rapports de plantage : rien n'est envoyé sans votre accord.
+• Le bouton de localisation est en français, et « Arbre le plus proche » apparaît après « Me localiser ».
+• Textes lisibles sur petit écran, plus de flash blanc entre les onglets.
+Merci pour vos retours !
