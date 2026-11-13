@@ -1,6 +1,7 @@
 // The web map of arbresdeparis.fr: the same trees and « Herbier » map as the Android app, in the browser.
 // Trees come from data/ (built from the app's trees.db by data/scripts/build_web_map.py): one file per ~1 km cell,
-// fetched from street level, plus the remarkable trees, shown at every zoom.
+// fetched from street level, plus the remarkable trees, shown at every zoom, and their stories (« Les arbres
+// remarquables »), loaded the first time one is opened.
 
 import {
   CLUSTER_LAYERS,
@@ -25,6 +26,7 @@ const SOURCES = {
   paris: "« Les arbres », Paris Data",
   gpso: "« Arbres », Grand Paris Seine Ouest",
 };
+const STORY_SOURCE = "« Les arbres » et « Les arbres remarquables », Paris Data";
 
 const $ = (selector) => document.querySelector(selector);
 const nf = new Intl.NumberFormat("fr-FR");
@@ -40,6 +42,7 @@ const state = {
   onlyRemarkable: false,
   selected: null,
   user: null,
+  stories: null, // Promise of data/stories.json: tree id → story
 };
 
 const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -201,18 +204,90 @@ function measure(label, value, unit) {
   return `<div class="fact"><dt>${label}</dt><dd>${value == null ? "<span class=\"unknown\">inconnue</span>" : `${nf.format(value)}<small>${unit}</small>`}</dd></div>`;
 }
 
+/** The remarkable trees' stories, fetched once; an empty set when they cannot be loaded (the sheet stays as it was). */
+function loadStories() {
+  state.stories ??= getJson("data/stories.json").catch((error) => {
+    console.error(error);
+    state.stories = null; // try again next time
+    return {};
+  });
+  return state.stories;
+}
+
+/** Only web links: the dataset's URLs go into href and src. */
+const safeUrl = (url) => (typeof url === "string" && url.startsWith("https://") ? url : null);
+
+const CHEVRON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
+const EXPAND = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
+const LEAF = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19c0-8 5-14 14-14 0 9-6 14-14 14z"/><path d="M5 19 13 11"/></svg>';
+
+function badge(story) {
+  const why = story?.qualification ? ` · ${escapeHtml(story.qualification)}` : "";
+  return `<p class="badge">Arbre remarquable${why}</p>`;
+}
+
+function placeOf(row, story) {
+  return [row[F.area], story?.site ?? row[F.address]].filter(Boolean).map(escapeHtml).join(" · ");
+}
+
+function wikiLink(row) {
+  const wiki = wikipedia(row);
+  return wiki
+    ? `<a class="wiki" href="${wiki.url}" target="_blank" rel="noopener">
+         <span>${wiki.genusOnly ? `Le genre ${escapeHtml(row[F.genus])} sur Wikipédia` : "En savoir plus sur Wikipédia"}</span>
+         <small>${escapeHtml(wiki.title)} · fr.wikipedia.org</small>
+       </a>`
+    : "";
+}
+
+/** The City's photo, or a leaf while it loads or when there is none. */
+function photo(story, className) {
+  const src = safeUrl(story.photoUrl);
+  return `<span class="${className}">${LEAF}${src ? `<img src="${escapeHtml(src)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}</span>`;
+}
+
 function openSheet(row) {
   state.selected = row;
   drawSelectionAndUser();
+  showTree(row, null);
+  $("#sheet").hidden = false;
+  keepInSight(row);
+  if (row[F.remarkable]) {
+    loadStories().then((stories) => {
+      const story = stories[String(row[F.id])];
+      if (story && state.selected === row && $("#sheet-body").dataset.view === "tree") showTree(row, story);
+    });
+  }
+}
+
+/** The tree's sheet; a remarkable tree with its [story] gets its site, its reason and the gold « Son histoire » row. */
+function showTree(row, story) {
   const latin = scientificName(row);
-  const wiki = wikipedia(row);
-  const place = [row[F.area], row[F.address]].filter(Boolean).map(escapeHtml).join(" · ");
-  $("#sheet-body").innerHTML = `
-    ${row[F.remarkable] ? '<p class="badge">Arbre remarquable</p>' : ""}
+  const body = $("#sheet-body");
+  body.dataset.view = "tree";
+  body.innerHTML = `
+    ${row[F.remarkable] ? badge(story) : ""}
     <h2 id="sheet-title">${escapeHtml(row[F.name])}</h2>
     ${latin ? `<p class="latin">${escapeHtml(latin)}</p>` : '<p class="latin unknown">Espèce inconnue</p>'}
-    <p class="place">${place}</p>
-    <dl class="facts">
+    <p class="place">${placeOf(row, story)}</p>
+    ${facts(row)}
+    ${
+      story
+        ? `<button id="story-open" class="story-row" type="button">
+             ${photo(story, "story-thumb")}
+             <span class="story-text"><strong>Son histoire</strong>${story.teaser ? `<small>${escapeHtml(story.teaser)}</small>` : ""}</span>
+             ${CHEVRON}
+           </button>`
+        : ""
+    }
+    ${wikiLink(row)}
+    <p class="source">Arbre n° ${row[F.id]} · Source${story ? "s" : ""} : ${story ? STORY_SOURCE : (SOURCES[row[F.source]] ?? SOURCES.paris)}</p>`;
+  $("#story-open")?.addEventListener("click", () => showStory(row, story));
+  $("#sheet").scrollTop = 0;
+}
+
+function facts(row) {
+  return `<dl class="facts">
       ${
         row[F.height] == null && row[F.heightClass]
           ? `<div class="fact"><dt>Hauteur</dt><dd class="range">${escapeHtml(row[F.heightClass])} m</dd></div>`
@@ -220,19 +295,78 @@ function openSheet(row) {
       }
       ${measure("Circonférence", row[F.circ], "cm")}
       <div class="fact"><dt>Stade</dt><dd>${row[F.stage] ? escapeHtml(row[F.stage]) : '<span class="unknown">inconnu</span>'}</dd></div>
-    </dl>
+    </dl>`;
+}
+
+/** « Son histoire », in the sheet: the photo (full screen on a tap), why, the story, the official facts, the sign. */
+function showStory(row, story) {
+  const latin = scientificName(row);
+  const sign = safeUrl(story.signUrl);
+  const hasPhoto = Boolean(safeUrl(story.photoUrl));
+  const official = [
+    ["Plantation", story.plantingYear ?? '<span class="unknown">année inconnue</span>'],
+    story.label && ["Label national", escapeHtml(story.label)],
+    story.councilDecision && ["Délibération", `Conseil de Paris ${escapeHtml(story.councilDecision)}`],
+  ].filter(Boolean);
+  const body = $("#sheet-body");
+  body.dataset.view = "story";
+  body.innerHTML = `
+    <button id="story-back" class="back-link" type="button">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+      Fiche de l’arbre
+    </button>
+    <figure class="story-photo">
+      ${photo(story, "story-photo-frame")}
+      ${story.photoCredit ? `<figcaption>© ${escapeHtml(story.photoCredit)}</figcaption>` : ""}
+      ${hasPhoto ? `<button id="photo-open" class="photo-expand" type="button" aria-label="Voir la photo en plein écran" title="Voir la photo en plein écran">${EXPAND}</button>` : ""}
+    </figure>
+    ${badge(story)}
+    <h2 id="sheet-title">${escapeHtml(row[F.name])}</h2>
+    ${latin ? `<p class="latin">${escapeHtml(latin)}</p>` : ""}
+    <p class="place">${placeOf(row, story)}</p>
+    ${story.summary ? `<section class="why"><h3>Pourquoi il est remarquable</h3><p>${escapeHtml(story.summary)}</p></section>` : ""}
+    ${story.story ? `<section class="story"><h3>Son histoire</h3><p>${escapeHtml(story.story)}</p></section>` : ""}
+    ${facts(row)}
+    <dl class="official">${official.map(([term, value]) => `<div><dt>${term}</dt><dd>${value}</dd></div>`).join("")}</dl>
     ${
-      wiki
-        ? `<a class="wiki" href="${wiki.url}" target="_blank" rel="noopener">
-             <span>${wiki.genusOnly ? `Le genre ${escapeHtml(row[F.genus])} sur Wikipédia` : "En savoir plus sur Wikipédia"}</span>
-             <small>${escapeHtml(wiki.title)} · fr.wikipedia.org</small>
+      sign
+        ? `<a class="wiki" href="${escapeHtml(sign)}" target="_blank" rel="noopener noreferrer">
+             <span>Le panneau de l’arbre</span><small>PDF · Ville de Paris</small>
            </a>`
         : ""
     }
-    <p class="source">Arbre n° ${row[F.id]} · Source : ${SOURCES[row[F.source]] ?? SOURCES.paris}</p>`;
-  $("#sheet").hidden = false;
+    ${wikiLink(row)}
+    <p class="source">Arbre n° ${row[F.id]} · Sources : ${STORY_SOURCE}</p>`;
+  $("#story-back").addEventListener("click", () => showTree(row, story));
+  if (hasPhoto) {
+    const open = () => openPhoto(row, story);
+    $("#photo-open").addEventListener("click", open);
+    body.querySelector(".story-photo-frame").addEventListener("click", open);
+  }
   $("#sheet").scrollTop = 0;
-  keepInSight(row);
+  $("#story-back").focus({ preventScroll: true });
+}
+
+// --- full-screen photo ------------------------------------------------------------------------------------------------
+
+/** The City's photo over the whole window, on night ink; a tap zooms in where it lands, another zooms back out. */
+function openPhoto(row, story) {
+  const viewer = $("#photo-viewer");
+  const image = $("#photo-image");
+  image.src = safeUrl(story.photoUrl);
+  image.classList.remove("zoomed");
+  const latin = scientificName(row);
+  $("#photo-caption").innerHTML = `
+    <span><strong>${escapeHtml(row[F.name])}</strong>${latin ? ` <em>${escapeHtml(latin)}</em>` : ""}</span>
+    <span>${placeOf(row, story)}</span>
+    ${story.photoCredit ? `<small>© ${escapeHtml(story.photoCredit)}</small>` : ""}`;
+  viewer.showModal();
+}
+
+function closePhoto() {
+  const viewer = $("#photo-viewer");
+  if (viewer.open) viewer.close();
+  $("#photo-open")?.focus({ preventScroll: true });
 }
 
 /** Pans the map when the sheet covers the tree: to the middle of what is left (right of the card, or above the sheet). */
@@ -249,6 +383,7 @@ function keepInSight(row) {
 
 function closeSheet() {
   state.selected = null;
+  $("#sheet-body").dataset.view = "";
   $("#sheet").hidden = true;
   drawSelectionAndUser();
 }
@@ -350,7 +485,17 @@ $("#hint").addEventListener("click", () => map.easeTo({ zoom: TREE_MIN_ZOOM + 0.
 $("#only-remarkable").addEventListener("click", toggleRemarkable);
 $("#sheet-close").addEventListener("click", closeSheet);
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && !$("#sheet").hidden) closeSheet();
+  if (event.key !== "Escape" || $("#photo-viewer").open || $("#sheet").hidden) return; // the viewer closes itself
+  if ($("#sheet-body").dataset.view === "story") $("#story-back").click();
+  else closeSheet();
+});
+$("#photo-close").addEventListener("click", closePhoto);
+$("#photo-viewer").addEventListener("close", () => $("#photo-image").classList.remove("zoomed"));
+$("#photo-image").addEventListener("click", (event) => {
+  const image = event.currentTarget;
+  const box = image.getBoundingClientRect();
+  image.style.transformOrigin = `${event.clientX - box.left}px ${event.clientY - box.top}px`;
+  image.classList.toggle("zoomed");
 });
 
 async function start() {

@@ -60,6 +60,14 @@
     <div id="sheet-body"></div>
   </aside>
 
+  <dialog id="photo-viewer" class="photo-viewer" aria-label="Photo de l’arbre">
+    <button id="photo-close" class="photo-close" type="button" aria-label="Fermer" title="Fermer">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+    <img id="photo-image" alt="" referrerpolicy="no-referrer">
+    <p id="photo-caption" class="photo-caption"></p>
+  </dialog>
+
   <noscript><p class="toast">La carte a besoin de JavaScript.</p></noscript>
 
   <script src="vendor/maplibre-gl-5.24.0.js"></script>

@@ -416,6 +416,272 @@ a:focus-visible {
   font-size: 12px;
 }
 
+/* A remarkable tree's « Son histoire » row in the sheet (the app's StoryCard, canvas option A). */
+.story-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 10px 12px 10px 10px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--gold-wash);
+  color: var(--gold-ink);
+  text-align: left;
+}
+
+.story-row:hover {
+  filter: brightness(0.98);
+}
+
+.story-thumb,
+.story-photo-frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--sage);
+  color: var(--moss);
+}
+
+.story-thumb {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+}
+
+.story-thumb img,
+.story-photo-frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.story-text {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.story-text strong {
+  font: 400 19px/1.2 var(--serif);
+}
+
+.story-text small {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.story-row svg:last-child {
+  flex: none;
+}
+
+/* « Son histoire », shown in the sheet. */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  margin: -6px 0 10px -6px;
+  padding: 0 10px 0 6px;
+  border: 0;
+  border-radius: 20px;
+  background: none;
+  color: var(--moss);
+  font-weight: 600;
+}
+
+.back-link:hover {
+  background: var(--sage);
+}
+
+.story-photo {
+  position: relative;
+  margin: 0 0 16px;
+}
+
+.story-photo-frame {
+  height: 220px;
+  border-radius: 16px;
+  cursor: zoom-in;
+}
+
+.story-photo figcaption {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  max-width: calc(100% - 16px);
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: rgba(30, 38, 32, 0.6);
+  color: #fbfaf6;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+/* Top right of the photo, like the app's round button facing « Retour » (canvas « Bouton plein écran — B »). */
+.photo-expand {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(251, 250, 246, 0.92);
+  color: #1e2620;
+  box-shadow: 0 1px 3px rgba(30, 38, 32, 0.25);
+}
+
+.why {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--gold-wash);
+  color: var(--gold-ink);
+}
+
+.why h3 {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.why p {
+  margin: 0;
+  color: var(--ink);
+}
+
+.story h3 {
+  margin: 0 0 6px;
+  font: 400 22px/1.2 var(--serif);
+}
+
+.story p {
+  margin: 0 0 16px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+.official {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
+.official div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.official dt {
+  padding: 2px 10px;
+  border-radius: 10px;
+  background: var(--sage);
+  color: var(--moss);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.official dd {
+  margin: 0;
+}
+
+/* The photo in full screen: night ink, the photo fitted, its caption below; a tap zooms in. */
+.photo-viewer {
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: #12110f;
+  color: #fbfaf6;
+  overflow: hidden;
+}
+
+.photo-viewer[open] {
+  display: grid;
+  place-items: center;
+}
+
+.photo-viewer::backdrop {
+  background: #12110f;
+}
+
+.photo-viewer img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  cursor: zoom-in;
+  transition: transform 0.2s ease;
+}
+
+.photo-viewer img.zoomed {
+  cursor: zoom-out;
+  transform: scale(2.5);
+}
+
+.photo-close {
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top));
+  left: 16px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(251, 250, 246, 0.14);
+  color: #fbfaf6;
+}
+
+.photo-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 14px 20px calc(16px + env(safe-area-inset-bottom));
+  background: rgba(18, 17, 15, 0.6);
+  color: #c9c6bc;
+  font-size: 13px;
+}
+
+.photo-caption strong {
+  color: #fbfaf6;
+  font: 400 20px/1.25 var(--serif);
+}
+
+.photo-caption em {
+  font: italic 16px var(--serif);
+}
+
+.photo-caption small {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
 /* MapLibre controls in the same paper. */
 .maplibregl-ctrl-group,
 .maplibregl-ctrl-attrib {
