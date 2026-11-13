@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  # A pull request that only touches the website, docs/ or Markdown files skips the Android job; one that only touches
+  # A pull request that only touches the website, docs/, data/ or Markdown files skips the Android job; one that only touches
   # the Android app skips the data (and web map) tests, unless it changes :core:data (Room schema, trees.db) or
   # :core:domain (rules the scripts copy), which they read. A skipped job is still reported, and counts as passing for
   # its required check. Pushes to main and manual runs always run everything.
@@ -43,8 +43,9 @@ jobs:
           changed=$(git diff --name-only "$BASE...$HEAD")
           echo "Changed files:"
           echo "$changed"
-          # Android: anything but the website, docs/ and Markdown.
-          if echo "$changed" | grep -qvE '^(website|docs)/|\.md$'; then android=true; else android=false; fi
+          # Android: anything but the website, docs/, the data scripts and Markdown. A data change the app sees
+          # (trees.db, its version, the Room schema) is under android/.
+          if echo "$changed" | grep -qvE '^(website|docs|data)/|\.md$'; then android=true; else android=false; fi
           # Data: anything outside android/, or in the modules the data scripts read.
           if echo "$changed" | grep -qvE '^android/' || echo "$changed" | grep -qE '^android/core/(data|domain)/'; then
             data=true
