@@ -15,8 +15,8 @@ permissions:
 
 jobs:
   # Which jobs a pull request needs, from the files it changes. Markdown files never run anything: a PR that only
-  # changes .md files skips every job below. Otherwise a PR that only touches the website, docs/ or data/ skips the
-  # Android job; one that only touches the Android app skips the data (and web map) tests, unless it changes
+  # changes .md files skips every job below. Otherwise the Android job runs only for a change under android/ (or to
+  # this workflow); a PR that only touches the Android app skips the data (and web map) tests, unless it changes
   # :core:data (Room schema, trees.db) or :core:domain (rules the scripts copy), which they read. A skipped job is
   # still reported, and counts as passing for its required check. Pushes to main and manual runs run everything.
   changes:
@@ -50,9 +50,9 @@ jobs:
           code=false
           if [ -n "$changed" ]; then
             code=true
-            # Android: anything but the website, docs/ and the data scripts. A data change the app sees (trees.db,
-            # its version, the Room schema) is under android/.
-            if echo "$changed" | grep -qvE '^(website|docs|data)/'; then android=true; fi
+            # Android: a change under android/ (a data change the app sees, trees.db, its version or the Room schema,
+            # is there too), or to this workflow, so that a change to these rules is checked by every job.
+            if echo "$changed" | grep -qE '^android/|^\.github/workflows/ci\.yml$'; then android=true; fi
             # Data: anything outside android/, or in the modules the data scripts read.
             if echo "$changed" | grep -qvE '^android/' || echo "$changed" | grep -qE '^android/core/(data|domain)/'; then
               data=true
