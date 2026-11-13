@@ -38,7 +38,8 @@ internal const val FILTER_ROW_TAG = "filter_row"
 
 /**
  * The map's two filters on one line, which combine: which trees (« Tous les arbres ▾ », or the essence chosen in the
- * « Essences » sheet) and « Remarquables » (on or off). Their dots match the pins, so they double as the legend. The
+ * « Essences » sheet) and « Remarquables » (on or off), then « ? », which explains them. Their dots match the pins, so
+ * they double as the legend. The
  * row scrolls sideways when it does not fit; [contentPadding] keeps the chips off the screen edges while letting the
  * row scroll under them.
  */
@@ -49,6 +50,7 @@ internal fun MapFilterChips(
     onRemarkableFilterChange: (Boolean) -> Unit,
     onGenusPickerOpen: () -> Unit,
     onGenusFilterClear: () -> Unit,
+    onHelpOpen: () -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(horizontal = TreesSpacing.m),
 ) {
@@ -70,6 +72,29 @@ internal fun MapFilterChips(
             GenusFilterPill(filter = genusFilter, onOpen = onGenusPickerOpen, onClear = onGenusFilterClear)
         }
         RemarkableChip(checked = remarkableOnly, onCheckedChange = onRemarkableFilterChange)
+        HelpButton(onClick = onHelpOpen)
+    }
+}
+
+/** « ? »: how the filters work and what a remarkable tree is. */
+@Composable
+private fun HelpButton(onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Surface(
+        shape = CircleShape,
+        color = colors.surfaceContainerLow,
+        border = BorderStroke(1.dp, colors.outlineVariant),
+        shadowElevation = 2.dp,
+        modifier = Modifier.size(GENUS_PILL_HEIGHT),
+    ) {
+        IconButton(onClick = onClick) {
+            Icon(
+                imageVector = TreesIcons.Help,
+                contentDescription = stringResource(R.string.map_filters_help),
+                tint = colors.primary,
+                modifier = Modifier.size(20.dp),
+            )
+        }
     }
 }
 
@@ -209,8 +234,8 @@ private fun MapFilterChipsPreview() {
             modifier = Modifier.padding(vertical = TreesSpacing.m),
             verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
         ) {
-            MapFilterChips(false, null, {}, {}, {})
-            MapFilterChips(true, GenusFilterUi("Tilia", TreeLeaf.TILIA), {}, {}, {})
+            MapFilterChips(false, null, {}, {}, {}, {})
+            MapFilterChips(true, GenusFilterUi("Tilia", TreeLeaf.TILIA), {}, {}, {}, {})
         }
     }
 }

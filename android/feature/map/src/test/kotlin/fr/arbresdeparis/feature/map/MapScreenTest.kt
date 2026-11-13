@@ -134,8 +134,6 @@ class MapScreenTest {
         compose.onNodeWithText("Remarquables").assertIsOff()
         compose.onNodeWithText("Arbres de Paris").assertDoesNotExist()
         compose.onNodeWithText("Seuls les arbres remarquables sont affichés").assertDoesNotExist()
-        // « ? » lives in the remarkable caption now, not in the row.
-        compose.onNodeWithText("Qu’est-ce que c’est ?").assertDoesNotExist()
     }
 
     @Test
@@ -143,8 +141,9 @@ class MapScreenTest {
         show(base)
         val species = compose.onNodeWithTag(GENUS_PILL_TAG).getBoundsInRoot()
         val remarkable = compose.onNodeWithText("Remarquables").getBoundsInRoot()
-        assertEquals(species.centerY(), remarkable.centerY())
-        assertTrue(species.right <= remarkable.left)
+        val help = compose.onNodeWithContentDescription("Comment fonctionnent les filtres ?").getBoundsInRoot()
+        listOf(remarkable, help).forEach { assertEquals(species.centerY(), it.centerY()) }
+        assertTrue(species.right <= remarkable.left && remarkable.right <= help.left)
         compose
             .onNodeWithTag(FILTER_ROW_TAG)
             .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.HorizontalScrollAxisRange))
@@ -179,10 +178,15 @@ class MapScreenTest {
     }
 
     @Test
-    fun remarkableOn_showsCaptionThatExplainsRemarkableTrees() {
+    fun remarkableOn_showsCaption() {
         show(base.copy(remarkableOnly = true))
-        compose.onNodeWithText("Seuls les arbres remarquables sont affichés", substring = true).assertIsDisplayed()
-        compose.onNodeWithText("Qu’est-ce que c’est ?", substring = true).performClick()
+        compose.onNodeWithText("Seuls les arbres remarquables sont affichés").assertIsDisplayed()
+    }
+
+    @Test
+    fun helpButton_explainsTheFilters() {
+        show(base)
+        compose.onNodeWithContentDescription("Comment fonctionnent les filtres ?").performClick()
         assertEquals(1, infoOpens)
     }
 

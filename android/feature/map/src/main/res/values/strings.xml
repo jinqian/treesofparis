@@ -21,8 +21,15 @@
     <string name="map_filter_all">Tous les arbres</string>
     <string name="map_filter_genus_clear">Afficher tous les arbres</string>
     <string name="map_filter_remarkable_caption">Seuls les arbres remarquables sont affichés</string>
-    <string name="map_filter_remarkable_what">Qu’est-ce que c’est ?</string>
     <string name="map_legend_tree">Arbre</string>
+    <string name="map_filters_help">Comment fonctionnent les filtres ?</string>
+    <string name="map_filters_help_title">Les filtres de la carte</string>
+    <string name="map_filters_help_species_title">Tous les arbres ou une essence</string>
+    <string name="map_filters_help_species_body">Par défaut, la carte montre tous les arbres. Touchez « Tous les arbres » pour n’en garder qu’une essence : platanes, tilleuls, ginkgos… Son nom prend alors la place, et le × montre de nouveau tous les arbres.</string>
+    <string name="map_filters_help_remarkable_body">Touchez « Remarquables » pour ne montrer que les arbres remarquables, et touchez-le encore pour revoir tous les arbres.</string>
+    <string name="map_filters_help_both_title">Les deux se combinent</string>
+    <string name="map_filters_help_both_body">Avec « Tilleul » et « Remarquables », la carte ne montre que les tilleuls remarquables.</string>
+    <string name="map_filters_help_legend">Sur la carte</string>
     <string name="map_remarkable_info_title">Qu’est-ce qu’un arbre remarquable ?</string>
     <string name="map_remarkable_info_body">La Ville de Paris et Grand Paris Seine Ouest distinguent certains arbres pour leur âge, leurs dimensions, leur rareté ou leur histoire. Sur la carte, ils se reconnaissent à leur point doré.</string>
     <string name="map_remarkable_info_show">Voir seulement les remarquables</string>

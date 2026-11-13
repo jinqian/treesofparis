@@ -193,7 +193,7 @@ fun MapScreen(
         state.genusPicker?.let { GenusPickerSheet(it, onGenusPick, onGenusFilterClear, onGenusPickerDismiss) }
         if (state.showRemarkableInfo) {
             TreesBottomSheet(onDismiss = onRemarkableInfoDismiss) {
-                RemarkableInfoContent(
+                FilterHelpContent(
                     onShowRemarkableOnly = { onRemarkableFilterChange(true) },
                     onClose = onRemarkableInfoDismiss,
                 )
@@ -268,8 +268,8 @@ private fun LocationControls(
 }
 
 /**
- * The filters on one line (« Tous les arbres ▾ · Remarquables », see [MapFilterChips]) and, under them, the
- * remarkable caption (with « Qu’est-ce que c’est ? ») and the zoom hint.
+ * The filters on one line (« Tous les arbres ▾ · Remarquables · ? », see [MapFilterChips]) and, under them, the
+ * remarkable caption and the zoom hint.
  */
 @Composable
 private fun MapFilters(
@@ -291,9 +291,10 @@ private fun MapFilters(
             onRemarkableFilterChange = onRemarkableFilterChange,
             onGenusPickerOpen = onGenusPickerOpen,
             onGenusFilterClear = onGenusFilterClear,
+            onHelpOpen = onRemarkableInfoOpen,
         )
         val centred = Modifier.align(Alignment.CenterHorizontally).padding(horizontal = TreesSpacing.m)
-        if (state.remarkableOnly) RemarkableOnlyCaption(onWhatIsIt = onRemarkableInfoOpen, modifier = centred)
+        if (state.remarkableOnly) RemarkableOnlyCaption(centred)
         if (state.showZoomHint) ZoomHint(onClick = onZoomHintClick, modifier = centred)
     }
 }

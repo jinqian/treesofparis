@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -74,46 +76,114 @@ internal fun LegendDot(
     )
 }
 
-/** The bottom sheet body explaining remarkable trees, with the legend and a shortcut to the filter. */
+/**
+ * The « ? » sheet: how the two filters work (« Tous les arbres » or an essence, « Remarquables » with what a remarkable
+ * tree is, and that they combine), then the legend of the map, and a shortcut to the remarkable filter.
+ */
 @Composable
-internal fun RemarkableInfoContent(
+internal fun FilterHelpContent(
     onShowRemarkableOnly: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colors = MaterialTheme.colorScheme
     Column(
         modifier =
             modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = TreesSpacing.l)
                 .padding(top = TreesSpacing.xs, bottom = TreesSpacing.l)
                 .navigationBarsPadding(),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.map_filters_help_title),
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.semantics { heading() },
+        )
+        HelpSection(
+            title = stringResource(R.string.map_filters_help_species_title),
+            body = stringResource(R.string.map_filters_help_species_body),
+        ) { LegendDot(TreesTheme.colors.treePin) }
+        HelpSection(
+            title = stringResource(R.string.map_filter_remarkable),
+            body = stringResource(R.string.map_filters_help_remarkable_body),
+        ) { LegendDot(TreesTheme.colors.remarkable) }
+        RemarkableNote()
+        HelpSection(
+            title = stringResource(R.string.map_filters_help_both_title),
+            body = stringResource(R.string.map_filters_help_both_body),
+        ) { Icon(TreesIcons.Leaf, null, tint = colors.primary, modifier = Modifier.size(18.dp)) }
+        HelpLegend()
+        Column(verticalArrangement = Arrangement.spacedBy(TreesSpacing.s)) {
+            Button(onClick = onShowRemarkableOnly, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                Text(stringResource(R.string.map_remarkable_info_show), style = MaterialTheme.typography.labelLarge)
+            }
+            TextButton(onClick = onClose, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                Text(stringResource(R.string.map_remarkable_info_close), style = MaterialTheme.typography.labelLarge)
+            }
+        }
+    }
+}
+
+/** « Qu’est-ce qu’un arbre remarquable ? » in a gold-tinted box. */
+@Composable
+private fun RemarkableNote() {
+    val colors = MaterialTheme.colorScheme
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(colors.tertiaryContainer.copy(alpha = REMARKABLE_NOTE_ALPHA), MaterialTheme.shapes.medium)
+                .padding(TreesSpacing.m),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
             text = stringResource(R.string.map_remarkable_info_title),
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.semantics { heading() },
+            style = MaterialTheme.typography.titleSmall,
+            color = colors.onTertiaryContainer,
         )
         Text(
             text = stringResource(R.string.map_remarkable_info_body),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = colors.onTertiaryContainer,
         )
-        Column {
-            TreesDivider()
-            LegendRow(stringResource(R.string.map_legend_tree), TreesTheme.colors.treePin)
-            TreesDivider()
-            LegendRow(stringResource(R.string.map_detail_remarkable), TreesTheme.colors.remarkable)
-            TreesDivider()
-        }
-        Column(verticalArrangement = Arrangement.spacedBy(TreesSpacing.s)) {
-            Button(onClick = onShowRemarkableOnly, modifier = Modifier.fillMaxWidth().height(48.dp)) {
-                Text(stringResource(R.string.map_remarkable_info_show), style = MaterialTheme.typography.labelLarge)
-            }
-            TextButton(onClick = onClose, modifier = Modifier.fillMaxWidth().height(48.dp)) {
-                Text(stringResource(R.string.map_remarkable_info_close), style = MaterialTheme.typography.labelLarge)
-            }
+    }
+}
+
+/** « Sur la carte »: a tree, a remarkable tree. */
+@Composable
+private fun HelpLegend() {
+    Column {
+        Text(
+            text = stringResource(R.string.map_filters_help_legend).uppercase(),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = TreesSpacing.xs),
+        )
+        TreesDivider()
+        LegendRow(stringResource(R.string.map_legend_tree), TreesTheme.colors.treePin)
+        TreesDivider()
+        LegendRow(stringResource(R.string.map_detail_remarkable), TreesTheme.colors.remarkable)
+        TreesDivider()
+    }
+}
+
+private const val REMARKABLE_NOTE_ALPHA = 0.6f
+
+/** A filter, its marker on the left (a pin dot, a leaf) and what it does. */
+@Composable
+private fun HelpSection(
+    title: String,
+    body: String,
+    marker: @Composable () -> Unit,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        Box(modifier = Modifier.padding(top = 2.dp).size(20.dp), contentAlignment = Alignment.Center) { marker() }
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(title, style = MaterialTheme.typography.titleSmall)
+            Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -133,41 +203,20 @@ private fun LegendRow(
     }
 }
 
-/**
- * Small note under the filters while only remarkable trees are shown, ending with « Qu’est-ce que c’est ? »: the whole
- * note opens the explanation of remarkable trees (it replaces the « ? » button).
- */
+/** Small note under the filters while only remarkable trees are shown. */
 @Composable
-internal fun RemarkableOnlyCaption(
-    onWhatIsIt: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = MaterialTheme.colorScheme
-    val caption = stringResource(R.string.map_filter_remarkable_caption)
-    val link = stringResource(R.string.map_filter_remarkable_what)
+internal fun RemarkableOnlyCaption(modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier,
         shape = MaterialTheme.shapes.medium,
-        color = colors.surfaceContainerLow.copy(alpha = CAPTION_ALPHA),
+        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = CAPTION_ALPHA),
         shadowElevation = 1.dp,
     ) {
         Text(
-            text =
-                buildAnnotatedString {
-                    append(caption)
-                    append(" · ")
-                    withStyle(
-                        SpanStyle(color = colors.primary, textDecoration = TextDecoration.Underline),
-                    ) { append(link) }
-                },
+            text = stringResource(R.string.map_filter_remarkable_caption),
             style = MaterialTheme.typography.bodySmall,
-            color = colors.onSurfaceVariant,
-            modifier =
-                Modifier
-                    .clickable(role = Role.Button, onClick = onWhatIsIt)
-                    .heightIn(min = 48.dp)
-                    .wrapContentHeight()
-                    .padding(horizontal = 14.dp, vertical = TreesSpacing.s),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = TreesSpacing.s),
         )
     }
 }
@@ -179,7 +228,7 @@ private const val CAPTION_ALPHA = 0.94f
 private fun RemarkableInfoContentPreview() {
     TreesTheme {
         Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
-            RemarkableInfoContent(onShowRemarkableOnly = {}, onClose = {})
+            FilterHelpContent(onShowRemarkableOnly = {}, onClose = {})
         }
     }
 }

@@ -82,6 +82,22 @@ class SmallScreenScreenshotTest {
         genusPicker("large_text")
     }
 
+    @Test
+    @Config(qualifiers = NARROW_TALL)
+    fun filterHelp_narrow() = filterHelp("narrow")
+
+    @Test
+    @Config(qualifiers = LARGE_TEXT_TALL)
+    fun filterHelp_largeText() {
+        RuntimeEnvironment.setFontScale(LARGE_FONT_SCALE)
+        filterHelp("large_text")
+    }
+
+    private fun filterHelp(variant: String) {
+        show { FilterHelpContent(onShowRemarkableOnly = {}, onClose = {}) }
+        check("filter_help_$variant")
+    }
+
     private fun filterBar(variant: String) {
         show {
             Column(
@@ -94,6 +110,7 @@ class SmallScreenScreenshotTest {
                     onRemarkableFilterChange = {},
                     onGenusPickerOpen = {},
                     onGenusFilterClear = {},
+                    onHelpOpen = {},
                 )
                 MapFilterChips(
                     remarkableOnly = true,
@@ -101,8 +118,9 @@ class SmallScreenScreenshotTest {
                     onRemarkableFilterChange = {},
                     onGenusPickerOpen = {},
                     onGenusFilterClear = {},
+                    onHelpOpen = {},
                 )
-                RemarkableOnlyCaption(onWhatIsIt = {}, modifier = Modifier.padding(horizontal = TreesSpacing.m))
+                RemarkableOnlyCaption(Modifier.padding(horizontal = TreesSpacing.m))
             }
         }
         check("filter_bar_$variant")
