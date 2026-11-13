@@ -11,13 +11,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,7 +39,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,111 +53,6 @@ import fr.arbresdeparis.core.designsystem.leaf.LeafDrawing
 import fr.arbresdeparis.core.designsystem.leaf.TreeLeaf
 import fr.arbresdeparis.core.designsystem.theme.TreesSpacing
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
-
-/**
- * Two segments, « Tous les arbres » and « Remarquables », whose dots match the pins so the control doubles as a
- * legend, plus a « ? » button that explains what a remarkable tree is.
- */
-@Composable
-internal fun RemarkableFilterBar(
-    remarkableOnly: Boolean,
-    onRemarkableFilterChange: (Boolean) -> Unit,
-    onInfoClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = MaterialTheme.colorScheme
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Row(
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .height(48.dp)
-                    .shadow(4.dp, CircleShape)
-                    .background(colors.surfaceContainerHighest, CircleShape)
-                    .border(1.dp, colors.outlineVariant, CircleShape)
-                    .padding(4.dp)
-                    .selectableGroup(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            Segment(
-                label = stringResource(R.string.map_filter_all),
-                dotColor = TreesTheme.colors.treePin,
-                selected = !remarkableOnly,
-                onClick = { onRemarkableFilterChange(false) },
-                modifier = Modifier.weight(1f),
-            )
-            Segment(
-                label = stringResource(R.string.map_filter_remarkable),
-                dotColor = TreesTheme.colors.remarkable,
-                selected = remarkableOnly,
-                onClick = { onRemarkableFilterChange(true) },
-                modifier = Modifier.weight(1f),
-            )
-        }
-        Surface(
-            shape = CircleShape,
-            color = colors.surfaceContainerLow,
-            border = BorderStroke(1.dp, colors.outlineVariant),
-            shadowElevation = 4.dp,
-            modifier = Modifier.size(48.dp),
-        ) {
-            IconButton(onClick = onInfoClick) {
-                Icon(
-                    imageVector = TreesIcons.Help,
-                    contentDescription = stringResource(R.string.map_remarkable_info_title),
-                    tint = colors.primary,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun Segment(
-    label: String,
-    dotColor: Color,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = MaterialTheme.colorScheme
-    Row(
-        modifier =
-            modifier
-                .fillMaxHeight()
-                .then(
-                    if (selected) {
-                        Modifier.shadow(1.dp, CircleShape).background(colors.surfaceContainerLow, CircleShape)
-                    } else {
-                        Modifier
-                    },
-                ).selectable(selected = selected, onClick = onClick, role = Role.RadioButton),
-        horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        LegendDot(color = dotColor)
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-            color = if (selected) colors.onSurface else colors.onSurfaceVariant,
-            maxLines = 1,
-            // On a narrow screen or with large text, shrink a little rather than cut « Tous les arbres ».
-            autoSize =
-                TextAutoSize.StepBased(
-                    minFontSize = SEGMENT_MIN_FONT_SIZE,
-                    maxFontSize = MaterialTheme.typography.labelLarge.fontSize,
-                ),
-        )
-    }
-}
-
-private val SEGMENT_MIN_FONT_SIZE = 11.sp
 
 internal const val LEGEND_DOT_TAG = "legend_dot"
 
@@ -173,9 +76,12 @@ internal fun LegendDot(
     )
 }
 
-/** The bottom sheet body explaining remarkable trees, with the legend and a shortcut to the filter. */
+/**
+ * The « ? » sheet, kept short so it opens low on the screen (its handle stays clear of the status bar): the two
+ * filters with their pin dot and one line each, that they combine, and a shortcut to the remarkable filter.
+ */
 @Composable
-internal fun RemarkableInfoContent(
+internal fun FilterHelpContent(
     onShowRemarkableOnly: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
@@ -184,100 +90,58 @@ internal fun RemarkableInfoContent(
         modifier =
             modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = TreesSpacing.l)
                 .padding(top = TreesSpacing.xs, bottom = TreesSpacing.l)
                 .navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         Text(
-            text = stringResource(R.string.map_remarkable_info_title),
+            text = stringResource(R.string.map_filters_help_title),
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.semantics { heading() },
         )
+        HelpSection(
+            title = stringResource(R.string.map_filter_all),
+            body = stringResource(R.string.map_filters_help_species_body),
+        ) { LegendDot(TreesTheme.colors.treePin) }
+        HelpSection(
+            title = stringResource(R.string.map_filter_remarkable),
+            body = stringResource(R.string.map_filters_help_remarkable_body),
+        ) { LegendDot(TreesTheme.colors.remarkable) }
         Text(
-            text = stringResource(R.string.map_remarkable_info_body),
+            text = stringResource(R.string.map_filters_help_both),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Column {
-            TreesDivider()
-            LegendRow(stringResource(R.string.map_legend_tree), TreesTheme.colors.treePin)
-            TreesDivider()
-            LegendRow(stringResource(R.string.map_detail_remarkable), TreesTheme.colors.remarkable)
-            TreesDivider()
-        }
-        Column(verticalArrangement = Arrangement.spacedBy(TreesSpacing.s)) {
-            Button(onClick = onShowRemarkableOnly, modifier = Modifier.fillMaxWidth().height(48.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(TreesSpacing.xs)) {
+            Button(onClick = onShowRemarkableOnly, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
                 Text(stringResource(R.string.map_remarkable_info_show), style = MaterialTheme.typography.labelLarge)
             }
-            TextButton(onClick = onClose, modifier = Modifier.fillMaxWidth().height(48.dp)) {
+            TextButton(onClick = onClose, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
                 Text(stringResource(R.string.map_remarkable_info_close), style = MaterialTheme.typography.labelLarge)
             }
         }
     }
 }
 
+/** A filter, its marker on the left (a pin dot, a leaf) and what it does. */
 @Composable
-private fun LegendRow(
-    label: String,
-    color: Color,
+private fun HelpSection(
+    title: String,
+    body: String,
+    marker: @Composable () -> Unit,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(modifier = Modifier.size(20.dp), contentAlignment = Alignment.Center) { LegendDot(color) }
-        Text(label, style = MaterialTheme.typography.bodyMedium)
-    }
-}
-
-/**
- * « Seulement : Tilleul » with the genus leaf: tapping the name opens the « Essences » sheet to choose another one, the
- * cross shows every tree again.
- */
-@Composable
-internal fun GenusFilterPill(
-    filter: GenusFilterUi,
-    onOpen: () -> Unit,
-    onClear: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = MaterialTheme.colorScheme
-    val name =
-        if (filter.leaf == TreeLeaf.GENERIC) filter.commonName ?: filter.genus else stringResource(filter.leaf.label)
-    Surface(
-        modifier = modifier.testTag(GENUS_PILL_TAG).height(GENUS_PILL_HEIGHT),
-        shape = CircleShape,
-        color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
-        shadowElevation = 2.dp,
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Row(
-                modifier =
-                    Modifier
-                        .clickable(onClickLabel = stringResource(R.string.map_genus_change), onClick = onOpen)
-                        .padding(start = 12.dp, top = 10.dp, bottom = 10.dp, end = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                LeafDrawing(filter.leaf, Modifier.size(22.dp), strokeWidth = 1.3.dp)
-                Text(stringResource(R.string.map_filter_genus, name), style = MaterialTheme.typography.labelLarge)
-            }
-            IconButton(onClick = onClear) {
-                Icon(
-                    TreesIcons.Close,
-                    contentDescription = stringResource(R.string.map_filter_genus_clear),
-                    tint = colors.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
+    Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        Box(modifier = Modifier.padding(top = 2.dp).size(20.dp), contentAlignment = Alignment.Center) { marker() }
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(title, style = MaterialTheme.typography.titleSmall)
+            Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
-/** Small note under the segments while only remarkable trees are shown. */
+/** Small note under the filters while only remarkable trees are shown. */
 @Composable
 internal fun RemarkableOnlyCaption(modifier: Modifier = Modifier) {
     Surface(
@@ -299,30 +163,10 @@ private const val CAPTION_ALPHA = 0.94f
 
 @PreviewLightDark
 @Composable
-private fun RemarkableFilterBarPreview() {
-    TreesTheme {
-        Column(Modifier.padding(TreesSpacing.m), verticalArrangement = Arrangement.spacedBy(TreesSpacing.m)) {
-            RemarkableFilterBar(
-                remarkableOnly = false,
-                onRemarkableFilterChange = {},
-                onInfoClick = {},
-            )
-            RemarkableFilterBar(
-                remarkableOnly = true,
-                onRemarkableFilterChange = {},
-                onInfoClick = {},
-            )
-            RemarkableOnlyCaption()
-        }
-    }
-}
-
-@PreviewLightDark
-@Composable
 private fun RemarkableInfoContentPreview() {
     TreesTheme {
         Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
-            RemarkableInfoContent(onShowRemarkableOnly = {}, onClose = {})
+            FilterHelpContent(onShowRemarkableOnly = {}, onClose = {})
         }
     }
 }

@@ -82,14 +82,45 @@ class SmallScreenScreenshotTest {
         genusPicker("large_text")
     }
 
+    @Test
+    @Config(qualifiers = NARROW_TALL)
+    fun filterHelp_narrow() = filterHelp("narrow")
+
+    @Test
+    @Config(qualifiers = LARGE_TEXT_TALL)
+    fun filterHelp_largeText() {
+        RuntimeEnvironment.setFontScale(LARGE_FONT_SCALE)
+        filterHelp("large_text")
+    }
+
+    private fun filterHelp(variant: String) {
+        show { FilterHelpContent(onShowRemarkableOnly = {}, onClose = {}) }
+        check("filter_help_$variant")
+    }
+
     private fun filterBar(variant: String) {
         show {
-            Column(Modifier.padding(TreesSpacing.m), verticalArrangement = Arrangement.spacedBy(TreesSpacing.s)) {
-                RemarkableFilterBar(remarkableOnly = false, onRemarkableFilterChange = {}, onInfoClick = {})
-                RemarkableFilterBar(remarkableOnly = true, onRemarkableFilterChange = {}, onInfoClick = {})
-                RemarkableOnlyCaption()
-                GenusFilterButton(onClick = {})
-                GenusFilterPill(filter = GenusFilterUi("Celtis", TreeLeaf.CELTIS), onOpen = {}, onClear = {})
+            Column(
+                Modifier.padding(vertical = TreesSpacing.m),
+                verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
+            ) {
+                MapFilterChips(
+                    remarkableOnly = false,
+                    genusFilter = null,
+                    onRemarkableFilterChange = {},
+                    onGenusPickerOpen = {},
+                    onGenusFilterClear = {},
+                    onHelpOpen = {},
+                )
+                MapFilterChips(
+                    remarkableOnly = true,
+                    genusFilter = GenusFilterUi("Celtis", TreeLeaf.CELTIS),
+                    onRemarkableFilterChange = {},
+                    onGenusPickerOpen = {},
+                    onGenusFilterClear = {},
+                    onHelpOpen = {},
+                )
+                RemarkableOnlyCaption(Modifier.padding(horizontal = TreesSpacing.m))
             }
         }
         check("filter_bar_$variant")

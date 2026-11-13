@@ -190,14 +190,10 @@ fun MapScreen(
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = TreesSpacing.xl * 2),
         )
         TreeSheet(state.selectedTree, onDetailDismiss, onFavoriteToggle, onOpenWikipedia, onOpenDirections)
-        state.genusPicker?.let { picker ->
-            TreesBottomSheet(onDismiss = onGenusPickerDismiss) {
-                GenusPickerContent(picker = picker, onPick = onGenusPick)
-            }
-        }
+        state.genusPicker?.let { GenusPickerSheet(it, onGenusPick, onGenusFilterClear, onGenusPickerDismiss) }
         if (state.showRemarkableInfo) {
             TreesBottomSheet(onDismiss = onRemarkableInfoDismiss) {
-                RemarkableInfoContent(
+                FilterHelpContent(
                     onShowRemarkableOnly = { onRemarkableFilterChange(true) },
                     onClose = onRemarkableInfoDismiss,
                 )
@@ -272,8 +268,8 @@ private fun LocationControls(
 }
 
 /**
- * The filter segments and, under them, the remarkable caption, the genus pill (« Toutes les essences » or
- * « Seulement : Tilleul ») and the zoom hint.
+ * The filters on one line (« Tous les arbres ▾ · Remarquables · ? », see [MapFilterChips]) and, under them, the
+ * remarkable caption and the zoom hint.
  */
 @Composable
 private fun MapFilters(
@@ -286,32 +282,40 @@ private fun MapFilters(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.statusBarsPadding().padding(TreesSpacing.m),
+        modifier = modifier.statusBarsPadding().padding(vertical = TreesSpacing.m),
         verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
     ) {
-        RemarkableFilterBar(
+        MapFilterChips(
             remarkableOnly = state.remarkableOnly,
+            genusFilter = state.genusFilter,
             onRemarkableFilterChange = onRemarkableFilterChange,
-            onInfoClick = onRemarkableInfoOpen,
+            onGenusPickerOpen = onGenusPickerOpen,
+            onGenusFilterClear = onGenusFilterClear,
+            onHelpOpen = onRemarkableInfoOpen,
         )
-        if (state.remarkableOnly) RemarkableOnlyCaption(Modifier.align(Alignment.CenterHorizontally))
-        val genusFilter = state.genusFilter
-        if (genusFilter == null) {
-            GenusFilterButton(onClick = onGenusPickerOpen, modifier = Modifier.align(Alignment.CenterHorizontally))
-        } else {
-            GenusFilterPill(
-                filter = genusFilter,
-                onOpen = onGenusPickerOpen,
-                onClear = onGenusFilterClear,
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-            )
-        }
-        if (state.showZoomHint) {
-            ZoomHint(
-                onClick = onZoomHintClick,
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-            )
-        }
+        val centred = Modifier.align(Alignment.CenterHorizontally).padding(horizontal = TreesSpacing.m)
+        if (state.remarkableOnly) RemarkableOnlyCaption(centred)
+        if (state.showZoomHint) ZoomHint(onClick = onZoomHintClick, modifier = centred)
+    }
+}
+
+/** The « Essences » sheet: an essence filters the map; « Tous les arbres » clears the filter and closes the sheet. */
+@Composable
+private fun GenusPickerSheet(
+    picker: GenusPickerUi,
+    onPick: (GenusChoiceUi) -> Unit,
+    onClear: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    TreesBottomSheet(onDismiss = onDismiss) {
+        GenusPickerContent(
+            picker = picker,
+            onPick = onPick,
+            onPickAll = {
+                onClear()
+                onDismiss()
+            },
+        )
     }
 }
 

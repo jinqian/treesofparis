@@ -16,7 +16,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class RemarkableInfoContentTest {
+class FilterHelpContentTest {
     @get:Rule
     val compose = createComposeRule()
 
@@ -26,24 +26,32 @@ class RemarkableInfoContentTest {
     private fun show() =
         compose.setContent {
             TreesTheme {
-                RemarkableInfoContent(onShowRemarkableOnly = { chosen += true }, onClose = { dismissed++ })
+                FilterHelpContent(onShowRemarkableOnly = { chosen += true }, onClose = { dismissed++ })
             }
         }
 
     @Test
-    fun explainsWithTitleAndLegend() {
+    fun explainsBothFilters_briefly() {
         show()
         compose
-            .onNodeWithText("Qu’est-ce qu’un arbre remarquable ?")
+            .onNodeWithText("Les filtres de la carte")
             .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
-        compose.onNodeWithText("Arbre").assertIsDisplayed()
-        compose.onNodeWithText("Arbre remarquable").assertIsDisplayed()
+        compose.onNodeWithText("Tous les arbres").assertIsDisplayed()
+        compose.onNodeWithText("Touchez pour ne garder qu’une essence.").assertIsDisplayed()
+        compose.onNodeWithText("Remarquables").assertIsDisplayed()
+        compose.onNodeWithText("Les deux filtres se combinent.").assertIsDisplayed()
     }
 
     @Test
-    fun legendDots_allHaveTheSameSize() {
+    fun filterDots_haveTheSameSize() {
         show()
-        val sizes = compose.onAllNodesWithTag(LEGEND_DOT_TAG).fetchSemanticsNodes().map { it.size }
+        val sizes =
+            compose
+                .onAllNodesWithTag(
+                    LEGEND_DOT_TAG,
+                    useUnmergedTree = true,
+                ).fetchSemanticsNodes()
+                .map { it.size }
         assertEquals(2, sizes.size)
         assertEquals(1, sizes.distinct().size)
     }
