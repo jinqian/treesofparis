@@ -8,12 +8,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isHeading
+import androidx.compose.ui.test.isSelectable
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -22,6 +31,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.unit.DpRect
 import fr.arbresdeparis.core.designsystem.leaf.TreeLeaf
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.core.map.CameraRequest
@@ -35,6 +45,7 @@ import fr.arbresdeparis.core.map.MapProvider
 import fr.arbresdeparis.domain.model.GeoBounds
 import fr.arbresdeparis.domain.model.GeoPoint
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -117,16 +128,30 @@ class MapScreenTest {
     private val base = MapUiState(initialCamera = MapViewModel.DEFAULT_CAMERA)
 
     @Test
-    fun filterSegments_showAllSelectedAndNoAppNamePill() {
+    fun filters_allTreesAndRemarkableOff_byDefault() {
         show(base)
-        compose.onNodeWithText("Tous les arbres").assertIsSelected()
-        compose.onNodeWithText("Remarquables").assertIsNotSelected()
+        compose.onNodeWithText("Tous les arbres").assertIsDisplayed()
+        compose.onNodeWithText("Remarquables").assertIsOff()
         compose.onNodeWithText("Arbres de Paris").assertDoesNotExist()
         compose.onNodeWithText("Seuls les arbres remarquables sont affichés").assertDoesNotExist()
+        // « ? » lives in the remarkable caption now, not in the row.
+        compose.onNodeWithText("Qu’est-ce que c’est ?").assertDoesNotExist()
     }
 
     @Test
-    fun filterSegments_dotsHaveTheSameSize() {
+    fun filters_shareOneLineThatScrollsSideways() {
+        show(base)
+        val species = compose.onNodeWithTag(GENUS_PILL_TAG).getBoundsInRoot()
+        val remarkable = compose.onNodeWithText("Remarquables").getBoundsInRoot()
+        assertEquals(species.centerY(), remarkable.centerY())
+        assertTrue(species.right <= remarkable.left)
+        compose
+            .onNodeWithTag(FILTER_ROW_TAG)
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.HorizontalScrollAxisRange))
+    }
+
+    @Test
+    fun filters_dotsHaveTheSameSize() {
         show(base)
         val sizes =
             compose
@@ -140,36 +165,55 @@ class MapScreenTest {
     }
 
     @Test
-    fun filterSegments_chooseRemarkableThenAll() {
+    fun remarkableChip_turnsOn() {
         show(base)
         compose.onNodeWithText("Remarquables").performClick()
-        compose.onNodeWithText("Tous les arbres").performClick()
-        assertEquals(listOf(true, false), filterChanges)
+        assertEquals(listOf(true), filterChanges)
     }
 
     @Test
-    fun filterSegments_remarkableSelectedShowsCaption() {
+    fun remarkableChip_turnsOff() {
         show(base.copy(remarkableOnly = true))
-        compose.onNodeWithText("Remarquables").assertIsSelected()
-        compose.onNodeWithText("Seuls les arbres remarquables sont affichés").assertIsDisplayed()
+        compose.onNodeWithText("Remarquables").assertIsOn().performClick()
+        assertEquals(listOf(false), filterChanges)
     }
 
     @Test
-    fun genusFilter_showsAPillThatReopensTheSheetOrClears() {
+    fun remarkableOn_showsCaptionThatExplainsRemarkableTrees() {
+        show(base.copy(remarkableOnly = true))
+        compose.onNodeWithText("Seuls les arbres remarquables sont affichés", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Qu’est-ce que c’est ?", substring = true).performClick()
+        assertEquals(1, infoOpens)
+    }
+
+    @Test
+    fun allTreesChip_opensTheEssences() {
+        show(base)
+        compose.onNodeWithText("Tous les arbres").performClick()
+        assertEquals(1, genusPickerOpens)
+    }
+
+    @Test
+    fun genusChosen_chipShowsItAndReopensTheSheetOrClears() {
         show(base.copy(genusFilter = GenusFilterUi("Tilia", TreeLeaf.TILIA)))
-        compose.onNodeWithText("Toutes les essences").assertDoesNotExist()
-        // The genus filter combines with the segments: « Tous les arbres » stays chosen.
-        compose.onNodeWithText("Tous les arbres").assertIsSelected()
-        compose.onNodeWithText("Seulement : Tilleul").performClick()
+        compose.onNodeWithText("Tous les arbres").assertDoesNotExist()
+        compose.onNodeWithText("Tilleul").performClick()
         compose.onNodeWithContentDescription("Afficher tous les arbres").performClick()
         assertEquals(1, genusPickerOpens)
         assertEquals(1, genusClears)
     }
 
     @Test
-    fun genusFilter_undrawnGenus_isNamedInFrench() {
+    fun genusChosen_combinesWithRemarkable() {
+        show(base.copy(genusFilter = GenusFilterUi("Tilia", TreeLeaf.TILIA), remarkableOnly = true))
+        compose.onNodeWithText("Tilleul").assertIsDisplayed()
+        compose.onNodeWithText("Remarquables").assertIsOn()
+    }
+
+    @Test
+    fun genusChosen_undrawnGenus_isNamedInFrench() {
         show(base.copy(genusFilter = GenusFilterUi("Ginkgo", TreeLeaf.GENERIC, "Arbre aux quarante écus")))
-        compose.onNodeWithText("Seulement : Arbre aux quarante écus").assertIsDisplayed()
+        compose.onNodeWithText("Arbre aux quarante écus").assertIsDisplayed()
     }
 
     @Test
@@ -193,13 +237,6 @@ class MapScreenTest {
         compose.onNodeWithTag(GENUS_PILL_TAG).assertHeightIsEqualTo(GENUS_PILL_HEIGHT)
     }
 
-    @Test
-    fun noGenusFilter_offersAllGenera() {
-        show(base)
-        compose.onNodeWithText("Toutes les essences").performClick()
-        assertEquals(1, genusPickerOpens)
-    }
-
     private val picker =
         GenusPickerUi(
             drawn =
@@ -217,12 +254,27 @@ class MapScreenTest {
     @Test
     fun genusPicker_listsDrawnAndOtherGenera_withCounts() {
         show(base.copy(genusPicker = picker))
-        compose.onNodeWithText("Essences").assertIsDisplayed()
+        // The sheet's title (the filter chip also reads « Essences »).
+        compose.onNode(hasText("Essences") and isHeading()).assertIsDisplayed()
         compose.onNodeWithText("Platane").assertIsDisplayed()
         compose.onNodeWithText("42 591 arbres").assertIsDisplayed()
         compose.onNodeWithText("Érable", useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithText("Platane").performClick()
         assertEquals(listOf("Platanus"), genusPicks)
+    }
+
+    @Test
+    fun genusPicker_startsWithAllTrees_chosenWhileNoEssenceIs() {
+        val none = picker.copy(drawn = picker.drawn.map { it.copy(selected = false) })
+        show(base.copy(genusPicker = none))
+        compose.onNode(hasText("Tous les arbres") and isSelectable()).assertIsSelected().performClick()
+        assertEquals(1, genusClears)
+    }
+
+    @Test
+    fun genusPicker_allTreesNotChosen_whileAnEssenceIs() {
+        show(base.copy(genusPicker = picker)) // « Érable » is chosen
+        compose.onNode(hasText("Tous les arbres") and isSelectable()).assertIsNotSelected()
     }
 
     @Test
@@ -233,13 +285,6 @@ class MapScreenTest {
         compose.onNodeWithText("Arbre aux quarante écus").assertIsDisplayed()
         compose.onNodeWithText("Rechercher une essence").performTextReplacement("chêne")
         compose.onNodeWithText("Aucune essence ne correspond à « chêne ».").assertIsDisplayed()
-    }
-
-    @Test
-    fun infoButton_opensExplanation() {
-        show(base)
-        compose.onNodeWithContentDescription("Qu’est-ce qu’un arbre remarquable ?").performClick()
-        assertEquals(1, infoOpens)
     }
 
     @Test
@@ -375,3 +420,5 @@ class MapScreenTest {
         assertEquals(listOf(1, 1, 1), listOf(nearbyOpens, nearbyNexts, nearbyDismisses))
     }
 }
+
+private fun DpRect.centerY() = (top + bottom) / 2

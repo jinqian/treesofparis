@@ -1,6 +1,8 @@
 package fr.arbresdeparis.feature.map
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +34,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
@@ -39,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -58,43 +62,12 @@ internal const val GENUS_PILL_TAG = "genus_pill"
 
 internal const val LEAF_CARD_TAG = "leaf_card"
 
-/** Both genus pills (« Toutes les essences » and « Seulement : Tilleul ») share this height, the touch-target size. */
+/** Every chip of the filter row (« Essences », « Seulement : Tilleul »…) has this height, the touch-target size. */
 internal val GENUS_PILL_HEIGHT = 48.dp
 
-/** « Toutes les essences ⌄ » under the filter segments: opens the « Essences » sheet. */
-@Composable
-internal fun GenusFilterButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = MaterialTheme.colorScheme
-    Surface(
-        onClick = onClick,
-        modifier = modifier.testTag(GENUS_PILL_TAG).height(GENUS_PILL_HEIGHT),
-        shape = CircleShape,
-        color = colors.surfaceContainerLow,
-        border = BorderStroke(1.dp, colors.outlineVariant),
-        shadowElevation = 2.dp,
-    ) {
-        Row(
-            modifier = Modifier.padding(start = 12.dp, end = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(TreesIcons.Leaf, contentDescription = null, tint = colors.primary, modifier = Modifier.size(20.dp))
-            Text(stringResource(R.string.map_genus_all), style = MaterialTheme.typography.labelLarge)
-            Icon(
-                TreesIcons.ChevronDown,
-                contentDescription = null,
-                tint = colors.onSurfaceVariant,
-                modifier = Modifier.size(16.dp),
-            )
-        }
-    }
-}
-
 /**
- * The « Essences » sheet body: a search field, the drawn genera as a grid of leaves, then the other genera as a list.
+ * The « Essences » sheet body: « Tous les arbres » first (no essence), a search field, the drawn genera as a grid of
+ * leaves, then the other genera as a list.
  * The search runs on the names shown, the French names and the Latin genus.
  */
 @Composable
@@ -102,6 +75,7 @@ internal fun GenusPickerContent(
     picker: GenusPickerUi,
     onPick: (GenusChoiceUi) -> Unit,
     modifier: Modifier = Modifier,
+    onPickAll: () -> Unit = {},
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     val drawn = picker.drawn.filter { it.matches(query, it.displayName()) }
@@ -114,6 +88,12 @@ internal fun GenusPickerContent(
         verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
     ) {
         fullWidth { PickerHeader(picker.remarkableOnly) }
+        fullWidth {
+            AllTreesChoice(
+                selected = (picker.drawn + picker.others).none { it.selected },
+                onClick = onPickAll,
+            )
+        }
         fullWidth {
             SearchField(query = query, onQueryChange = { query = it }, modifier = Modifier.padding(top = 6.dp))
         }
@@ -164,6 +144,38 @@ private fun PickerHeader(remarkableOnly: Boolean) {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+
+/** « ● Tous les arbres », chosen while no essence is: shows every tree again. */
+@Composable
+private fun AllTreesChoice(
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = 52.dp)
+                .clip(MaterialTheme.shapes.medium)
+                .background(if (selected) colors.primaryContainer else colors.surfaceContainerLowest)
+                .border(1.dp, if (selected) colors.primary else colors.outlineVariant, MaterialTheme.shapes.medium)
+                .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+                .padding(horizontal = TreesSpacing.m),
+        horizontalArrangement = Arrangement.spacedBy(TreesSpacing.m),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        LegendDot(color = TreesTheme.colors.treePin)
+        Text(
+            stringResource(R.string.map_filter_all),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (selected) colors.onPrimaryContainer else colors.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+        if (selected) Icon(TreesIcons.Check, null, tint = colors.onPrimaryContainer, modifier = Modifier.size(18.dp))
     }
 }
 
@@ -331,10 +343,4 @@ private fun GenusPickerPreview() {
             )
         }
     }
-}
-
-@PreviewLightDark
-@Composable
-private fun GenusFilterButtonPreview() {
-    TreesTheme { GenusFilterButton(onClick = {}, modifier = Modifier.padding(TreesSpacing.m)) }
 }

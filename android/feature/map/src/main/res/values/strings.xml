@@ -19,9 +19,9 @@
     <string name="map_location_settings">Réglages</string>
     <string name="map_filter_remarkable">Remarquables</string>
     <string name="map_filter_all">Tous les arbres</string>
-    <string name="map_filter_genus">Seulement : %1$s</string>
     <string name="map_filter_genus_clear">Afficher tous les arbres</string>
     <string name="map_filter_remarkable_caption">Seuls les arbres remarquables sont affichés</string>
+    <string name="map_filter_remarkable_what">Qu’est-ce que c’est ?</string>
     <string name="map_legend_tree">Arbre</string>
     <string name="map_remarkable_info_title">Qu’est-ce qu’un arbre remarquable ?</string>
     <string name="map_remarkable_info_body">La Ville de Paris et Grand Paris Seine Ouest distinguent certains arbres pour leur âge, leurs dimensions, leur rareté ou leur histoire. Sur la carte, ils se reconnaissent à leur point doré.</string>
@@ -48,7 +48,7 @@
     <string name="map_nearest_next">Suivant</string>
     <string name="map_nearest_close">Fermer</string>
     <string name="map_nearest_none">Aucun arbre trouvé autour de vous.</string>
-    <string name="map_genus_all">Toutes les essences</string>
+    <string name="map_genus_choose">choisir une essence</string>
     <string name="map_genus_change">changer d’essence</string>
     <string name="map_genus_title">Essences</string>
     <string name="map_genus_subtitle">Montrer seulement les arbres d’une essence.</string>

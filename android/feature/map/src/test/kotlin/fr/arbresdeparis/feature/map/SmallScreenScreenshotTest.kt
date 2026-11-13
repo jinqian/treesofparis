@@ -84,12 +84,25 @@ class SmallScreenScreenshotTest {
 
     private fun filterBar(variant: String) {
         show {
-            Column(Modifier.padding(TreesSpacing.m), verticalArrangement = Arrangement.spacedBy(TreesSpacing.s)) {
-                RemarkableFilterBar(remarkableOnly = false, onRemarkableFilterChange = {}, onInfoClick = {})
-                RemarkableFilterBar(remarkableOnly = true, onRemarkableFilterChange = {}, onInfoClick = {})
-                RemarkableOnlyCaption()
-                GenusFilterButton(onClick = {})
-                GenusFilterPill(filter = GenusFilterUi("Celtis", TreeLeaf.CELTIS), onOpen = {}, onClear = {})
+            Column(
+                Modifier.padding(vertical = TreesSpacing.m),
+                verticalArrangement = Arrangement.spacedBy(TreesSpacing.s),
+            ) {
+                MapFilterChips(
+                    remarkableOnly = false,
+                    genusFilter = null,
+                    onRemarkableFilterChange = {},
+                    onGenusPickerOpen = {},
+                    onGenusFilterClear = {},
+                )
+                MapFilterChips(
+                    remarkableOnly = true,
+                    genusFilter = GenusFilterUi("Celtis", TreeLeaf.CELTIS),
+                    onRemarkableFilterChange = {},
+                    onGenusPickerOpen = {},
+                    onGenusFilterClear = {},
+                )
+                RemarkableOnlyCaption(onWhatIsIt = {}, modifier = Modifier.padding(horizontal = TreesSpacing.m))
             }
         }
         check("filter_bar_$variant")
