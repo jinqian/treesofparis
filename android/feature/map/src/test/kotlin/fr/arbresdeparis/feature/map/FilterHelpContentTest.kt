@@ -8,10 +8,8 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,26 +31,19 @@ class FilterHelpContentTest {
         }
 
     @Test
-    fun explainsEveryFilter_underOneTitle() {
+    fun explainsBothFilters_briefly() {
         show()
         compose
             .onNodeWithText("Les filtres de la carte")
             .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
-        compose.onNodeWithText("Tous les arbres ou une essence").assertExists()
-        compose.onNodeWithText("Remarquables").assertExists()
-        compose.onNodeWithText("Qu’est-ce qu’un arbre remarquable ?").assertExists()
-        compose.onNodeWithText("Les deux se combinent").assertExists()
+        compose.onNodeWithText("Tous les arbres").assertIsDisplayed()
+        compose.onNodeWithText("Touchez pour ne garder qu’une essence.").assertIsDisplayed()
+        compose.onNodeWithText("Remarquables").assertIsDisplayed()
+        compose.onNodeWithText("Les deux filtres se combinent.").assertIsDisplayed()
     }
 
     @Test
-    fun endsWithTheMapLegend() {
-        show()
-        compose.onNodeWithText("Arbre").assertExists()
-        compose.onNodeWithText("Arbre remarquable").assertExists()
-    }
-
-    @Test
-    fun legendDots_allHaveTheSameSize() {
+    fun filterDots_haveTheSameSize() {
         show()
         val sizes =
             compose
@@ -61,21 +52,21 @@ class FilterHelpContentTest {
                     useUnmergedTree = true,
                 ).fetchSemanticsNodes()
                 .map { it.size }
-        assertTrue(sizes.size >= 2)
+        assertEquals(2, sizes.size)
         assertEquals(1, sizes.distinct().size)
     }
 
     @Test
     fun showRemarkableOnly_choosesTheFilter() {
         show()
-        compose.onNodeWithText("Voir seulement les remarquables").performScrollTo().performClick()
+        compose.onNodeWithText("Voir seulement les remarquables").performClick()
         assertEquals(listOf(true), chosen)
     }
 
     @Test
     fun close_dismisses() {
         show()
-        compose.onNodeWithText("Fermer").performScrollTo().performClick()
+        compose.onNodeWithText("Fermer").performClick()
         assertEquals(1, dismissed)
     }
 }
