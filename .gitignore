@@ -11,6 +11,9 @@ keystore.properties
 
 # Firebase config: written from a CI secret, copied by hand for local builds (ADR 0007)
 google-services.json
+
+# Google Play upload: the service account key lives in the PLAY_SERVICE_ACCOUNT_JSON secret (android/RELEASING.md)
+*service-account*.json
 .kotlin/
 *.hprof
 
