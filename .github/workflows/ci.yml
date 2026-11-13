@@ -14,8 +14,42 @@ permissions:
   contents: read
 
 jobs:
+  # A pull request that only touches the website, docs/ or Markdown files skips the Android job. The job is still
+  # reported (as skipped), which counts as passing for the required check. Pushes to main always run it.
+  changes:
+    name: What changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      android: ${{ steps.diff.outputs.android }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "android=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          others=$(git diff --name-only "$BASE...$HEAD" | grep -vE '^(website|docs)/|\.md$' || true)
+          if [ -n "$others" ]; then
+            echo "Android job runs for:"
+            echo "$others"
+            echo "android=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Only website, docs or Markdown changed: the Android job is skipped."
+            echo "android=false" >> "$GITHUB_OUTPUT"
+          fi
+
   android:
     name: Android (static analysis, unit tests, build)
+    needs: changes
+    if: needs.changes.outputs.android == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     defaults:
