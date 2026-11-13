@@ -1,5 +1,7 @@
 package fr.arbresdeparis.feature.about
 
+import fr.arbresdeparis.domain.model.ThemeMode
+
 data class AboutUiState(
     val versionName: String,
     /** « Nous écrire » writes to this address. */
@@ -11,6 +13,8 @@ data class AboutUiState(
     val floweringSheetCount: Int = 0,
     /** « Envoyer les rapports de plantage »: off until the user says yes (ADR 0007). */
     val crashReportingEnabled: Boolean = false,
+    /** « Apparence »: like the phone, light or dark. */
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
 )
 
 /** « arbresdeparis.fr »: the website address as shown, without its scheme. */

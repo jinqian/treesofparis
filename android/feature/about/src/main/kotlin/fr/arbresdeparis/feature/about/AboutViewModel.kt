@@ -5,12 +5,15 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.arbresdeparis.domain.model.AppInfo
 import fr.arbresdeparis.domain.model.DatasetInfo
+import fr.arbresdeparis.domain.model.ThemeMode
 import fr.arbresdeparis.domain.usecase.GetFloweringSources
 import fr.arbresdeparis.domain.usecase.ObserveCrashReporting
+import fr.arbresdeparis.domain.usecase.ObserveThemeMode
 import fr.arbresdeparis.domain.usecase.SetCrashReporting
+import fr.arbresdeparis.domain.usecase.SetThemeMode
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -24,6 +27,8 @@ class AboutViewModel
         getFloweringSources: GetFloweringSources,
         observeCrashReporting: ObserveCrashReporting,
         private val setCrashReporting: SetCrashReporting,
+        observeThemeMode: ObserveThemeMode,
+        private val setThemeMode: SetThemeMode,
     ) : ViewModel() {
         private val initial =
             AboutUiState(
@@ -35,12 +40,16 @@ class AboutViewModel
             )
 
         val uiState: StateFlow<AboutUiState> =
-            observeCrashReporting()
-                .map { initial.copy(crashReportingEnabled = it) }
-                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), initial)
+            combine(observeCrashReporting(), observeThemeMode()) { crashReporting, themeMode ->
+                initial.copy(crashReportingEnabled = crashReporting, themeMode = themeMode)
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), initial)
 
         fun onCrashReportingChange(enabled: Boolean) {
             viewModelScope.launch { setCrashReporting(enabled) }
+        }
+
+        fun onThemeModeChange(mode: ThemeMode) {
+            viewModelScope.launch { setThemeMode(mode) }
         }
 
         private companion object {

@@ -21,7 +21,7 @@ class AppLocaleTest {
 
         override fun attachBaseContext(newBase: Context) {
             super.attachBaseContext(newBase)
-            useAppLocale()
+            useAppConfiguration()
         }
 
         override fun onCreate(savedInstanceState: android.os.Bundle?) {
