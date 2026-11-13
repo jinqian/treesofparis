@@ -3,6 +3,30 @@
 All notable changes to Arbres de Paris. Generated from the commit history with [git-cliff](https://git-cliff.org);
 see `android/RELEASING.md`. User-facing release notes, in French, are in `android/fastlane/metadata/android/fr-FR/changelogs/`.
 
+## [0.3.0] - 2026-11-13
+
+### Added
+
+- **about**: Choose light, dark or the phone's theme
+- **designsystem**: Lighter, warmer dark theme « Crépuscule »
+- **map**: Filters on one line, « Tous les arbres ▾ » and « Remarquables »
+- **map**: Bring back « ? », a help sheet for the filters
+- **map**: Shorter filter help sheet
+- **data**: Stories of the remarkable trees of Paris
+- **map**: Remarkable tree stories, with the City's photos
+- **map**: Compact story row in the sheet, tree photo in full screen
+- **map**: Full-screen photo button at the top right of « Son histoire »
+- **website**: Remarkable tree stories on the web map
+
+### Fixed
+
+- **designsystem**: Let row ripples fill card groups to their edges
+- **map**: Back from « Son histoire » lands on the map, page shows at once
+
+### Documentation
+
+- A Claude skill to prepare a release
+
 ## [0.2.0] - 2026-11-13
 
 ### Added
