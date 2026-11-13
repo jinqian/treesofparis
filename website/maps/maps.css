@@ -44,17 +44,17 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #141815;
-    --surface: #1c211d;
-    --ink: #e6e8e1;
-    --ink-soft: #c4cbc0;
-    --ink-muted: #a3ab9f;
-    --moss: #a8c3a0;
-    --sage: #2e3d30;
-    --hairline: #2e352f;
-    --gold: #d4a443;
-    --gold-ink: #e0b65a;
-    --gold-wash: #4a3810;
+    --paper: #26241f;
+    --surface: #2f2c27;
+    --ink: #efebe0;
+    --ink-soft: #d8d2c4;
+    --ink-muted: #b8b1a2;
+    --moss: #b6cb9e;
+    --sage: #3a4430;
+    --hairline: #433f37;
+    --gold: #e0b252;
+    --gold-ink: #eac26d;
+    --gold-wash: #4d3a12;
     --shadow: rgba(0, 0, 0, 0.45);
   }
 }
