@@ -6,6 +6,7 @@ import fr.arbresdeparis.domain.model.TreeSource
 import fr.arbresdeparis.domain.model.WikipediaArticle
 import fr.arbresdeparis.feature.map.MeasureUi
 import fr.arbresdeparis.feature.map.WikipediaUi
+import fr.arbresdeparis.feature.map.story
 import fr.arbresdeparis.feature.map.tree
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -103,5 +104,27 @@ class TreeDetailMapperTest {
         val genus = tree(1).copy(species = null, wikipedia = WikipediaArticle("Platane", isGenusArticle = true))
         assertEquals("Platanus", genus.toDetailUi(isFavorite = false).wikipedia?.genus)
         assertNull(tree(1).toDetailUi(isFavorite = false).wikipedia)
+    }
+
+    @Test
+    fun story_putsTheSiteInTheLocationLine_andKeepsWhatThePageShows() {
+        val detail = tree(1).copy(remarkable = true).toDetailUi(isFavorite = false, story = story(1))
+        assertEquals("Square Maurice Gardette", detail.address)
+        val story = detail.story!!
+        assertEquals("Paysager", story.qualification)
+        assertEquals("Cet arbre est classé remarquable pour son ampleur et son ancienneté.", story.summary)
+        assertEquals("1882", story.plantingYear)
+        assertEquals("© Sonia Yassa / Ville de Paris", story.photoCredit)
+    }
+
+    @Test
+    fun story_unknownPlantingYear_isNull() {
+        val detail = tree(1).toDetailUi(isFavorite = false, story = story(1).copy(plantingYear = null))
+        assertNull(detail.story!!.plantingYear)
+    }
+
+    @Test
+    fun noStory_keepsTheStreetAddress() {
+        assertNull(tree(1).toDetailUi(isFavorite = false).story)
     }
 }

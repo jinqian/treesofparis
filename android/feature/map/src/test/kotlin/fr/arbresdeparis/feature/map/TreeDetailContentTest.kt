@@ -181,4 +181,26 @@ class TreeDetailContentTest {
         compose.onNodeWithText("En savoir plus sur Wikipédia").assertDoesNotExist()
         compose.onNodeWithText("sur Wikipédia", substring = true).assertDoesNotExist()
     }
+
+    @Test
+    fun remarkableWithStory_saysWhyAndOpensItsStory() {
+        var opened = 0
+        val detail = tree(1).copy(remarkable = true).toDetailUi(isFavorite = false, story = story(1))
+        compose.setContent {
+            TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}, onOpenStory = { opened++ }) }
+        }
+        compose.onNodeWithText("ARBRE REMARQUABLE · PAYSAGER").assertIsDisplayed()
+        compose.onNodeWithText("Square Maurice Gardette", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Cet arbre est classé remarquable pour son ampleur et son ancienneté.").assertExists()
+        compose.onNodeWithText("Son histoire").performScrollTo().performClick()
+        assertEquals(1, opened)
+        compose.onNodeWithText("« Les arbres remarquables »", substring = true).assertExists()
+    }
+
+    @Test
+    fun remarkableWithoutStory_hasNoStoryCard() {
+        val detail = tree(1).copy(remarkable = true).toDetailUi(isFavorite = false)
+        compose.setContent { TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}) } }
+        compose.onNodeWithText("Son histoire").assertDoesNotExist()
+    }
 }

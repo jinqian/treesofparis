@@ -6,9 +6,11 @@ import fr.arbresdeparis.domain.format.formatMonth
 import fr.arbresdeparis.domain.format.formatMonthRange
 import fr.arbresdeparis.domain.format.formatPlace
 import fr.arbresdeparis.domain.model.FloweringSeason
+import fr.arbresdeparis.domain.model.RemarkableStory
 import fr.arbresdeparis.domain.model.Tree
 import fr.arbresdeparis.feature.map.FloweringUi
 import fr.arbresdeparis.feature.map.MeasureUi
+import fr.arbresdeparis.feature.map.RemarkableStoryUi
 import fr.arbresdeparis.feature.map.TreeDetailUi
 import fr.arbresdeparis.feature.map.WikipediaUi
 import java.net.URLEncoder
@@ -17,13 +19,15 @@ import java.time.Month
 fun Tree.toDetailUi(
     isFavorite: Boolean,
     flowering: FloweringUi? = null,
+    story: RemarkableStory? = null,
 ) = TreeDetailUi(
     id = id,
     location = location,
     name = commonName,
     scientificName = scientificName(),
     area = if (city == Tree.PARIS) formatArea(arrondissement) else city,
-    address = formatPlace(address),
+    // A remarkable tree is better known by its site (« Square Maurice Gardette ») than by its street address.
+    address = story?.site ?: formatPlace(address),
     // A range (« 5 à 10 m ») reads as one value, without the big-number layout of an exact height.
     height = heightM?.let { MeasureUi(it.toString(), "m") } ?: heightClass?.let { MeasureUi("$it m", unit = "") },
     circumference = circumferenceCm?.let { MeasureUi(it.toString(), "cm") },
@@ -44,7 +48,22 @@ fun Tree.toDetailUi(
         },
     flowering = flowering,
     source = source,
+    story = story?.toUi(),
 )
+
+fun RemarkableStory.toUi() =
+    RemarkableStoryUi(
+        site = site,
+        qualification = qualification,
+        summary = summary,
+        story = story,
+        plantingYear = plantingYear?.toString(),
+        label = label,
+        councilDecision = councilDecision,
+        signUrl = signUrl,
+        photoUrl = photoUrl,
+        photoCredit = photoCredit?.let { "© $it" },
+    )
 
 fun FloweringSeason.toFloweringUi(now: Month) =
     FloweringUi(

@@ -1,6 +1,7 @@
 package fr.arbresdeparis.feature.herbier
 
 import fr.arbresdeparis.core.designsystem.leaf.TreeLeaf
+import fr.arbresdeparis.feature.herbier.mapper.storyTeaser
 import fr.arbresdeparis.feature.herbier.mapper.toHerbierUi
 import fr.arbresdeparis.feature.herbier.mapper.toRemarkableAreasUi
 import org.junit.Assert.assertEquals
@@ -57,6 +58,27 @@ class HerbierUiMapperTest {
         assertEquals("Bois de Boulogne · Route du Lac à Bagatelle", remarkable.tallest?.place)
         assertEquals("7,40 m", remarkable.widest?.value)
         assertEquals("Paris 19e · Parc des Buttes Chaumont", remarkable.widest?.place)
+    }
+
+    @Test
+    fun remarkableTrees_withAStory_tellItInOneSentence() {
+        val luxembourg =
+            REMARKABLE_TREES
+                .toRemarkableAreasUi(STORIES)
+                .first()
+                .trees
+                .single { it.id == 13L }
+        // The botanical first sentence (« … appartient à la famille des … ») is skipped: the next one tells the tree.
+        assertEquals(
+            "Cet arbre est issu du semis du véritable marronnier qu’Anne Frank voyait depuis son grenier, à Amsterdam.",
+            luxembourg.teaser,
+        )
+    }
+
+    @Test
+    fun storyTeaser_keepsTheFirstSentenceWhenItIsNotBotanical() {
+        assertEquals("Cet orme a été planté en 1935.", storyTeaser("Cet orme a été planté en 1935. Il est vieux."))
+        assertEquals(null, storyTeaser(null))
     }
 
     @Test

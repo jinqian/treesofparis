@@ -1,6 +1,7 @@
 package fr.arbresdeparis.feature.herbier
 
 import fr.arbresdeparis.domain.usecase.GetFloweringSeasons
+import fr.arbresdeparis.domain.usecase.GetRemarkableStories
 import fr.arbresdeparis.domain.usecase.GetRemarkableTrees
 import fr.arbresdeparis.domain.usecase.GetTreeStatistics
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,6 +22,7 @@ class HerbierViewModelTest {
             GetTreeStatistics(FakeStatisticsRepository()),
             GetFloweringSeasons(FakeFloweringRepository()),
             GetRemarkableTrees(FakeTreeRepository()),
+            GetRemarkableStories(FakeRemarkableStoryRepository()),
             NOVEMBER,
         )
 
@@ -40,5 +42,6 @@ class HerbierViewModelTest {
             assertEquals(11, content.flowering.currentMonth)
             assertEquals(SEASONS.size, content.flowering.rows.size)
             assertEquals(4, content.remarkableTrees.sumOf { it.trees.size })
+            assertEquals(1, content.remarkableTrees.flatMap { it.trees }.count { it.teaser != null })
         }
 }

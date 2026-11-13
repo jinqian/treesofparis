@@ -84,5 +84,5 @@ fun content(month: Month = Month.NOVEMBER) =
     HerbierUiState.Content(
         herbier = PARIS.toHerbierUi(),
         flowering = SEASONS.toFloweringCalendarUi(month, PARIS.genera.map { it.genus }),
-        remarkableTrees = REMARKABLE_TREES.toRemarkableAreasUi(),
+        remarkableTrees = REMARKABLE_TREES.toRemarkableAreasUi(STORIES),
     )

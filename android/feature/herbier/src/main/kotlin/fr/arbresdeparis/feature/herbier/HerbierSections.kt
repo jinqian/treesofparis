@@ -285,6 +285,7 @@ internal fun RemarkableAreaGroup(
                     subtitle = tree.detail,
                     onClick = { onTreeClick(tree.id) },
                     remarkable = true,
+                    note = tree.teaser,
                 )
                 if (index < area.trees.lastIndex) TreesDivider()
             }

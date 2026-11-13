@@ -67,6 +67,7 @@ fun MapRoute(
     modifier: Modifier = Modifier,
     genus: String? = null,
     inFront: Boolean = true,
+    onOpenStory: (Long) -> Unit = {},
     viewModel: MapViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -104,6 +105,7 @@ fun MapRoute(
         onRemarkableInfoDismiss = viewModel::onRemarkableInfoDismiss,
         onOpenWikipedia = { url -> context.openInCustomTab(url) },
         onOpenDirections = { location -> context.openInMapsApp(location) },
+        onOpenStory = onOpenStory,
         onGenusFilterClear = viewModel::onGenusFilterClear,
         onGenusPickerOpen = viewModel::onGenusPickerOpen,
         onGenusPick = viewModel::onGenusPick,
@@ -148,6 +150,7 @@ fun MapScreen(
     showSystemLocationButtons: Boolean = true,
     onZoomHintClick: () -> Unit = {},
     onOpenDirections: (GeoPoint) -> Unit = {},
+    onOpenStory: (Long) -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     MessageEffect(state.message, snackbarHostState, onMessageDismiss, onOpenSettings)
@@ -189,7 +192,7 @@ fun MapScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = TreesSpacing.xl * 2),
         )
-        TreeSheet(state.selectedTree, onDetailDismiss, onFavoriteToggle, onOpenWikipedia, onOpenDirections)
+        TreeSheet(state.selectedTree, onDetailDismiss, onFavoriteToggle, onOpenWikipedia, onOpenDirections, onOpenStory)
         state.genusPicker?.let { GenusPickerSheet(it, onGenusPick, onGenusFilterClear, onGenusPickerDismiss) }
         if (state.showRemarkableInfo) {
             TreesBottomSheet(onDismiss = onRemarkableInfoDismiss) {
@@ -202,7 +205,7 @@ fun MapScreen(
     }
 }
 
-/** The open tree's sheet: its details, favorite and Wikipédia link. */
+/** The open tree's sheet: its details, favorite and Wikipédia link, and a remarkable tree's « Son histoire ». */
 @Composable
 private fun TreeSheet(
     detail: TreeDetailUi?,
@@ -210,6 +213,7 @@ private fun TreeSheet(
     onFavoriteToggle: () -> Unit,
     onOpenWikipedia: (String) -> Unit,
     onOpenDirections: (GeoPoint) -> Unit,
+    onOpenStory: (Long) -> Unit,
 ) {
     if (detail == null) return
     TreesBottomSheet(onDismiss = onDismiss) {
@@ -218,6 +222,7 @@ private fun TreeSheet(
             onFavoriteToggle = onFavoriteToggle,
             onOpenWikipedia = onOpenWikipedia,
             onOpenDirections = onOpenDirections,
+            onOpenStory = { onOpenStory(detail.id) },
         )
     }
 }

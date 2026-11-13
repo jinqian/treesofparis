@@ -132,4 +132,6 @@ data class RemarkableTreeUi(
     val name: String,
     /** « Parc Monceau · 22 m ». */
     val detail: String,
+    /** One sentence of its story (« Les arbres remarquables »), when the City tells one. */
+    val teaser: String? = null,
 )

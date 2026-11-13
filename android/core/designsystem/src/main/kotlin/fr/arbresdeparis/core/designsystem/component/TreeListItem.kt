@@ -26,7 +26,8 @@ import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 /**
  * A tree row: a leaf badge (gold for a [remarkable] tree), the serif [title] and a [subtitle] on one line unless
  * [subtitleMaxLines] allows more. [trailing] holds an optional action, e.g. a favorite toggle. A null [onClick] leaves
- * the row inert. Meant to sit inside a [TreesCardGroup].
+ * the row inert. An optional [note] adds up to two lines below, e.g. a remarkable tree's story. Meant to sit inside a
+ * [TreesCardGroup].
  */
 @Composable
 fun TreeListItem(
@@ -36,6 +37,7 @@ fun TreeListItem(
     modifier: Modifier = Modifier,
     remarkable: Boolean = false,
     subtitleMaxLines: Int = 1,
+    note: String? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     Row(
@@ -61,11 +63,21 @@ fun TreeListItem(
                     maxLines = subtitleMaxLines,
                     overflow = TextOverflow.Ellipsis,
                 )
+                if (note != null) {
+                    Text(
+                        note,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = NOTE_MAX_LINES,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
         trailing?.invoke()
     }
 }
+
+private const val NOTE_MAX_LINES = 2
 
 /** A round leaf badge: sage for any tree, gold for a remarkable one. Decorative. */
 @Composable

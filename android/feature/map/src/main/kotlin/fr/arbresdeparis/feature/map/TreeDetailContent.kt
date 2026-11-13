@@ -62,6 +62,7 @@ fun TreeDetailContent(
     modifier: Modifier = Modifier,
     onOpenWikipedia: (String) -> Unit = {},
     onOpenDirections: (GeoPoint) -> Unit = {},
+    onOpenStory: () -> Unit = {},
 ) {
     Box(modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
         LeafDrawing(
@@ -85,14 +86,16 @@ fun TreeDetailContent(
                 Location(detail, onOpenDirections = { onOpenDirections(detail.location) })
                 Stats(detail)
             }
+            detail.story?.let { StoryCard(it, onOpenStory) }
             detail.flowering?.let { FloweringSection(it) }
             detail.wikipedia?.let { WikipediaRow(it, onOpenWikipedia) }
             Text(
                 text =
                     stringResource(
-                        when (detail.source) {
-                            TreeSource.PARIS -> R.string.map_detail_source
-                            TreeSource.GPSO -> R.string.map_detail_source_gpso
+                        when {
+                            detail.story != null -> R.string.map_detail_source_remarkable
+                            detail.source == TreeSource.GPSO -> R.string.map_detail_source_gpso
+                            else -> R.string.map_detail_source
                         },
                     ),
                 style = MaterialTheme.typography.labelSmall,
@@ -113,7 +116,7 @@ private fun Header(
         horizontalArrangement = Arrangement.spacedBy(TreesSpacing.m),
     ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            if (detail.remarkable) RemarkableEyebrow()
+            if (detail.remarkable) RemarkableEyebrow(detail.story?.qualification)
             Text(detail.name, style = MaterialTheme.typography.displaySmall)
             Text(
                 text = detail.scientificName ?: stringResource(R.string.map_detail_unknown_species),
@@ -125,8 +128,9 @@ private fun Header(
     }
 }
 
+/** « ★ ARBRE REMARQUABLE », with why when the City says it: « ★ ARBRE REMARQUABLE · PAYSAGER ». */
 @Composable
-private fun RemarkableEyebrow() {
+internal fun RemarkableEyebrow(qualification: String? = null) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s)) {
         Icon(
             imageVector = TreesIcons.Remarkable,
@@ -135,7 +139,10 @@ private fun RemarkableEyebrow() {
             modifier = Modifier.size(14.dp),
         )
         Text(
-            text = stringResource(R.string.map_detail_remarkable).uppercase(Locale.FRENCH),
+            text =
+                listOfNotNull(stringResource(R.string.map_detail_remarkable), qualification)
+                    .joinToString(" · ")
+                    .uppercase(Locale.FRENCH),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.tertiary,
         )
@@ -226,7 +233,7 @@ internal const val DETAIL_LOCATION_TAG = "detail_location"
 internal const val DETAIL_STATS_TAG = "detail_stats"
 
 @Composable
-private fun Stats(detail: TreeDetailUi) {
+internal fun Stats(detail: TreeDetailUi) {
     Column(modifier = Modifier.testTag(DETAIL_STATS_TAG)) {
         TreesDivider()
         Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
@@ -258,7 +265,7 @@ private fun Stats(detail: TreeDetailUi) {
 
 /** Option A of the design: a soft card under the figures that opens the article outside the app. */
 @Composable
-private fun WikipediaRow(
+internal fun WikipediaRow(
     wikipedia: WikipediaUi,
     onOpen: (String) -> Unit,
 ) {

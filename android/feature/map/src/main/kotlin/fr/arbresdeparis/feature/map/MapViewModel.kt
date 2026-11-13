@@ -17,6 +17,7 @@ import fr.arbresdeparis.domain.model.UserLocation
 import fr.arbresdeparis.domain.usecase.GetFloweringSeason
 import fr.arbresdeparis.domain.usecase.GetGenera
 import fr.arbresdeparis.domain.usecase.GetNearestTrees
+import fr.arbresdeparis.domain.usecase.GetRemarkableStory
 import fr.arbresdeparis.domain.usecase.GetTree
 import fr.arbresdeparis.domain.usecase.GetTreeClusters
 import fr.arbresdeparis.domain.usecase.GetTreesInBounds
@@ -56,6 +57,7 @@ class MapViewModel
         private val locateUser: LocateUser,
         private val getNearestTrees: GetNearestTrees,
         private val getFloweringSeason: GetFloweringSeason,
+        private val getRemarkableStory: GetRemarkableStory,
         private val getGenera: GetGenera,
         private val clock: Clock,
         private val savedState: SavedStateHandle,
@@ -391,8 +393,9 @@ class MapViewModel
                         return@launch
                     }
                     val flowering = getFloweringSeason(tree.genus)?.toFloweringUi(LocalDate.now(clock).month)
+                    val story = if (tree.remarkable) getRemarkableStory(id) else null
                     observeIsFavorite(id).collect { isFavorite ->
-                        state.update { it.copy(selectedTree = tree.toDetailUi(isFavorite, flowering)) }
+                        state.update { it.copy(selectedTree = tree.toDetailUi(isFavorite, flowering, story)) }
                     }
                 }
         }

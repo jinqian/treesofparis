@@ -38,6 +38,7 @@ import fr.arbresdeparis.navigation.HerbierKey
 import fr.arbresdeparis.navigation.HerbierSectionKey
 import fr.arbresdeparis.navigation.LibrariesKey
 import fr.arbresdeparis.navigation.MapKey
+import fr.arbresdeparis.navigation.RemarkableStoryKey
 import fr.arbresdeparis.navigation.TopLevelDestination
 import fr.arbresdeparis.navigation.TreesNavigationState
 import fr.arbresdeparis.navigation.TreesNavigator
@@ -49,7 +50,8 @@ import fr.arbresdeparis.navigation.rememberTreesNavigationState
  */
 @Composable
 fun TreesApp(
-    mapContent: @Composable (key: MapKey, inFront: Boolean) -> Unit,
+    mapContent: @Composable (key: MapKey, inFront: Boolean, onOpenStory: (Long) -> Unit) -> Unit,
+    remarkableStoryContent: @Composable (treeId: Long, onBack: () -> Unit) -> Unit,
     favoritesContent: @Composable (onTreeClick: (Long) -> Unit, onExploreMap: () -> Unit) -> Unit,
     herbierContent: @Composable (onOpenSection: (HerbierSection) -> Unit) -> Unit,
     herbierSectionContent: @Composable (
@@ -75,7 +77,10 @@ fun TreesApp(
                 state.toDecoratedEntries(
                     entryProvider {
                         entry<MapKey>(metadata = tabOf(TopLevelDestination.MAP)) { key ->
-                            mapContent(key, isSettledInFront())
+                            mapContent(key, isSettledInFront(), navigator::openRemarkableStory)
+                        }
+                        entry<RemarkableStoryKey>(metadata = tabOf(TopLevelDestination.MAP)) { key ->
+                            remarkableStoryContent(key.treeId, navigator::goBack)
                         }
                         entry<HerbierKey>(metadata = tabOf(TopLevelDestination.HERBIER)) {
                             herbierContent(navigator::openHerbierSection)

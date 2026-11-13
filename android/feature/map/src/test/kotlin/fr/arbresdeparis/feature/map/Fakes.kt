@@ -6,12 +6,14 @@ import fr.arbresdeparis.domain.model.FloweringSheet
 import fr.arbresdeparis.domain.model.GenusSummary
 import fr.arbresdeparis.domain.model.GeoBounds
 import fr.arbresdeparis.domain.model.GeoPoint
+import fr.arbresdeparis.domain.model.RemarkableStory
 import fr.arbresdeparis.domain.model.Tree
 import fr.arbresdeparis.domain.model.TreeCluster
 import fr.arbresdeparis.domain.model.TreeStatistics
 import fr.arbresdeparis.domain.repository.FavoritesRepository
 import fr.arbresdeparis.domain.repository.FloweringRepository
 import fr.arbresdeparis.domain.repository.LocationRepository
+import fr.arbresdeparis.domain.repository.RemarkableStoryRepository
 import fr.arbresdeparis.domain.repository.TreeRepository
 import fr.arbresdeparis.domain.repository.TreeStatisticsRepository
 import kotlinx.coroutines.Dispatchers
@@ -168,4 +170,32 @@ class FakeStatisticsRepository : TreeStatisticsRepository {
             GenusSummary("Tilia", "Tilleul", treeCount = 1, remarkableCount = 0),
             GenusSummary("Ginkgo", "Arbre aux quarante écus", treeCount = 1_154, remarkableCount = 0),
         )
+}
+
+/** The Noisetier de Byzance of square Maurice Gardette, as « Les arbres remarquables » tells it. */
+fun story(treeId: Long) =
+    RemarkableStory(
+        treeId = treeId,
+        site = "Square Maurice Gardette",
+        qualification = "Paysager",
+        summary = "Cet arbre est classé remarquable pour son ampleur et son ancienneté.",
+        story =
+            "Le noisetier de Byzance appartient à la famille des Bétulacées. Planté en 1879, cet arbre fait " +
+                "aujourd’hui l’attraction de ce lieu riche d’histoire.",
+        plantingYear = 1882,
+        label = "A.R.B.R.E.S en 2015",
+        councilDecision = "2015 DEVE 152",
+        signUrl = "https://capgeo.sig.paris.fr/PdfEtImages/ArbresRemarquables/PDF/124914.pdf",
+        photoUrl = "https://capgeo.sig.paris.fr/PdfEtImages/ArbresRemarquables/Photos2023/1/124914.jpg",
+        photoCredit = "Sonia Yassa / Ville de Paris",
+    )
+
+class FakeRemarkableStoryRepository(
+    vararg stories: RemarkableStory,
+) : RemarkableStoryRepository {
+    private val byId = stories.associateBy { it.treeId }
+
+    override suspend fun getStory(treeId: Long) = byId[treeId]
+
+    override suspend fun getStories() = byId.values.toList()
 }
