@@ -37,8 +37,10 @@ jobs:
       - name: Static analysis
         run: ./gradlew spotlessCheck detekt checkModuleBoundaries
 
-      - name: Unit tests
-        run: ./gradlew testDebugUnitTest
+      # Also compares every screenshot test with its reference image (src/test/screenshots/ in each feature):
+      # a visual change fails here until the references are recorded again (./gradlew recordRoborazziDebug).
+      - name: Unit and screenshot tests
+        run: ./gradlew testDebugUnitTest -Proborazzi.test.verify=true
 
       - name: Android lint
         run: ./gradlew lintDebug
@@ -58,6 +60,7 @@ jobs:
           path: |
             android/**/build/reports/
             android/**/build/test-results/
+            android/**/build/outputs/roborazzi/
           retention-days: 14
 
       - name: Upload debug APK
