@@ -5,6 +5,7 @@ import fr.arbresdeparis.domain.format.formatArea
 import fr.arbresdeparis.domain.format.formatMonth
 import fr.arbresdeparis.domain.format.formatMonthRange
 import fr.arbresdeparis.domain.format.formatPlace
+import fr.arbresdeparis.domain.format.storyTeaser
 import fr.arbresdeparis.domain.model.FloweringSeason
 import fr.arbresdeparis.domain.model.RemarkableStory
 import fr.arbresdeparis.domain.model.Tree
@@ -63,6 +64,7 @@ fun RemarkableStory.toUi() =
         signUrl = signUrl,
         photoUrl = photoUrl,
         photoCredit = photoCredit?.let { "© $it" },
+        teaser = storyTeaser(story),
     )
 
 fun FloweringSeason.toFloweringUi(now: Month) =

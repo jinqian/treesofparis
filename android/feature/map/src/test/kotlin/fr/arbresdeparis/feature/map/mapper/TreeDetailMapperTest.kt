@@ -114,6 +114,10 @@ class TreeDetailMapperTest {
         assertEquals("Paysager", story.qualification)
         assertEquals("Cet arbre est classé remarquable pour son ampleur et son ancienneté.", story.summary)
         assertEquals("1882", story.plantingYear)
+        assertEquals(
+            "Planté en 1879, cet arbre fait aujourd’hui l’attraction de ce lieu riche d’histoire.",
+            story.teaser,
+        )
         assertEquals("© Sonia Yassa / Ville de Paris", story.photoCredit)
     }
 

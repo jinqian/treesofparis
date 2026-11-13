@@ -183,7 +183,7 @@ class TreeDetailContentTest {
     }
 
     @Test
-    fun remarkableWithStory_saysWhyAndOpensItsStory() {
+    fun remarkableWithStory_tellsOneSentenceAndOpensItsStory() {
         var opened = 0
         val detail = tree(1).copy(remarkable = true).toDetailUi(isFavorite = false, story = story(1))
         compose.setContent {
@@ -191,7 +191,15 @@ class TreeDetailContentTest {
         }
         compose.onNodeWithText("ARBRE REMARQUABLE · PAYSAGER").assertIsDisplayed()
         compose.onNodeWithText("Square Maurice Gardette", substring = true).assertIsDisplayed()
-        compose.onNodeWithText("Cet arbre est classé remarquable pour son ampleur et son ancienneté.").assertExists()
+        // The summary is nearly always a formula, and the header already says why: the sheet tells the story instead.
+        compose
+            .onNodeWithText(
+                "Cet arbre est classé remarquable pour son ampleur et son ancienneté.",
+            ).assertDoesNotExist()
+        compose
+            .onNodeWithText(
+                "Planté en 1879, cet arbre fait aujourd’hui l’attraction de ce lieu riche d’histoire.",
+            ).assertExists()
         compose.onNodeWithText("Son histoire").performScrollTo().performClick()
         assertEquals(1, opened)
         compose.onNodeWithText("« Les arbres remarquables »", substring = true).assertExists()

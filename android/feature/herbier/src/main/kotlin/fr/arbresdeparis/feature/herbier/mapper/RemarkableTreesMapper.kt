@@ -1,15 +1,13 @@
 package fr.arbresdeparis.feature.herbier.mapper
 
 import fr.arbresdeparis.domain.format.formatArea
+import fr.arbresdeparis.domain.format.storyTeaser
 import fr.arbresdeparis.domain.model.RemarkableStory
 import fr.arbresdeparis.domain.model.Tree
 import fr.arbresdeparis.feature.herbier.RemarkableAreaUi
 import fr.arbresdeparis.feature.herbier.RemarkableTreeUi
 import java.text.Collator
 import java.util.Locale
-
-private val SENTENCE_END = Regex("""(?<=[.!?…])\s+(?=\p{Lu}|[«“"])""")
-private const val BOTANICAL_OPENING = "famille des "
 
 private val ARRONDISSEMENT = Regex("""^PARIS (\d{1,2})(?:ER|E) ARRDT$""")
 
@@ -52,18 +50,3 @@ private fun arrondissementNumber(raw: String): Int? =
         ?.groupValues
         ?.get(1)
         ?.toInt()
-
-/**
- * The first sentence of a story that tells the tree: about a third of the stories open with its botanical family
- * (« Le marronnier appartient à la famille des Sapindacées. », « Appartenant à la famille des Pinacées, … »), which
- * the list skips.
- */
-fun storyTeaser(story: String?): String? {
-    val sentences =
-        story
-            ?.split(SENTENCE_END)
-            ?.map(String::trim)
-            ?.filter(String::isNotEmpty)
-            .orEmpty()
-    return sentences.firstOrNull { !it.contains(BOTANICAL_OPENING) } ?: sentences.firstOrNull()
-}

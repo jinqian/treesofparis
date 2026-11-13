@@ -27,6 +27,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,8 +69,9 @@ internal const val STORY_LOADING_TAG = "story_loading"
 const val STORY_CARD_TAG = "story_card"
 
 /**
- * In the tree sheet (option B of #74): the City's photo, the one-sentence summary and « Son histoire › », which opens
- * the [RemarkableStoryScreen]. Kept to one row so the sheet barely grows.
+ * In the tree sheet: one gold row (« Rangée », #74) with the City's photo, « Son histoire » and one sentence of the
+ * story, which opens the [RemarkableStoryScreen]. The summary stays on that page: it is nearly always a formula, and
+ * the sheet's header already says why the tree is remarkable.
  */
 @Composable
 internal fun StoryCard(
@@ -83,27 +87,26 @@ internal fun StoryCard(
                 .clip(MaterialTheme.shapes.medium)
                 .background(colors.tertiaryContainer)
                 .clickable(role = Role.Button, onClick = onOpenStory)
-                .padding(start = 12.dp, end = 10.dp, top = 12.dp, bottom = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                .padding(start = 10.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        StoryPhoto(story, MaterialTheme.shapes.small, showCredit = false, modifier = Modifier.size(64.dp))
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            story.summary?.let {
+        StoryPhoto(story, MaterialTheme.shapes.small, showCredit = false, modifier = Modifier.size(52.dp))
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = stringResource(R.string.map_story_open),
+                style = MaterialTheme.typography.titleMedium,
+                color = colors.onTertiaryContainer,
+            )
+            story.teaser?.let {
                 Text(
                     text = it,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = colors.onTertiaryContainer,
-                    maxLines = 4,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Text(
-                text = stringResource(R.string.map_story_open),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = colors.onTertiaryContainer,
-            )
         }
         Icon(TreesIcons.ChevronRight, null, tint = colors.onTertiaryContainer, modifier = Modifier.size(18.dp))
     }
@@ -162,7 +165,11 @@ fun RemarkableStoryScreen(
     modifier: Modifier = Modifier,
 ) {
     val story = detail.story ?: return
-    StoryFrame(onBack, modifier) { StoryBody(detail, story, onOpenUrl) }
+    var viewingPhoto by rememberSaveable { mutableStateOf(false) }
+    StoryFrame(onBack, modifier) {
+        StoryBody(detail, story, onOpenUrl, onOpenPhoto = { viewingPhoto = true })
+    }
+    if (viewingPhoto) StoryPhotoDialog(detail, onClose = { viewingPhoto = false })
 }
 
 /**
@@ -241,15 +248,11 @@ private fun StoryBody(
     detail: TreeDetailUi,
     story: RemarkableStoryUi,
     onOpenUrl: (String) -> Unit,
+    onOpenPhoto: () -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-        StoryPhoto(
-            story,
-            RectangleShapeCompat,
-            showCredit = true,
-            modifier = Modifier.fillMaxWidth().height(PHOTO_HEIGHT),
-        )
+        PagePhoto(story, onOpenPhoto)
         Column(
             modifier =
                 Modifier
@@ -298,6 +301,40 @@ private fun StoryHeader(
             style = MaterialTheme.typography.bodyMedium,
             color = colors.onSurfaceVariant,
         )
+    }
+}
+
+/**
+ * The page's photo, with its credit. With a photo to show, a tap on it, or on its ⤢ button, opens it in full screen
+ * ([StoryPhotoDialog]).
+ */
+@Composable
+private fun PagePhoto(
+    story: RemarkableStoryUi,
+    onOpenPhoto: () -> Unit,
+) {
+    val open = stringResource(R.string.map_story_photo_open)
+    val canOpen = story.photoUrl != null
+    Box(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(PHOTO_HEIGHT)
+                .then(if (canOpen) Modifier.clickable(onClickLabel = open, onClick = onOpenPhoto) else Modifier),
+    ) {
+        StoryPhoto(story, RectangleShapeCompat, showCredit = true, modifier = Modifier.fillMaxSize())
+        if (canOpen) {
+            Surface(
+                onClick = onOpenPhoto,
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.9f),
+                modifier = Modifier.align(Alignment.BottomStart).padding(TreesSpacing.s).size(40.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(TreesIcons.Expand, contentDescription = open, modifier = Modifier.size(20.dp))
+                }
+            }
+        }
     }
 }
 

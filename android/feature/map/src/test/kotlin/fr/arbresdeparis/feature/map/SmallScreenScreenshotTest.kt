@@ -97,6 +97,14 @@ class SmallScreenScreenshotTest {
     }
 
     @Test
+    @Config(qualifiers = LARGE_TEXT)
+    fun storyPhotoViewer_largeText() {
+        RuntimeEnvironment.setFontScale(LARGE_FONT_SCALE)
+        show { StoryPhotoViewer(micocoulier(story = STORY), onClose = {}) }
+        check("story_photo_viewer_large_text")
+    }
+
+    @Test
     @Config(qualifiers = NARROW_TALL)
     fun genusPicker_narrow() = genusPicker("narrow")
 
@@ -283,6 +291,9 @@ class SmallScreenScreenshotTest {
                 signUrl = "https://capgeo.sig.paris.fr/PdfEtImages/ArbresRemarquables/PDF/124358.pdf",
                 photoUrl = null,
                 photoCredit = "© Jean-Pierre Viguié / Ville de Paris",
+                teaser =
+                    "Introduit et planté en 1601 par Jean Robin, auquel il doit son nom, cet arbre est le plus " +
+                        "vieux de Paris.",
             )
     }
 }

@@ -1,12 +1,16 @@
 package fr.arbresdeparis.feature.map
 
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
+import fr.arbresdeparis.domain.model.RemarkableStory
 import fr.arbresdeparis.feature.map.mapper.toDetailUi
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -23,8 +27,8 @@ class RemarkableStoryScreenTest {
     private val opened = mutableListOf<String>()
     private var backs = 0
 
-    private fun show() {
-        val detail = tree(1).copy(remarkable = true).toDetailUi(isFavorite = false, story = story(1))
+    private fun show(story: RemarkableStory = story(1)) {
+        val detail = tree(1).copy(remarkable = true).toDetailUi(isFavorite = false, story = story)
         compose.setContent {
             TreesTheme {
                 RemarkableStoryScreen(detail = detail, onBack = { backs++ }, onOpenUrl = { opened += it })
@@ -76,5 +80,21 @@ class RemarkableStoryScreenTest {
         }
         compose.onNodeWithText("L’histoire de cet arbre n’est pas disponible.").assertExists()
         compose.onNodeWithTag(STORY_LOADING_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun photo_opensInFullScreen_withItsCredit_andClosesAgain() {
+        show()
+        compose.onNodeWithContentDescription("Voir la photo en plein écran").performClick()
+        compose.onNodeWithTag(PHOTO_VIEWER_TAG).assertIsDisplayed()
+        compose.onAllNodesWithText("© Sonia Yassa / Ville de Paris").assertCountEquals(2) // the page's and the viewer's
+        compose.onNodeWithContentDescription("Fermer").performClick()
+        compose.onNodeWithTag(PHOTO_VIEWER_TAG).assertDoesNotExist()
+    }
+
+    @Test
+    fun withoutPhoto_nothingToOpen() {
+        show(story(1).copy(photoUrl = null))
+        compose.onNodeWithContentDescription("Voir la photo en plein écran").assertDoesNotExist()
     }
 }

@@ -1,7 +1,6 @@
 package fr.arbresdeparis.feature.herbier
 
 import fr.arbresdeparis.core.designsystem.leaf.TreeLeaf
-import fr.arbresdeparis.feature.herbier.mapper.storyTeaser
 import fr.arbresdeparis.feature.herbier.mapper.toHerbierUi
 import fr.arbresdeparis.feature.herbier.mapper.toRemarkableAreasUi
 import org.junit.Assert.assertEquals
@@ -73,12 +72,6 @@ class HerbierUiMapperTest {
             "Cet arbre est issu du semis du véritable marronnier qu’Anne Frank voyait depuis son grenier, à Amsterdam.",
             luxembourg.teaser,
         )
-    }
-
-    @Test
-    fun storyTeaser_keepsTheFirstSentenceWhenItIsNotBotanical() {
-        assertEquals("Cet orme a été planté en 1935.", storyTeaser("Cet orme a été planté en 1935. Il est vieux."))
-        assertEquals(null, storyTeaser(null))
     }
 
     @Test

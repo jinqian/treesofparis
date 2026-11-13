@@ -99,6 +99,9 @@ class MapScreenshotTest {
         }
 
     @Test
+    fun storyPhotoViewer() = snap("story_photo_viewer") { StoryPhotoViewer(STORY_TREE, onClose = {}) }
+
+    @Test
     fun genusPicker_light() = sheet("genus_picker_light") { GenusPickerContent(PICKER, onPick = {}) }
 
     @Test
@@ -233,6 +236,9 @@ class MapScreenshotTest {
                         signUrl = "https://capgeo.sig.paris.fr/PdfEtImages/ArbresRemarquables/PDF/124358.pdf",
                         photoUrl = null,
                         photoCredit = "© Jean-Pierre Viguié / Ville de Paris",
+                        teaser =
+                            "Introduit et planté en 1601 par Jean Robin, auquel il doit son nom, " +
+                                "cet arbre est le plus vieux de Paris.",
                     ),
             )
 

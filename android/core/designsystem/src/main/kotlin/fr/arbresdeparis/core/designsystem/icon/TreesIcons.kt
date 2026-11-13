@@ -30,6 +30,7 @@ object TreesIcons {
     val ChevronDown: ImageVector = line("ChevronDown", "M6 9l6 6 6-6")
     val Search: ImageVector = line("Search", circle(11f, 11f, 6.5f), "M20 20l-4.2-4.2")
     val Close: ImageVector = line("Close", "M6 6l12 12M18 6 6 18")
+    val Expand: ImageVector = line("Expand", "M4 9V4h5", "M20 9V4h-5", "M4 15v5h5", "M20 15v5h-5")
     val Check: ImageVector = line("Check", "M5 12.5l4.5 4.5L19 7")
     val Back: ImageVector = line("Back", "M19 12H5", "M11 6l-6 6 6 6")
     val OpenExternal: ImageVector = line("OpenExternal", "M7 17 17 7M9 7h8v8")

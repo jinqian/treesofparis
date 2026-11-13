@@ -46,6 +46,8 @@ data class RemarkableStoryUi(
     val signUrl: String?,
     val photoUrl: String?,
     val photoCredit: String?,
+    /** One sentence of the [story] for the tree sheet, its botanical opening skipped. */
+    val teaser: String? = null,
 )
 
 /** The 12-month flowering bar of the sheet. */
