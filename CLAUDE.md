@@ -82,4 +82,5 @@ python3 -m http.server --directory website 8000   # preview the website (map at 
 - Small screens: `SmallScreenScreenshotTest` (:feature:map) checks that no text is cut or splits a word at 320 dp and
   at 130 % text size. Add a case there for any new map control or sheet.
 - Toolchain: JDK 25. Bytecode target 17 (Android) / 21 (JVM).
-- Android-specific guidance lives in `.claude/skills/` (from android/skills).
+- Android-specific guidance lives in `.claude/skills/` (from android/skills). Releases: the `release` skill, which
+  follows `android/RELEASING.md`.
