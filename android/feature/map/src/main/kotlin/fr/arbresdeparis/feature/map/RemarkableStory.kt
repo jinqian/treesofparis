@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -166,8 +167,9 @@ fun RemarkableStoryScreen(
 ) {
     val story = detail.story ?: return
     var viewingPhoto by rememberSaveable { mutableStateOf(false) }
-    StoryFrame(onBack, modifier) {
-        StoryBody(detail, story, onOpenUrl, onOpenPhoto = { viewingPhoto = true })
+    val openPhoto = { viewingPhoto = true }
+    StoryFrame(onBack, modifier, onOpenPhoto = openPhoto.takeIf { story.photoUrl != null }) {
+        StoryBody(detail, story, onOpenUrl, onOpenPhoto = openPhoto)
     }
     if (viewingPhoto) StoryPhotoDialog(detail, onClose = { viewingPhoto = false })
 }
@@ -190,28 +192,49 @@ fun RemarkableStoryPage(
     }
 }
 
-/** The page's ground with its back button pinned over [content], so it stays at hand however far the story scrolls. */
+/**
+ * The page's ground with its round buttons pinned over [content], so they stay at hand however far the story scrolls:
+ * « Retour » at the top left and, when there is a photo to show ([onOpenPhoto]), « plein écran » mirrored at the top
+ * right (canvas « Bouton plein écran — B »).
+ */
 @Composable
 private fun StoryFrame(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenPhoto: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    val colors = MaterialTheme.colorScheme
-    Surface(modifier = modifier.fillMaxSize(), color = colors.background) {
+    Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box {
             content()
-            Surface(
-                shape = CircleShape,
-                color = colors.surfaceContainerLow.copy(alpha = 0.92f),
-                shadowElevation = 2.dp,
-                modifier = Modifier.statusBarsPadding().padding(TreesSpacing.m).size(48.dp),
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(TreesIcons.Back, contentDescription = stringResource(R.string.map_story_back))
-                }
+            RoundButton(TreesIcons.Back, stringResource(R.string.map_story_back), onBack)
+            onOpenPhoto?.let {
+                RoundButton(
+                    TreesIcons.Expand,
+                    stringResource(R.string.map_story_photo_open),
+                    it,
+                    Modifier.align(Alignment.TopEnd),
+                )
             }
         }
+    }
+}
+
+/** A 48 dp round button on a paper disc, below the status bar, readable over the photo. */
+@Composable
+private fun RoundButton(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.92f),
+        shadowElevation = 2.dp,
+        modifier = modifier.statusBarsPadding().padding(TreesSpacing.m).size(48.dp),
+    ) {
+        IconButton(onClick = onClick) { Icon(icon, contentDescription = label) }
     }
 }
 
@@ -304,38 +327,32 @@ private fun StoryHeader(
     }
 }
 
-/**
- * The page's photo, with its credit. With a photo to show, a tap on it, or on its ⤢ button, opens it in full screen
- * ([StoryPhotoDialog]).
- */
+/** The page's photo, with its credit. A tap on it, when there is one, opens it in full screen ([StoryPhotoDialog]). */
 @Composable
 private fun PagePhoto(
     story: RemarkableStoryUi,
     onOpenPhoto: () -> Unit,
 ) {
-    val open = stringResource(R.string.map_story_photo_open)
     val canOpen = story.photoUrl != null
-    Box(
+    StoryPhoto(
+        story,
+        RectangleShapeCompat,
+        showCredit = true,
         modifier =
             Modifier
                 .fillMaxWidth()
                 .height(PHOTO_HEIGHT)
-                .then(if (canOpen) Modifier.clickable(onClickLabel = open, onClick = onOpenPhoto) else Modifier),
-    ) {
-        StoryPhoto(story, RectangleShapeCompat, showCredit = true, modifier = Modifier.fillMaxSize())
-        if (canOpen) {
-            Surface(
-                onClick = onOpenPhoto,
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.9f),
-                modifier = Modifier.align(Alignment.BottomStart).padding(TreesSpacing.s).size(40.dp),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(TreesIcons.Expand, contentDescription = open, modifier = Modifier.size(20.dp))
-                }
-            }
-        }
-    }
+                .then(
+                    if (canOpen) {
+                        Modifier.clickable(
+                            onClickLabel = stringResource(R.string.map_story_photo_open),
+                            onClick = onOpenPhoto,
+                        )
+                    } else {
+                        Modifier
+                    },
+                ),
+    )
 }
 
 /** The measures, then the planting year, the national label and the council decision when there is one. */
