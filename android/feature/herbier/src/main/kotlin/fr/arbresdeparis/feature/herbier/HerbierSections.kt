@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -188,7 +187,7 @@ internal fun RemarkableCard(remarkable: RemarkableUi) {
             stringResource(R.string.herbier_remarkable_count_leading, remarkable.count, it.count, label)
         } ?: stringResource(R.string.herbier_remarkable_count, remarkable.count)
     // No inner padding: the gold header fills the card up to its rounded top edge.
-    TreesCardGroup(contentPadding = PaddingValues()) {
+    TreesCardGroup {
         Row(
             modifier = Modifier.fillMaxWidth().background(colors.tertiaryContainer).padding(TreesSpacing.m),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
