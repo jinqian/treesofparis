@@ -14,10 +14,11 @@ permissions:
   contents: read
 
 jobs:
-  # A pull request that only touches the website, docs/, data/ or Markdown files skips the Android job; one that only touches
-  # the Android app skips the data (and web map) tests, unless it changes :core:data (Room schema, trees.db) or
-  # :core:domain (rules the scripts copy), which they read. A skipped job is still reported, and counts as passing for
-  # its required check. Pushes to main and manual runs always run everything.
+  # Which jobs a pull request needs, from the files it changes. Markdown files never run anything: a PR that only
+  # changes .md files skips every job below. Otherwise a PR that only touches the website, docs/ or data/ skips the
+  # Android job; one that only touches the Android app skips the data (and web map) tests, unless it changes
+  # :core:data (Room schema, trees.db) or :core:domain (rules the scripts copy), which they read. A skipped job is
+  # still reported, and counts as passing for its required check. Pushes to main and manual runs run everything.
   changes:
     name: What changed
     runs-on: ubuntu-latest
@@ -25,6 +26,7 @@ jobs:
     outputs:
       android: ${{ steps.diff.outputs.android }}
       data: ${{ steps.diff.outputs.data }}
+      code: ${{ steps.diff.outputs.code }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -36,25 +38,28 @@ jobs:
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
           if [ "$EVENT" != "pull_request" ]; then
-            echo "android=true" >> "$GITHUB_OUTPUT"
-            echo "data=true" >> "$GITHUB_OUTPUT"
+            { echo "android=true"; echo "data=true"; echo "code=true"; } >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          changed=$(git diff --name-only "$BASE...$HEAD")
           echo "Changed files:"
-          echo "$changed"
-          # Android: anything but the website, docs/, the data scripts and Markdown. A data change the app sees
-          # (trees.db, its version, the Room schema) is under android/.
-          if echo "$changed" | grep -qvE '^(website|docs|data)/|\.md$'; then android=true; else android=false; fi
-          # Data: anything outside android/, or in the modules the data scripts read.
-          if echo "$changed" | grep -qvE '^android/' || echo "$changed" | grep -qE '^android/core/(data|domain)/'; then
-            data=true
-          else
-            data=false
+          git diff --name-only "$BASE...$HEAD"
+          # Everything but Markdown.
+          changed=$(git diff --name-only "$BASE...$HEAD" | grep -vE '\.md$' || true)
+          android=false
+          data=false
+          code=false
+          if [ -n "$changed" ]; then
+            code=true
+            # Android: anything but the website, docs/ and the data scripts. A data change the app sees (trees.db,
+            # its version, the Room schema) is under android/.
+            if echo "$changed" | grep -qvE '^(website|docs|data)/'; then android=true; fi
+            # Data: anything outside android/, or in the modules the data scripts read.
+            if echo "$changed" | grep -qvE '^android/' || echo "$changed" | grep -qE '^android/core/(data|domain)/'; then
+              data=true
+            fi
           fi
-          echo "android=$android" >> "$GITHUB_OUTPUT"
-          echo "data=$data" >> "$GITHUB_OUTPUT"
-          echo "Android job: $android · data job: $data"
+          { echo "android=$android"; echo "data=$data"; echo "code=$code"; } >> "$GITHUB_OUTPUT"
+          echo "Android job: $android · data job: $data · other jobs: $code"
 
   android:
     name: Android (static analysis, unit tests, build)
@@ -132,6 +137,8 @@ jobs:
 
   commit-msg:
     name: Commit message check tests
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -159,7 +166,8 @@ jobs:
 
   dependency-review:
     name: Dependency review
-    if: github.event_name == 'pull_request' && !github.event.repository.private
+    needs: changes
+    if: github.event_name == 'pull_request' && !github.event.repository.private && needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
