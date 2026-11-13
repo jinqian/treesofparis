@@ -45,7 +45,7 @@ repository root holds what is shared: `data/` (builds `trees.db`), `website/`, `
 - Map camera: `initialCamera` is applied once, `CameraRequest` (with a unique id) for programmatic moves,
   gestures only report through `onCameraChange`.
 - The web map (`website/maps/`) mirrors the app: `style.js` copies `HerbierMapStyle.kt` and the pin colours, and
-  `build_web_map.py` copies `formatArea`/`formatPlace`. Change both sides together.
+  `build_web_map.py` copies `formatArea`/`formatPlace` and `storyTeaser`. Change both sides together.
 - The tree schema is owned by the Room entities. `data/scripts/update_trees.py` builds `trees.db` from
   Room's exported schema JSON in `android/core/data/schemas/`. Never hand-edit the schema in two places.
 

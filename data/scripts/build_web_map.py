@@ -4,7 +4,8 @@
 The trees are split on a fixed grid of cells about 1 km wide; the page fetches only the cells it shows, from street
 level (as the app does). Below street level it shows groups of trees instead: `clusters.json` counts the trees on three
 coarser grids (about 2 km, 1 km, 500 m and 250 m), each group placed at the mean position of its trees. Remarkable trees go
-in one extra file so the page can show them at every zoom, and the Wikipedia titles in another.
+in one extra file so the page can show them at every zoom, their stories (« Les arbres remarquables », issue #74) in
+another, loaded when one is opened, and the Wikipedia titles in a third.
 
 Standard library only. Usage (from the repository root):
 
@@ -64,6 +65,20 @@ FIELDS = (
     "source",
 )
 
+# The stories' fields, as the page reads them (RemarkableTreeEntity's columns, plus the sheet's one-sentence teaser).
+STORY_FIELDS = (
+    ("site", "site"),
+    ("qualification", "qualification"),
+    ("summary", "summary"),
+    ("story", "story"),
+    ("plantingYear", "planting_year"),
+    ("label", "label"),
+    ("councilDecision", "council_decision"),
+    ("signUrl", "sign_url"),
+    ("photoUrl", "photo_url"),
+    ("photoCredit", "photo_credit"),
+)
+
 # --- French place names (same rules as fr.arbresdeparis.domain.format.PlaceNames) ---------------------------------
 
 PARTICLES = {"de", "du", "des", "la", "le", "les", "et", "sur", "sous", "au", "aux", "en", "à"}
@@ -117,6 +132,39 @@ def cell_of(lat: float, lon: float) -> str:
     """The key of the grid cell holding a point, « row_column » counted from the south-west corner of COVERAGE."""
     south, west, _, _ = COVERAGE
     return f"{int((lat - south) // CELL_LAT)}_{int((lon - west) // CELL_LON)}"
+
+
+# --- a story's teaser (same rule as fr.arbresdeparis.domain.format.storyTeaser) ------------------------------------
+
+SENTENCE_BREAK = re.compile(r"(?<=[.!?…])\s+", re.ASCII)  # \s as in Kotlin: no non-breaking space
+BOTANICAL_OPENING = "famille des "
+
+
+def story_teaser(story: str | None) -> str | None:
+    """The first sentence of a story that tells the tree, skipping a botanical opening (« … famille des … »)."""
+    sentences: list[str] = []
+    for piece in SENTENCE_BREAK.split(story or ""):
+        piece = piece.strip()
+        if not piece:
+            continue
+        # A sentence starts with a capital or a quote; « … 1,5 m. de haut » is not a new one.
+        if sentences and not (piece[0].isupper() or piece[0] in "«“\""):
+            sentences[-1] += " " + piece
+        else:
+            sentences.append(piece)
+    return next((s for s in sentences if BOTANICAL_OPENING not in s), sentences[0] if sentences else None)
+
+
+def stories(con: sqlite3.Connection) -> dict[str, dict]:
+    """The remarkable trees' stories by tree id, without empty fields; none when trees.db predates them."""
+    if not con.execute("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'remarkable_trees'").fetchone():
+        return {}
+    result = {}
+    for row in con.execute("SELECT * FROM remarkable_trees ORDER BY tree_id"):
+        story = {key: row[column] for key, column in STORY_FIELDS}
+        story["teaser"] = story_teaser(row["story"])
+        result[str(row["tree_id"])] = {key: value for key, value in story.items() if value is not None}
+    return result
 
 
 def tree_row(row: sqlite3.Row) -> list:
@@ -209,6 +257,7 @@ def build(db: Path, meta_file: Path, out: Path) -> dict:
         cells.setdefault(cell_of(row["lat"], row["lon"]), []).append(tree)
         if row["remarkable"]:
             remarkable.append(tree)
+    tales = stories(con)
     taxa = {
         f"{r['genus']}|{r['species']}": [r["wikipedia_title"], 1 if r["genus_only"] else 0]
         for r in con.execute("SELECT * FROM taxon_links")
@@ -223,6 +272,7 @@ def build(db: Path, meta_file: Path, out: Path) -> dict:
     _write(out / "remarkable.json", remarkable)
     _write(out / "clusters.json", clusters(points))
     _write(out / "taxa.json", taxa)
+    _write(out / "stories.json", tales)
 
     meta = json.loads(meta_file.read_text(encoding="utf-8")) if meta_file.exists() else {}
     index = {
@@ -232,6 +282,7 @@ def build(db: Path, meta_file: Path, out: Path) -> dict:
         "cells": sorted(cells),
         "treeCount": sum(len(t) for t in cells.values()),
         "remarkableCount": len(remarkable),
+        "storyCount": len(tales),
         "extractedAt": meta.get("extractedAt"),
         "dataVersion": meta.get("dataVersion"),
     }
@@ -252,7 +303,8 @@ def main(argv: list[str] | None = None) -> int:
     index = build(args.db, args.meta, args.output)
     size = sum(f.stat().st_size for f in args.output.rglob("*.json"))
     print(
-        f"{index['treeCount']} trees in {len(index['cells'])} cells, {index['remarkableCount']} remarkable; "
+        f"{index['treeCount']} trees in {len(index['cells'])} cells, {index['remarkableCount']} remarkable "
+        f"({index['storyCount']} with a story); "
         f"wrote {args.output.relative_to(REPO) if args.output.is_relative_to(REPO) else args.output} "
         f"({size / 1e6:.1f} MB)"
     )

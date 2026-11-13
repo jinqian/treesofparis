@@ -77,6 +77,12 @@ LINKS_SQL = (
     "genus_only INTEGER NOT NULL, PRIMARY KEY (genus, species))"
 )
 
+STORIES_SQL = (
+    "CREATE TABLE remarkable_trees (tree_id INTEGER PRIMARY KEY, site TEXT, qualification TEXT, summary TEXT, "
+    "story TEXT, planting_year INTEGER, label TEXT, council_decision TEXT, sign_url TEXT, photo_url TEXT, "
+    "photo_credit TEXT)"
+)
+
 
 @pytest.fixture
 def small_db(tmp_path):
@@ -98,6 +104,14 @@ def small_db(tmp_path):
         ],
     )
     con.execute("INSERT INTO taxon_links VALUES ('Platanus', 'x hispanica', 'Platane commun', 0)")
+    con.execute(STORIES_SQL)
+    con.execute(
+        "INSERT INTO remarkable_trees VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        (2, "Square Maurice Gardette", "Paysager", "Cet arbre est classé remarquable pour son ampleur.",
+         "Le platane appartient à la famille des Platanacées. Planté en 1879, il fait l’attraction du square.",
+         1882, None, "2015 DEVE 152", "https://capgeo.sig.paris.fr/PdfEtImages/ArbresRemarquables/PDF/2.pdf",
+         "https://capgeo.sig.paris.fr/PdfEtImages/ArbresRemarquables/Photos2023/1/2.jpg", "Sonia Yassa / Ville de Paris"),
+    )
     con.commit()
     con.close()
     meta = tmp_path / "meta.json"
@@ -149,3 +163,59 @@ def test_build_replaces_an_older_output(small_db, tmp_path):
     (out / "cells" / "99_99.json").write_text("[]")
     wm.build(db, meta, out)
     assert not (out / "cells" / "99_99.json").exists()
+
+
+# --- remarkable trees' stories (issue #74) ----------------------------------------------------------------------------
+
+
+def test_build_writes_the_stories_of_the_remarkable_trees(small_db, tmp_path):
+    db, meta = small_db
+    out = tmp_path / "out"
+    index = wm.build(db, meta, out)
+    stories = json.loads((out / "stories.json").read_text())
+    assert index["storyCount"] == 1
+    assert stories == {
+        "2": {
+            "site": "Square Maurice Gardette",
+            "qualification": "Paysager",
+            "summary": "Cet arbre est classé remarquable pour son ampleur.",
+            "story": "Le platane appartient à la famille des Platanacées. Planté en 1879, il fait l’attraction du square.",
+            "teaser": "Planté en 1879, il fait l’attraction du square.",
+            "plantingYear": 1882,
+            "councilDecision": "2015 DEVE 152",
+            "signUrl": "https://capgeo.sig.paris.fr/PdfEtImages/ArbresRemarquables/PDF/2.pdf",
+            "photoUrl": "https://capgeo.sig.paris.fr/PdfEtImages/ArbresRemarquables/Photos2023/1/2.jpg",
+            "photoCredit": "Sonia Yassa / Ville de Paris",
+        }
+    }
+
+
+def test_build_without_stories_table_writes_none(tmp_path):
+    db = tmp_path / "old.db"
+    con = sqlite3.connect(db)
+    con.execute(TREES_SQL)
+    con.execute(LINKS_SQL)
+    con.commit()
+    con.close()
+    index = wm.build(db, tmp_path / "missing.json", tmp_path / "out")
+    assert index["storyCount"] == 0
+    assert json.loads((tmp_path / "out" / "stories.json").read_text()) == {}
+
+
+# The same cases as StoryTeaserTest in :core:domain.
+@pytest.mark.parametrize(
+    "story, expected",
+    [
+        (
+            "Le platane appartient à la famille des Platanacées. Planté en 1873, cet arbre est le témoin des "
+            "plantations du parc. Il mesure 30 m.",
+            "Planté en 1873, cet arbre est le témoin des plantations du parc.",
+        ),
+        ("Cet orme a été planté en 1935. Il est vieux.", "Cet orme a été planté en 1935."),
+        ("Le saule appartient à la famille des Salicacées.", "Le saule appartient à la famille des Salicacées."),
+        (None, None),
+        ("  ", None),
+    ],
+)
+def test_story_teaser(story, expected):
+    assert wm.story_teaser(story) == expected
