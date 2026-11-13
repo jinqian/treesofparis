@@ -26,6 +26,28 @@ data class TreeDetailUi(
     val flowering: FloweringUi? = null,
     /** The dataset it comes from, credited at the bottom of the sheet. */
     val source: TreeSource = TreeSource.PARIS,
+    /** What the City says about this remarkable tree (Paris only), or null. */
+    val story: RemarkableStoryUi? = null,
+)
+
+/**
+ * A remarkable tree's story, from « Les arbres remarquables »: why it is remarkable ([qualification]), a [summary],
+ * the [story] itself, the planting year (« 1882 »), its national label and council decision, the City's sign (PDF) and
+ * photo with its credit (« © Sonia Yassa / Ville de Paris »). Null fields are not in the data.
+ */
+data class RemarkableStoryUi(
+    val site: String?,
+    val qualification: String?,
+    val summary: String?,
+    val story: String?,
+    val plantingYear: String?,
+    val label: String?,
+    val councilDecision: String?,
+    val signUrl: String?,
+    val photoUrl: String?,
+    val photoCredit: String?,
+    /** One sentence of the [story] for the tree sheet, its botanical opening skipped. */
+    val teaser: String? = null,
 )
 
 /** The 12-month flowering bar of the sheet. */

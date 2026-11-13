@@ -10,6 +10,7 @@ import fr.arbresdeparis.domain.model.GeoPoint
 import fr.arbresdeparis.domain.usecase.GetFloweringSeason
 import fr.arbresdeparis.domain.usecase.GetGenera
 import fr.arbresdeparis.domain.usecase.GetNearestTrees
+import fr.arbresdeparis.domain.usecase.GetRemarkableStory
 import fr.arbresdeparis.domain.usecase.GetTree
 import fr.arbresdeparis.domain.usecase.GetTreeClusters
 import fr.arbresdeparis.domain.usecase.GetTreesInBounds
@@ -44,6 +45,7 @@ class MapViewModelTest {
         )
     private val favorites = FakeFavoritesRepository()
     private val location = FakeLocationRepository(null)
+    private val stories = FakeRemarkableStoryRepository()
 
     private fun viewModel(saved: SavedStateHandle = SavedStateHandle()) =
         MapViewModel(
@@ -55,6 +57,7 @@ class MapViewModelTest {
             locateUser = LocateUser(location),
             getNearestTrees = GetNearestTrees(trees),
             getFloweringSeason = GetFloweringSeason(FakeFloweringRepository()),
+            getRemarkableStory = GetRemarkableStory(stories),
             getGenera = GetGenera(FakeStatisticsRepository()),
             clock = NOVEMBER,
             savedState = saved,

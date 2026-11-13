@@ -25,6 +25,8 @@ turbine = "1.2.1"
 robolectric = "4.17"
 # Screenshot tests on Robolectric (:feature:map small-screen layouts).
 roborazzi = "1.77.0"
+# Photos of the remarkable trees, loaded from the City's server (issue #74).
+coil = "3.3.0"
 junit = "4.13.2"
 # Firebase: Crashlytics only (ADR 0007). The plugins apply only when app/google-services.json exists.
 firebaseBom = "35.1.0"
@@ -89,6 +91,8 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 androidx-test-core = { module = "androidx.test:core-ktx", version = "1.7.0" }
 roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }
 roborazzi-gradlePlugin = { module = "io.github.takahirom.roborazzi:roborazzi-gradle-plugin", version.ref = "roborazzi" }
 

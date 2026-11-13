@@ -60,6 +60,21 @@ class HerbierUiMapperTest {
     }
 
     @Test
+    fun remarkableTrees_withAStory_tellItInOneSentence() {
+        val luxembourg =
+            REMARKABLE_TREES
+                .toRemarkableAreasUi(STORIES)
+                .first()
+                .trees
+                .single { it.id == 13L }
+        // The botanical first sentence (« … appartient à la famille des … ») is skipped: the next one tells the tree.
+        assertEquals(
+            "Cet arbre est issu du semis du véritable marronnier qu’Anne Frank voyait depuis son grenier, à Amsterdam.",
+            luxembourg.teaser,
+        )
+    }
+
+    @Test
     fun remarkableTrees_byArrondissementThenOtherPlaces_withPlaceAndHeight() {
         val areas = REMARKABLE_TREES.toRemarkableAreasUi()
         assertEquals(listOf("Paris 6e", "Paris 19e", "Bois de Boulogne"), areas.map { it.name })

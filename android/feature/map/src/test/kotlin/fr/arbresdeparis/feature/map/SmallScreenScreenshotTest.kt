@@ -67,6 +67,44 @@ class SmallScreenScreenshotTest {
     }
 
     @Test
+    @Config(qualifiers = NARROW)
+    fun treeDetailStory_narrow() = treeDetail("story_narrow", withStory = true)
+
+    @Test
+    @Config(qualifiers = LARGE_TEXT)
+    fun treeDetailStory_largeText() {
+        RuntimeEnvironment.setFontScale(LARGE_FONT_SCALE)
+        treeDetail("story_large_text", withStory = true)
+    }
+
+    @Test
+    @Config(qualifiers = NARROW)
+    fun remarkableStory_narrow() = remarkableStory("narrow")
+
+    @Test
+    @Config(qualifiers = LARGE_TEXT)
+    fun remarkableStory_largeText() {
+        RuntimeEnvironment.setFontScale(LARGE_FONT_SCALE)
+        remarkableStory("large_text")
+    }
+
+    @Test
+    @Config(qualifiers = LARGE_TEXT)
+    fun remarkableStoryUnavailable_largeText() {
+        RuntimeEnvironment.setFontScale(LARGE_FONT_SCALE)
+        show { RemarkableStoryPage(RemarkableStoryUiState.Unavailable, onBack = {}, onOpenUrl = {}) }
+        check("remarkable_story_unavailable_large_text")
+    }
+
+    @Test
+    @Config(qualifiers = LARGE_TEXT)
+    fun storyPhotoViewer_largeText() {
+        RuntimeEnvironment.setFontScale(LARGE_FONT_SCALE)
+        show { StoryPhotoViewer(micocoulier(story = STORY), onClose = {}) }
+        check("story_photo_viewer_large_text")
+    }
+
+    @Test
     @Config(qualifiers = NARROW_TALL)
     fun genusPicker_narrow() = genusPicker("narrow")
 
@@ -126,29 +164,40 @@ class SmallScreenScreenshotTest {
         check("filter_bar_$variant")
     }
 
-    private fun treeDetail(variant: String) {
+    private fun treeDetail(
+        variant: String,
+        withStory: Boolean = false,
+    ) {
         show {
             TreeDetailContent(
-                detail =
-                    TreeDetailUi(
-                        id = 1,
-                        location = GeoPoint.PARIS_CENTER,
-                        name = "Micocoulier de Provence",
-                        scientificName = "Celtis australis",
-                        area = "Paris 19e",
-                        address = "Quai de la Seine",
-                        height = MeasureUi("16", "m"),
-                        circumference = MeasureUi("165", "cm"),
-                        stage = "Jeune (arbre)",
-                        remarkable = true,
-                        isFavorite = false,
-                        leaf = TreeLeaf.CELTIS,
-                    ),
+                detail = micocoulier(story = if (withStory) STORY else null),
                 onFavoriteToggle = {},
             )
         }
         check("tree_detail_$variant")
     }
+
+    private fun remarkableStory(variant: String) {
+        show { RemarkableStoryScreen(micocoulier(story = STORY), onBack = {}, onOpenUrl = {}) }
+        check("remarkable_story_$variant")
+    }
+
+    private fun micocoulier(story: RemarkableStoryUi?) =
+        TreeDetailUi(
+            id = 1,
+            location = GeoPoint.PARIS_CENTER,
+            name = "Micocoulier de Provence",
+            scientificName = "Celtis australis",
+            area = "Paris 19e",
+            address = "Quai de la Seine",
+            height = MeasureUi("16", "m"),
+            circumference = MeasureUi("165", "cm"),
+            stage = "Jeune (arbre)",
+            remarkable = true,
+            isFavorite = false,
+            leaf = TreeLeaf.CELTIS,
+            story = story,
+        )
 
     @Suppress("MagicNumber") // sample counts
     private fun genusPicker(variant: String) {
@@ -227,5 +276,24 @@ class SmallScreenScreenshotTest {
         const val LARGE_TEXT = "w360dp-h640dp-xxhdpi"
         const val LARGE_TEXT_TALL = "w360dp-h1600dp-xxhdpi"
         const val LARGE_FONT_SCALE = 1.3f
+
+        val STORY =
+            RemarkableStoryUi(
+                site = "Square René Viviani",
+                qualification = "Historique",
+                summary = "Cet arbre est classé remarquable pour son caractère historique.",
+                story =
+                    "Introduit et planté en 1601 par Jean Robin, auquel il doit son nom, cet arbre est le plus " +
+                        "vieux de Paris.",
+                plantingYear = "1602",
+                label = "A.R.B.R.E.S en 2015",
+                councilDecision = "2015 DEVE 152",
+                signUrl = "https://capgeo.sig.paris.fr/PdfEtImages/ArbresRemarquables/PDF/124358.pdf",
+                photoUrl = null,
+                photoCredit = "© Jean-Pierre Viguié / Ville de Paris",
+                teaser =
+                    "Introduit et planté en 1601 par Jean Robin, auquel il doit son nom, cet arbre est le plus " +
+                        "vieux de Paris.",
+            )
     }
 }

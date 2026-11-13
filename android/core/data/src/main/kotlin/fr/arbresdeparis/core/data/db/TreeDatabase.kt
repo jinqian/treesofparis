@@ -9,7 +9,7 @@ import fr.arbresdeparis.core.data.BuildConfig
  * Room drop the old copy and copy the asset again (see [fr.arbresdeparis.core.data.di.DataModule]).
  */
 @Database(
-    entities = [TreeEntity::class, TaxonLinkEntity::class],
+    entities = [TreeEntity::class, TaxonLinkEntity::class, RemarkableTreeEntity::class],
     version = BuildConfig.TREES_DB_VERSION,
     exportSchema = true,
 )
@@ -17,6 +17,8 @@ abstract class TreeDatabase : RoomDatabase() {
     abstract fun treeDao(): TreeDao
 
     internal abstract fun treeStatisticsDao(): TreeStatisticsDao
+
+    abstract fun remarkableStoryDao(): RemarkableStoryDao
 
     companion object {
         const val FILE_NAME = "trees.db"

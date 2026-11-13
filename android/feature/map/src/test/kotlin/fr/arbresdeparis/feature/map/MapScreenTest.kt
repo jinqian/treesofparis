@@ -44,6 +44,7 @@ import fr.arbresdeparis.core.map.MapPalette
 import fr.arbresdeparis.core.map.MapProvider
 import fr.arbresdeparis.domain.model.GeoBounds
 import fr.arbresdeparis.domain.model.GeoPoint
+import fr.arbresdeparis.feature.map.mapper.toDetailUi
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -92,7 +93,7 @@ class MapScreenTest {
     private fun show(
         state: MapUiState,
         preciseLocation: Boolean = true,
-        showSystemLocationButtons: Boolean = true,
+        inFront: Boolean = true,
     ) = compose.setContent {
         CompositionLocalProvider(LocalMapProvider provides StubMap) {
             TreesTheme {
@@ -118,7 +119,7 @@ class MapScreenTest {
                     onNearbyOpen = { nearbyOpens++ },
                     onNearbyDismiss = { nearbyDismisses++ },
                     preciseLocation = preciseLocation,
-                    showSystemLocationButtons = showSystemLocationButtons,
+                    inFront = inFront,
                     onZoomHintClick = { zoomHintClicks++ },
                 )
             }
@@ -343,10 +344,26 @@ class MapScreenTest {
     fun systemLocationButtons_whileTheMapIsNotInFront_giveWayToLookAlikes() {
         // The system draws its buttons on a layer above the whole window: they would stay on screen while the map
         // fades out behind another tab. Until the map is settled, our own button stands in for « Me localiser ».
-        show(base, preciseLocation = false, showSystemLocationButtons = false)
+        show(base, preciseLocation = false, inFront = false)
         compose.onAllNodesWithTag(SYSTEM_LOCATION_BUTTON_TAG, useUnmergedTree = true).assertCountEquals(0)
         compose.onNodeWithText("Arbre le plus proche").assertDoesNotExist()
         compose.onNodeWithContentDescription("Me localiser").assertIsDisplayed()
+    }
+
+    @Test
+    fun treeSheet_whileTheMapIsNotInFront_waits() {
+        // The sheet opens in a window of its own, above every screen: drawn while the map comes back from « Son
+        // histoire », it would cover the page fading out and catch the predictive back gesture.
+        val detail = tree(7).copy(remarkable = true).toDetailUi(isFavorite = false, story = story(7))
+        show(base.copy(selectedTree = detail), inFront = false)
+        compose.onNodeWithText("Son histoire").assertDoesNotExist()
+    }
+
+    @Test
+    fun treeSheet_onceTheMapIsInFront_showsTheOpenTree() {
+        val detail = tree(7).copy(remarkable = true).toDetailUi(isFavorite = false, story = story(7))
+        show(base.copy(selectedTree = detail))
+        compose.onNodeWithText("Son histoire").assertExists()
     }
 
     @Test

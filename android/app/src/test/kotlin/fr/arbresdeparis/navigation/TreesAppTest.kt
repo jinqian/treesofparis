@@ -30,11 +30,18 @@ class TreesAppTest {
     private val app = @androidx.compose.runtime.Composable {
         TreesTheme {
             TreesApp(
-                mapContent = { key, inFront ->
+                mapContent = { key, inFront, onOpenStory ->
                     val map = retain { StubMap(created = mapsCreated++) }
                     Column {
                         Text("map tree=${key.treeId} genus=${key.genus}" + if (inFront) "" else " behind")
                         Text("map instance ${map.created}")
+                        Button(onClick = { onOpenStory(124914) }) { Text("story 124914") }
+                    }
+                },
+                remarkableStoryContent = { treeId, onBack ->
+                    Column {
+                        Text("story of $treeId")
+                        Button(onClick = onBack) { Text("back") }
                     }
                 },
                 favoritesContent = { onTreeClick, onExploreMap ->
@@ -78,6 +85,17 @@ class TreesAppTest {
                 },
             )
         }
+    }
+
+    @Test
+    fun aRemarkableTreesStory_opensOverTheMap_andBackKeepsTheSameMap() {
+        compose.setContent(app)
+        compose.onNodeWithText("story 124914").performClick()
+        compose.onNodeWithText("story of 124914").assertIsDisplayed()
+        compose.onNodeWithText("Carte").assertIsSelected()
+        compose.onNodeWithText("back").performClick()
+        compose.onNodeWithText("map instance 0").assertIsDisplayed()
+        assertEquals(0, mapsRetired)
     }
 
     @Test

@@ -79,6 +79,29 @@ class MapScreenshotTest {
     fun treeDetail_dark() = sheet("tree_detail_dark") { TreeDetailContent(TREE, onFavoriteToggle = {}) }
 
     @Test
+    fun treeDetailStory_light() = sheet("tree_detail_story_light") { StorySheet() }
+
+    @Test
+    @Config(qualifiers = "+night")
+    fun treeDetailStory_dark() = sheet("tree_detail_story_dark") { StorySheet() }
+
+    @Test
+    fun remarkableStory_light() = snap("remarkable_story_light") { RemarkableStoryScreen(STORY_TREE, {}, {}) }
+
+    @Test
+    @Config(qualifiers = "+night")
+    fun remarkableStory_dark() = snap("remarkable_story_dark") { RemarkableStoryScreen(STORY_TREE, {}, {}) }
+
+    @Test
+    fun remarkableStoryUnavailable_light() =
+        snap("remarkable_story_unavailable_light") {
+            RemarkableStoryPage(RemarkableStoryUiState.Unavailable, onBack = {}, onOpenUrl = {})
+        }
+
+    @Test
+    fun storyPhotoViewer() = snap("story_photo_viewer") { StoryPhotoViewer(STORY_TREE, onClose = {}) }
+
+    @Test
     fun genusPicker_light() = sheet("genus_picker_light") { GenusPickerContent(PICKER, onPick = {}) }
 
     @Test
@@ -115,10 +138,13 @@ class MapScreenshotTest {
                 onNearbyOpen = {},
                 onNearbyDismiss = {},
                 // Our own buttons: the system location button is drawn by Android, outside the composition.
-                showSystemLocationButtons = false,
+                inFront = false,
             )
         }
     }
+
+    @Composable
+    private fun StorySheet() = TreeDetailContent(STORY_TREE, onFavoriteToggle = {})
 
     /** A sheet's content as the bottom sheet shows it: on the sheet colour, at the bottom of the screen. */
     private fun sheet(
@@ -189,6 +215,30 @@ class MapScreenshotTest {
                         currentMonth = 10,
                         currentMonthName = "novembre",
                         monthsUntilFlowering = 6,
+                    ),
+            )
+
+        /** The Robinier of Square René Viviani with its story; no photo URL, so the screenshot shows its drawing. */
+        val STORY_TREE =
+            TREE.copy(
+                story =
+                    RemarkableStoryUi(
+                        site = "Square René Viviani",
+                        qualification = "Historique",
+                        summary = "Cet arbre est classé remarquable pour son caractère historique.",
+                        story =
+                            "Originaire des États-Unis, le Robinier faux-acacia appartient à la famille des " +
+                                "Fabacées. Introduit et planté en 1601 par Jean Robin, auquel il doit son nom, " +
+                                "cet arbre est le plus vieux de Paris.",
+                        plantingYear = "1602",
+                        label = "A.R.B.R.E.S en 2015",
+                        councilDecision = "2015 DEVE 152",
+                        signUrl = "https://capgeo.sig.paris.fr/PdfEtImages/ArbresRemarquables/PDF/124358.pdf",
+                        photoUrl = null,
+                        photoCredit = "© Jean-Pierre Viguié / Ville de Paris",
+                        teaser =
+                            "Introduit et planté en 1601 par Jean Robin, auquel il doit son nom, " +
+                                "cet arbre est le plus vieux de Paris.",
                     ),
             )
 

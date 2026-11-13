@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.arbresdeparis.domain.usecase.GetFloweringSeasons
+import fr.arbresdeparis.domain.usecase.GetRemarkableStories
 import fr.arbresdeparis.domain.usecase.GetRemarkableTrees
 import fr.arbresdeparis.domain.usecase.GetTreeStatistics
 import fr.arbresdeparis.feature.herbier.mapper.toFloweringCalendarUi
@@ -25,6 +26,7 @@ class HerbierViewModel
         getTreeStatistics: GetTreeStatistics,
         getFloweringSeasons: GetFloweringSeasons,
         getRemarkableTrees: GetRemarkableTrees,
+        getRemarkableStories: GetRemarkableStories,
         clock: Clock,
     ) : ViewModel() {
         val uiState: StateFlow<HerbierUiState> =
@@ -35,7 +37,7 @@ class HerbierViewModel
                         now = LocalDate.now(clock).month,
                         plantingOrder = statistics.genera.map { it.genus },
                     )
-                val remarkable = getRemarkableTrees().toRemarkableAreasUi()
+                val remarkable = getRemarkableTrees().toRemarkableAreasUi(getRemarkableStories())
                 emit(HerbierUiState.Content(statistics.toHerbierUi(), calendar, remarkable))
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), HerbierUiState.Loading)
 

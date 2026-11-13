@@ -58,8 +58,9 @@ import fr.arbresdeparis.domain.model.GeoPoint
  * Herbier). Never asks for location by itself: the user shares it with the location button (ADR 0006), and the map
  * centres on them at launch only when location is already granted.
  *
- * [inFront] is false while the Carte screen is not settled on screen (a tab transition): the system location buttons
- * are drawn by Android on a layer above the whole window, so they give way to look-alikes until then.
+ * [inFront] is false while the Carte screen is not settled on screen (a tab transition, « Son histoire » opening or
+ * closing, a back gesture): the system location buttons are drawn by Android on a layer above the whole window, so
+ * they give way to look-alikes until then, and the sheets, each in a window of its own, wait.
  */
 @Composable
 fun MapRoute(
@@ -67,6 +68,7 @@ fun MapRoute(
     modifier: Modifier = Modifier,
     genus: String? = null,
     inFront: Boolean = true,
+    onOpenStory: (Long) -> Unit = {},
     viewModel: MapViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -104,6 +106,10 @@ fun MapRoute(
         onRemarkableInfoDismiss = viewModel::onRemarkableInfoDismiss,
         onOpenWikipedia = { url -> context.openInCustomTab(url) },
         onOpenDirections = { location -> context.openInMapsApp(location) },
+        onOpenStory = { id ->
+            viewModel.onStoryOpen()
+            onOpenStory(id)
+        },
         onGenusFilterClear = viewModel::onGenusFilterClear,
         onGenusPickerOpen = viewModel::onGenusPickerOpen,
         onGenusPick = viewModel::onGenusPick,
@@ -116,7 +122,7 @@ fun MapRoute(
         modifier = modifier,
         onClusterClick = viewModel::onClusterClick,
         preciseLocation = preciseLocation,
-        showSystemLocationButtons = inFront,
+        inFront = inFront,
     )
 }
 
@@ -145,9 +151,10 @@ fun MapScreen(
     modifier: Modifier = Modifier,
     onClusterClick: (MapCluster) -> Unit = {},
     preciseLocation: Boolean = true,
-    showSystemLocationButtons: Boolean = true,
+    inFront: Boolean = true,
     onZoomHintClick: () -> Unit = {},
     onOpenDirections: (GeoPoint) -> Unit = {},
+    onOpenStory: (Long) -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     MessageEffect(state.message, snackbarHostState, onMessageDismiss, onOpenSettings)
@@ -179,7 +186,7 @@ fun MapScreen(
             onLocateResult = onLocateResult,
             onFindNearestTree = onFindNearestTree,
             preciseLocation = preciseLocation,
-            showSystemLocationButtons = showSystemLocationButtons,
+            showSystemLocationButtons = inFront,
             onNearbyNext = onNearbyNext,
             onNearbyOpen = onNearbyOpen,
             onNearbyDismiss = onNearbyDismiss,
@@ -189,7 +196,10 @@ fun MapScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = TreesSpacing.xl * 2),
         )
-        TreeSheet(state.selectedTree, onDetailDismiss, onFavoriteToggle, onOpenWikipedia, onOpenDirections)
+        // Each sheet is a window of its own, above every screen: it waits until the map is settled in front, or it
+        // would cover the screen the map is leaving or coming back from and catch the predictive back gesture.
+        if (!inFront) return@Box
+        TreeSheet(state.selectedTree, onDetailDismiss, onFavoriteToggle, onOpenWikipedia, onOpenDirections, onOpenStory)
         state.genusPicker?.let { GenusPickerSheet(it, onGenusPick, onGenusFilterClear, onGenusPickerDismiss) }
         if (state.showRemarkableInfo) {
             TreesBottomSheet(onDismiss = onRemarkableInfoDismiss) {
@@ -202,7 +212,7 @@ fun MapScreen(
     }
 }
 
-/** The open tree's sheet: its details, favorite and Wikipédia link. */
+/** The open tree's sheet: its details, favorite and Wikipédia link, and a remarkable tree's « Son histoire ». */
 @Composable
 private fun TreeSheet(
     detail: TreeDetailUi?,
@@ -210,6 +220,7 @@ private fun TreeSheet(
     onFavoriteToggle: () -> Unit,
     onOpenWikipedia: (String) -> Unit,
     onOpenDirections: (GeoPoint) -> Unit,
+    onOpenStory: (Long) -> Unit,
 ) {
     if (detail == null) return
     TreesBottomSheet(onDismiss = onDismiss) {
@@ -218,6 +229,7 @@ private fun TreeSheet(
             onFavoriteToggle = onFavoriteToggle,
             onOpenWikipedia = onOpenWikipedia,
             onOpenDirections = onOpenDirections,
+            onOpenStory = { onOpenStory(detail.id) },
         )
     }
 }

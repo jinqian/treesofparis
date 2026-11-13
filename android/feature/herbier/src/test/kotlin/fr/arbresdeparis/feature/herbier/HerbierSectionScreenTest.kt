@@ -79,6 +79,7 @@ class HerbierSectionScreenTest {
         scrollTo("PARIS 6E")
         compose.onNodeWithText("PARIS 6E").assertExists()
         scrollTo("Jardin du Luxembourg")
+        compose.onNodeWithText("Cet arbre est issu du semis", substring = true).assertExists()
         compose.onNodeWithText("Marronnier").performClick()
         assertEquals(listOf(13L), treeClicks)
     }

@@ -10,6 +10,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import fr.arbresdeparis.core.data.BuildConfig
+import fr.arbresdeparis.core.data.db.RemarkableStoryDao
 import fr.arbresdeparis.core.data.db.TreeDao
 import fr.arbresdeparis.core.data.db.TreeDatabase
 import fr.arbresdeparis.core.data.db.TreeStatisticsDao
@@ -17,12 +18,14 @@ import fr.arbresdeparis.core.data.db.UserDatabase
 import fr.arbresdeparis.core.data.location.LocationRepositoryImpl
 import fr.arbresdeparis.core.data.repository.FavoritesRepositoryImpl
 import fr.arbresdeparis.core.data.repository.GuideFloweringRepository
+import fr.arbresdeparis.core.data.repository.RemarkableStoryRepositoryImpl
 import fr.arbresdeparis.core.data.repository.TreeRepositoryImpl
 import fr.arbresdeparis.core.data.repository.TreeStatisticsRepositoryImpl
 import fr.arbresdeparis.domain.model.DatasetInfo
 import fr.arbresdeparis.domain.repository.FavoritesRepository
 import fr.arbresdeparis.domain.repository.FloweringRepository
 import fr.arbresdeparis.domain.repository.LocationRepository
+import fr.arbresdeparis.domain.repository.RemarkableStoryRepository
 import fr.arbresdeparis.domain.repository.TreeRepository
 import fr.arbresdeparis.domain.repository.TreeStatisticsRepository
 import java.time.Instant
@@ -39,6 +42,9 @@ internal abstract class DataModule {
 
     @Binds
     abstract fun bindFloweringRepository(impl: GuideFloweringRepository): FloweringRepository
+
+    @Binds
+    abstract fun bindRemarkableStoryRepository(impl: RemarkableStoryRepositoryImpl): RemarkableStoryRepository
 
     companion object {
         @Provides
@@ -59,6 +65,9 @@ internal abstract class DataModule {
 
         @Provides
         fun provideTreeStatisticsDao(db: TreeDatabase): TreeStatisticsDao = db.treeStatisticsDao()
+
+        @Provides
+        fun provideRemarkableStoryDao(db: TreeDatabase): RemarkableStoryDao = db.remarkableStoryDao()
 
         @Provides
         @Singleton

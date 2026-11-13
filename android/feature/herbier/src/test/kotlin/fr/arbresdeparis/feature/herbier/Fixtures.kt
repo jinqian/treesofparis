@@ -8,11 +8,13 @@ import fr.arbresdeparis.domain.model.GenusSummary
 import fr.arbresdeparis.domain.model.GeoBounds
 import fr.arbresdeparis.domain.model.GeoPoint
 import fr.arbresdeparis.domain.model.RemarkableStatistics
+import fr.arbresdeparis.domain.model.RemarkableStory
 import fr.arbresdeparis.domain.model.StageCount
 import fr.arbresdeparis.domain.model.Tree
 import fr.arbresdeparis.domain.model.TreeCluster
 import fr.arbresdeparis.domain.model.TreeStatistics
 import fr.arbresdeparis.domain.repository.FloweringRepository
+import fr.arbresdeparis.domain.repository.RemarkableStoryRepository
 import fr.arbresdeparis.domain.repository.TreeRepository
 import fr.arbresdeparis.domain.repository.TreeStatisticsRepository
 import kotlinx.coroutines.Dispatchers
@@ -173,4 +175,34 @@ class FakeTreeRepository(
         cellLat: Double,
         cellLon: Double,
     ) = emptyList<TreeCluster>()
+}
+
+/** The story of tree 13 (the Marronnier of the Jardin du Luxembourg), as « Les arbres remarquables » tells it. */
+val STORIES =
+    mapOf(
+        13L to
+            RemarkableStory(
+                treeId = 13,
+                site = "Jardin du Luxembourg",
+                qualification = "Symbolique",
+                summary = "Cet arbre est classé remarquable pour sa valeur symbolique.",
+                story =
+                    "Le marronnier appartient à la famille des Sapindacées. Cet arbre est issu du semis du " +
+                        "véritable marronnier qu’Anne Frank voyait depuis son grenier, à Amsterdam. " +
+                        "Il a été planté en 2006.",
+                plantingYear = 2006,
+                label = null,
+                councilDecision = null,
+                signUrl = null,
+                photoUrl = null,
+                photoCredit = null,
+            ),
+    )
+
+class FakeRemarkableStoryRepository(
+    private val stories: Map<Long, RemarkableStory> = STORIES,
+) : RemarkableStoryRepository {
+    override suspend fun getStory(treeId: Long) = stories[treeId]
+
+    override suspend fun getStories() = stories.values.toList()
 }

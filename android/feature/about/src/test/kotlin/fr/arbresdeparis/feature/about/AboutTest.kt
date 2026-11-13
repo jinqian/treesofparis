@@ -153,6 +153,27 @@ class AboutTest {
     }
 
     @Test
+    fun aboutScreen_creditsTheRemarkableTreesDataset() {
+        val urls = mutableListOf<String>()
+        compose.setContent {
+            TreesTheme {
+                AboutScreen(
+                    state,
+                    onOpenUrl = { urls += it },
+                    onWriteToUs = {},
+                    onOpenLibraries = {},
+                    onOpenFloweringSources = {},
+                    onCrashReportingChange = {},
+                )
+            }
+        }
+        val credit = "« Les arbres remarquables », Paris Data — Ville de Paris"
+        compose.onNodeWithTag(ABOUT_LIST_TAG).performScrollToNode(hasText(credit))
+        compose.onNodeWithText(credit).performClick()
+        assertEquals(listOf("https://opendata.paris.fr/explore/dataset/arbresremarquablesparis/information/"), urls)
+    }
+
+    @Test
     fun aboutScreen_showsOsmAttribution() {
         compose.setContent {
             TreesTheme {

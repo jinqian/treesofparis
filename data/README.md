@@ -5,6 +5,7 @@ The app ships open tree datasets as a pre-packaged SQLite database, `android/cor
 | Source | Trees | Licence | Module |
 |--------|-------|---------|--------|
 | [« Les arbres », Ville de Paris](https://opendata.paris.fr/explore/dataset/les-arbres/information/) | 220,339 | ODbL | `update_trees.py` |
+| [« Les arbres remarquables », Ville de Paris](https://opendata.paris.fr/explore/dataset/arbresremarquablesparis/information/) | 181 stories (table `remarkable_trees`, ADR 0009) | ODbL | `remarkable.py` |
 | [« Arbres », Grand Paris Seine Ouest](https://data.seineouest.fr/explore/dataset/arbres-v2/information/) (8 towns) | 32,636 | Licence Ouverte 2.0 | `gpso.py` |
 
 `scripts/update_trees.py` downloads them, cleans them, gives every tree its town (`city`) and its dataset
@@ -47,7 +48,7 @@ top-level fields describe the Paris data:
 | `dataVersion` | The data version, as in `trees-db-version.txt`. |
 | `wikipediaLinks` | How many genus + species pairs have a French Wikipedia article (see below). |
 | `source`, `sourceExport`, `license` | The dataset page, the export URL used, and its licence (ODbL). |
-| `otherSources` | The same fields for each other source (`id`: `gpso`), its `dropped` counts (stumps, trees already in the Paris data). |
+| `otherSources` | The same fields for each other source (`id`: `gpso`, `remarquables`), its `dropped` counts (stumps, trees already in the Paris data). |
 | `treesKept` | All the trees shipped, every source together. |
 
 The app shows the extraction date and the number of trees in À propos (« Extraction du 6 novembre 2026 · 220 339

@@ -19,6 +19,12 @@ data class MapKey(
     val request: Long = 0,
 ) : NavKey
 
+/** « Son histoire » of a remarkable tree, pushed on the Carte back stack over the map (issue #74). */
+@Serializable
+data class RemarkableStoryKey(
+    val treeId: Long,
+) : NavKey
+
 @Serializable
 data object HerbierKey : NavKey
 

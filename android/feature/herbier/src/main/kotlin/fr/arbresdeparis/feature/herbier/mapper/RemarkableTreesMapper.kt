@@ -1,6 +1,8 @@
 package fr.arbresdeparis.feature.herbier.mapper
 
 import fr.arbresdeparis.domain.format.formatArea
+import fr.arbresdeparis.domain.format.storyTeaser
+import fr.arbresdeparis.domain.model.RemarkableStory
 import fr.arbresdeparis.domain.model.Tree
 import fr.arbresdeparis.feature.herbier.RemarkableAreaUi
 import fr.arbresdeparis.feature.herbier.RemarkableTreeUi
@@ -13,7 +15,7 @@ private val ARRONDISSEMENT = Regex("""^PARIS (\d{1,2})(?:ER|E) ARRDT$""")
  * The remarkable trees by area: Paris 1er to 20e first, then the woods and the other places, by name. Within an
  * area, by name: « Parc Monceau · 22 m ».
  */
-fun List<Tree>.toRemarkableAreasUi(): List<RemarkableAreaUi> {
+fun List<Tree>.toRemarkableAreasUi(stories: Map<Long, RemarkableStory> = emptyMap()): List<RemarkableAreaUi> {
     val collator = Collator.getInstance(Locale.FRENCH)
     return groupBy { it.arrondissement }
         .entries
@@ -35,6 +37,7 @@ fun List<Tree>.toRemarkableAreasUi(): List<RemarkableAreaUi> {
                                         shortPlace(tree.address),
                                         tree.heightM?.let { "$it m" },
                                     ).joinToString(" · "),
+                                teaser = storyTeaser(stories[tree.id]?.story),
                             )
                         },
             )

@@ -23,6 +23,7 @@ import fr.arbresdeparis.feature.favorites.FavoritesRoute
 import fr.arbresdeparis.feature.herbier.HerbierRoute
 import fr.arbresdeparis.feature.herbier.HerbierSectionRoute
 import fr.arbresdeparis.feature.map.MapRoute
+import fr.arbresdeparis.feature.map.RemarkableStoryRoute
 import fr.arbresdeparis.theme.AppThemeSettings
 import fr.arbresdeparis.theme.overrideUiMode
 import fr.arbresdeparis.theme.savedThemeMode
@@ -64,12 +65,15 @@ class MainActivity : ComponentActivity() {
             TreesTheme {
                 CompositionLocalProvider(LocalMapProvider provides mapProvider) {
                     TreesApp(
-                        mapContent = {
-                            key,
-                            inFront,
-                            ->
-                            MapRoute(treeId = key.treeId, genus = key.genus, inFront = inFront)
+                        mapContent = { key, inFront, onOpenStory ->
+                            MapRoute(
+                                treeId = key.treeId,
+                                genus = key.genus,
+                                inFront = inFront,
+                                onOpenStory = onOpenStory,
+                            )
                         },
+                        remarkableStoryContent = { treeId, onBack -> RemarkableStoryRoute(treeId, onBack = onBack) },
                         favoritesContent = { onTreeClick, onExploreMap ->
                             FavoritesRoute(onTreeClick = onTreeClick, onExploreMap = onExploreMap)
                         },

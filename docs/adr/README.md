@@ -11,3 +11,4 @@ accepted one; mark superseded records as such.
 - [0006 — Precise location through the Android location button](0006-location-button.md)
 - [0007 — Crash reports with Firebase Crashlytics](0007-crashlytics.md)
 - [0008 — Trees from several open datasets, each with its town](0008-trees-from-several-sources.md)
+- [0009 — The stories of the remarkable trees, in the tree database](0009-remarkable-tree-stories.md)

@@ -77,6 +77,15 @@ class TreesNavigator(
         state.selected = TopLevelDestination.MAP
     }
 
+    /** Opens a remarkable tree's story over the map, so back returns to the map and its open sheet. */
+    fun openRemarkableStory(treeId: Long) {
+        state.backStacks.getValue(TopLevelDestination.MAP).apply {
+            val key = RemarkableStoryKey(treeId)
+            if (lastOrNull() != key) add(key)
+        }
+        state.selected = TopLevelDestination.MAP
+    }
+
     /** Opens a level-2 Herbier screen on top of the Herbier home. */
     fun openHerbierSection(section: HerbierSection) {
         state.backStacks.getValue(TopLevelDestination.HERBIER).apply {
