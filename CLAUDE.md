@@ -46,6 +46,10 @@ repository root holds what is shared: `data/` (builds `trees.db`), `website/`, `
   gestures only report through `onCameraChange`.
 - The web map (`website/maps/`) mirrors the app: `style.js` copies `HerbierMapStyle.kt` and the pin colours, and
   `build_web_map.py` copies `formatArea`/`formatPlace` and `storyTeaser`. Change both sides together.
+- The website is indexed by search engines: `website/robots.txt` and `website/sitemap.xml` (Google Search Console,
+  domain property, sitemap submitted, in the owner's account). A new page under `website/` goes in `sitemap.xml`
+  (with a title, a description and a canonical URL); one that must not be indexed gets `<meta name="robots"
+  content="noindex">`, like `404.html`.
 - The tree schema is owned by the Room entities. `data/scripts/update_trees.py` builds `trees.db` from
   Room's exported schema JSON in `android/core/data/schemas/`. Never hand-edit the schema in two places.
 
