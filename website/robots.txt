@@ -1,0 +1,6 @@
+# arbresdeparis.fr — every page may be indexed. The web map's tree files (maps/data/, ~38 MB of JSON) are data for
+# the map, not pages: crawlers skip them.
+User-agent: *
+Disallow: /maps/data/
+
+Sitemap: https://arbresdeparis.fr/sitemap.xml

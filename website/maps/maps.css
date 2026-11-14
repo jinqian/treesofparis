@@ -90,6 +90,16 @@ a {
   display: none !important;
 }
 
+/* For screen readers and search engines only: the page's title as its heading. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* Floating paper: the bar, the pills, the sheet. */
 .bar,
 .pill,
