@@ -380,7 +380,7 @@ def _headline(h: dict) -> str:
 def _genera(h: dict) -> str:
     rows = "".join(
         "<li>"
-        f'<a class="genus" href="../maps/?genre={escape(g["genus"])}" data-goatcounter-click="herbier-genre-{escape(g["genus"])}">'
+        f'<a class="genus" href="../maps/?genre={escape(g["genus"])}">'
         f'<span class="leaf-disc">{_leaf(g["genus"])}</span>'
         '<span class="genus-body">'
         f'<span class="genus-top"><span class="genus-name">{escape(g["label"])}</span>'
