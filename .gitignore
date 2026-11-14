@@ -38,3 +38,6 @@ __pycache__/
 
 # Web map tree files, built from trees.db by data/scripts/build_web_map.py (and by the Pages workflow)
 website/maps/data/
+
+# The Herbier page, written from trees.db by data/scripts/build_herbier.py (and by the Pages workflow)
+website/herbier/index.html

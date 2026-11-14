@@ -218,6 +218,21 @@ button {
   color: var(--gold-ink);
 }
 
+.genus-pill {
+  background: var(--sage);
+  max-width: 50vw;
+}
+
+.genus-pill span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.genus-pill svg {
+  flex: none;
+}
+
 .round {
   display: grid;
   place-items: center;

@@ -5,7 +5,8 @@ The trees are split on a fixed grid of cells about 1 km wide; the page fetches o
 level (as the app does). Below street level it shows groups of trees instead: `clusters.json` counts the trees on three
 coarser grids (about 2 km, 1 km, 500 m and 250 m), each group placed at the mean position of its trees. Remarkable trees go
 in one extra file so the page can show them at every zoom, their stories (« Les arbres remarquables », issue #74) in
-another, loaded when one is opened, and the Wikipedia titles in a third.
+another, loaded when one is opened, and the Wikipedia titles in a third. `genera/` holds the groups of each genus
+alone, for the map opened on one genus (`/maps/?genre=Tilia`, from the Herbier page, issue #84).
 
 Standard library only. Usage (from the repository root):
 
@@ -25,6 +26,9 @@ import shutil
 import sqlite3
 import sys
 from pathlib import Path
+
+# build_herbier.py (the genera's names) sits next to this script; isolated mode (python3 -I) leaves it off the path.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 REPO = Path(__file__).resolve().parents[2]
 ANDROID_DATA = REPO / "android" / "core" / "data"
@@ -251,9 +255,15 @@ def build(db: Path, meta_file: Path, out: Path) -> dict:
     cells: dict[str, list] = {}
     remarkable = []
     points = []
+    by_genus: dict[str, list] = {}
+    names: dict[str, dict[str, int]] = {}
     for row in con.execute("SELECT * FROM trees ORDER BY id"):
         tree = tree_row(row)
         points.append((row["lat"], row["lon"]))
+        if row["genus"]:
+            by_genus.setdefault(row["genus"], []).append((row["lat"], row["lon"]))
+            counts = names.setdefault(row["genus"], {})
+            counts[row["common_name"]] = counts.get(row["common_name"], 0) + 1
         cells.setdefault(cell_of(row["lat"], row["lon"]), []).append(tree)
         if row["remarkable"]:
             remarkable.append(tree)
@@ -273,6 +283,11 @@ def build(db: Path, meta_file: Path, out: Path) -> dict:
     _write(out / "clusters.json", clusters(points))
     _write(out / "taxa.json", taxa)
     _write(out / "stories.json", tales)
+    (out / "genera").mkdir()
+    genera = {}
+    for genus in sorted(by_genus):
+        genera[genus] = [genus_label(genus, names[genus]), len(by_genus[genus]), genus_file(genus)]
+        _write(out / "genera" / f"{genus_file(genus)}.json", clusters(by_genus[genus]))
 
     meta = json.loads(meta_file.read_text(encoding="utf-8")) if meta_file.exists() else {}
     index = {
@@ -283,11 +298,25 @@ def build(db: Path, meta_file: Path, out: Path) -> dict:
         "treeCount": sum(len(t) for t in cells.values()),
         "remarkableCount": len(remarkable),
         "storyCount": len(tales),
+        "genera": genera,
         "extractedAt": meta.get("extractedAt"),
         "dataVersion": meta.get("dataVersion"),
     }
     _write(out / "index.json", index)
     return index
+
+
+def genus_file(genus: str) -> str:
+    """The name of a genus's file in genera/: « x Chitalpa » → « x_Chitalpa »."""
+    return re.sub(r"[^A-Za-z0-9]", "_", genus)
+
+
+def genus_label(genus: str, names: dict[str, int]) -> str:
+    """The app's name for a drawn genus (« Tilleul »), else the French name most of its trees carry."""
+    from build_herbier import leaf_for  # imports this module: import it late
+
+    leaf = leaf_for(genus)
+    return leaf.label if leaf else max(names.items(), key=lambda item: (item[1], item[0]))[0]
 
 
 def _write(path: Path, value) -> None:

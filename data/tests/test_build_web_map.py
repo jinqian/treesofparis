@@ -219,3 +219,27 @@ def test_build_without_stories_table_writes_none(tmp_path):
 )
 def test_story_teaser(story, expected):
     assert wm.story_teaser(story) == expected
+
+
+# --- one genus on the map (from the Herbier, issue #84) ---------------------------------------------------------------
+
+
+def test_build_writes_the_groups_of_each_genus(small_db, tmp_path):
+    db, meta = small_db
+    out = tmp_path / "out"
+    index = wm.build(db, meta, out)
+
+    # Drawn genera carry the app's name for them; the others their most common French name.
+    assert index["genera"] == {
+        "Carpinus": ["Charme", 1, "Carpinus"],
+        "Platanus": ["Platane", 2, "Platanus"],
+        "Quercus": ["Chêne", 1, "Quercus"],
+    }
+    platanus = json.loads((out / "genera" / "Platanus.json").read_text())
+    assert sorted(platanus) == ["coarse", "district", "fine", "mid"]
+    assert all(sum(g[2] for g in level) == 2 for level in platanus.values())
+
+
+@pytest.mark.parametrize("genus, expected", [("Tilia", "Tilia"), ("x Chitalpa", "x_Chitalpa"), ("Non spécifié", "Non_sp_cifi_")])
+def test_genus_file_names_are_plain(genus, expected):
+    assert wm.genus_file(genus) == expected

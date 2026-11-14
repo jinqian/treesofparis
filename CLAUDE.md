@@ -45,7 +45,10 @@ repository root holds what is shared: `data/` (builds `trees.db`), `website/`, `
 - Map camera: `initialCamera` is applied once, `CameraRequest` (with a unique id) for programmatic moves,
   gestures only report through `onCameraChange`.
 - The web map (`website/maps/`) mirrors the app: `style.js` copies `HerbierMapStyle.kt` and the pin colours, and
-  `build_web_map.py` copies `formatArea`/`formatPlace` and `storyTeaser`. Change both sides together.
+  `build_web_map.py` copies `formatArea`/`formatPlace` and `storyTeaser`. Change both sides together. The Herbier page
+  (`website/herbier/`) is written by `data/scripts/build_herbier.py` from `data/templates/herbier.html`; it mirrors
+  the app's Herbier tab (`TreeStatisticsDao`, `HerbierUiMapper`) and reads the leaf drawings, genus names and flowering
+  months straight from the app's sources.
 - The website is indexed by search engines: `website/robots.txt` and `website/sitemap.xml` (Google Search Console,
   domain property, sitemap submitted, in the owner's account). A new page under `website/` goes in `sitemap.xml`
   (with a title, a description and a canonical URL); one that must not be indexed gets `<meta name="robots"
@@ -69,6 +72,7 @@ cd ..                                   # the rest runs from the repository root
 python3 -I -m pytest data/tests         # data script tests
 python3 data/scripts/update_trees.py    # refresh trees.db (see data/README.md)
 python3 data/scripts/build_web_map.py             # web map tree files from trees.db (git-ignored)
+python3 data/scripts/build_herbier.py             # the Herbier page from trees.db (git-ignored)
 python3 -m http.server --directory website 8000   # preview the website (map at /maps/)
 ```
 

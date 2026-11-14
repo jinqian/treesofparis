@@ -2,6 +2,8 @@
 // Trees come from data/ (built from the app's trees.db by data/scripts/build_web_map.py): one file per ~1 km cell,
 // fetched from street level, plus the remarkable trees, shown at every zoom, and their stories (« Les arbres
 // remarquables »), loaded the first time one is opened.
+// The Herbier page links here: `?genre=Tilia` shows only that genus at every zoom (its own groups, data/genera/), and
+// `?arbre=<id>` opens a remarkable tree's sheet.
 
 import {
   CLUSTER_LAYERS,
@@ -40,6 +42,7 @@ const state = {
   pending: new Map(), // key → Promise
   byId: new Map(),
   onlyRemarkable: false,
+  genus: null, // { genus, label, clusters } when only one genus is shown
   selected: null,
   user: null,
   stories: null, // Promise of data/stories.json: tree id → story
@@ -151,6 +154,7 @@ async function refresh() {
     if (token !== refreshToken) return; // a newer move took over
     $("#loading").hidden = true;
   }
+  if (state.genus) rows = rows.filter((row) => row[F.genus] === state.genus.genus);
   map.getSource(PINS_SOURCE)?.setData(collection(rows));
 }
 
@@ -167,7 +171,8 @@ function clusterCollection(levels) {
 }
 
 function drawClusters() {
-  if (state.clusters) map.getSource(CLUSTERS_SOURCE)?.setData(state.clusters);
+  const clusters = state.genus ? state.genus.clusters : state.clusters;
+  if (clusters) map.getSource(CLUSTERS_SOURCE)?.setData(clusters);
 }
 
 function drawSelectionAndUser() {
@@ -437,6 +442,41 @@ function toggleRemarkable() {
   refresh();
 }
 
+/** Shows only the trees of a dataset genus (« Tilia »), or every tree when null; the URL follows, to be shared. */
+async function setGenus(genus) {
+  const known = genus && state.index.genera?.[genus];
+  if (genus && !known) showToast("Cette essence n’est pas sur la carte.");
+  if (known) {
+    const [label, , file] = known;
+    try {
+      state.genus = { genus, label, clusters: clusterCollection(await getJson(`data/genera/${file}.json`)) };
+    } catch (error) {
+      console.error(error);
+      showToast("Impossible de charger les arbres. Vérifiez votre connexion.");
+      state.genus = null;
+    }
+  } else {
+    state.genus = null;
+  }
+  $("#genus-name").textContent = state.genus?.label ?? "";
+  $("#genus-filter").hidden = !state.genus;
+  if (state.selected && state.genus && state.selected[F.genus] !== state.genus.genus) closeSheet();
+  const url = new URL(window.location.href);
+  if (state.genus) url.searchParams.set("genre", genus);
+  else url.searchParams.delete("genre");
+  history.replaceState(history.state, "", url);
+  drawClusters();
+  refresh();
+}
+
+/** `?arbre=<id>`: a remarkable tree, centred at street level with its sheet open. */
+function openRequestedTree(id) {
+  const row = state.byId.get(Number(id));
+  if (!row) return showToast("Cet arbre n’est pas sur la carte.");
+  map.jumpTo({ center: [row[F.lon], row[F.lat]], zoom: Math.max(map.getZoom(), 17) });
+  openSheet(row);
+}
+
 // --- wiring -----------------------------------------------------------------------------------------------------------
 
 map.on("click", (event) => {
@@ -483,6 +523,7 @@ darkQuery.addEventListener("change", () => {
 $("#locate").addEventListener("click", locate);
 $("#hint").addEventListener("click", () => map.easeTo({ zoom: TREE_MIN_ZOOM + 0.7 }));
 $("#only-remarkable").addEventListener("click", toggleRemarkable);
+$("#genus-filter").addEventListener("click", () => setGenus(null));
 $("#sheet-close").addEventListener("click", closeSheet);
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape" || $("#photo-viewer").open || $("#sheet").hidden) return; // the viewer closes itself
@@ -523,9 +564,12 @@ async function start() {
     showToast("Impossible de charger les arbres. Vérifiez votre connexion.");
     return;
   }
-  const draw = () => {
+  const params = new URLSearchParams(window.location.search);
+  const draw = async () => {
     drawClusters();
-    refresh();
+    if (params.has("genre")) await setGenus(params.get("genre"));
+    else refresh();
+    if (params.has("arbre")) openRequestedTree(params.get("arbre"));
   };
   if (map.isStyleLoaded()) draw();
   else map.once("load", draw);

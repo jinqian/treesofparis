@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>L’herbier des arbres de Paris : essences, floraisons, arbres remarquables — Arbres de Paris</title>
+  <meta name="description" content="Les $total arbres de Paris en chiffres : la part de chaque essence, du platane au hêtre, le calendrier des floraisons, les $remarkableCount arbres remarquables par arrondissement, l’âge des arbres et les quartiers les plus boisés.">
+  <meta name="theme-color" content="#f4f3ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#26241F" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="https://arbresdeparis.fr/herbier/">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="../fonts/newsreader.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="herbier.css">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:site_name" content="Arbres de Paris">
+  <meta property="og:title" content="L’herbier des arbres de Paris">
+  <meta property="og:description" content="La part de chaque essence, le calendrier des floraisons, les arbres remarquables et les quartiers les plus boisés de Paris.">
+  <meta property="og:url" content="https://arbresdeparis.fr/herbier/">
+  <meta property="og:image" content="https://arbresdeparis.fr/images/app-herbier.jpg">
+  <meta property="og:image:alt" content="L’onglet Herbier de l’application Arbres de Paris">
+  <script data-goatcounter="https://arbresdeparis.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</head>
+<!-- Written by data/scripts/build_herbier.py from data/templates/herbier.html: edit the template, not this page. -->
+<body>
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
+  $sprite
+
+  <header class="wrap site-header">
+    <a class="brand" href="../" aria-label="Arbres de Paris, accueil">
+      <svg width="44" height="44" viewBox="0 0 108 108" aria-hidden="true"><rect width="108" height="108" fill="#3F5F45"/><g fill="none" stroke="#F4F3EC" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M60 72.5C72 70.5 80 59.5 78 47.5C76 35.5 64 25.5 54 17.5C44 25.5 32 35.5 30 47.5C28 59.5 36 70.5 48 72.5"/><path d="M54 89.5V33.5M54 63.5L42 51.5M54 63.5L66 51.5M54 53.5L44 43.5M54 53.5L64 43.5M54 43.5L47 36.5M54 43.5L61 36.5"/></g><circle cx="77" cy="83.5" r="4.5" fill="#C9962E"/></svg>
+      <span>Arbres de Paris</span>
+    </a>
+    <nav class="site-nav" aria-label="Le site">
+      <a href="../maps/">La carte</a>
+      <a href="./" aria-current="page">L’herbier</a>
+      <a href="../#application">L’application</a>
+      <a href="../#donnees">Les données</a>
+    </nav>
+  </header>
+
+  <main id="contenu">
+    <section class="wrap herbier-hero" aria-labelledby="titre">
+      <div class="herbier-intro">
+        <p class="eyebrow">Herbier</p>
+        <h1 id="titre">Les arbres de Paris en&nbsp;chiffres</h1>
+        <p class="totals">$total arbres · $genusCount genres · $taxonCount espèces et variétés</p>
+        <p class="lead">Les arbres d’alignement, des parcs, des cimetières et des bois de la Ville de Paris, d’après son jeu de données ouvert « Les arbres ».$dataDate</p>
+      </div>
+      <div class="herbier-cards">
+        $headline
+        <article id="saison" class="card season" aria-live="polite" hidden>
+          <p class="season-top"><span id="saison-titre" class="eyebrow">En fleur ce mois-ci</span><span class="eyebrow">≈ à Paris</span></p>
+          <p id="saison-texte" class="season-text"></p>
+          <p id="saison-feuilles" class="season-leaves" aria-hidden="true"></p>
+          <p id="saison-noms" class="season-names"></p>
+          <a href="#floraisons">Le calendrier des floraisons</a>
+        </article>
+      </div>
+      <nav class="herbier-toc" aria-label="Rubriques de l’herbier">
+        <a href="#essences"><strong>Les essences</strong><span>$drawnCount essences dessinées, $drawnShare des arbres</span></a>
+        <a href="#floraisons"><strong>Floraisons</strong><span>Le calendrier des $floweringCount essences</span></a>
+        <a href="#remarquables"><strong>Remarquables</strong><span>Les $remarkableCount arbres d’exception de Paris</span></a>
+        <a href="#age-quartiers"><strong>Âge et quartiers</strong><span>Les stades, les arrondissements les plus boisés</span></a>
+      </nav>
+    </section>
+
+    <section id="essences" class="wrap section" aria-labelledby="titre-essences">
+      <div class="section-head">
+        <h2 id="titre-essences">Les essences</h2>
+        <p>$drawnCount essences dessinées · $drawnShare des arbres</p>
+        <p class="hint">La part de chaque essence parmi les arbres de Paris. Choisissez-en une pour la voir sur la carte.</p>
+      </div>
+      $genera
+    </section>
+
+    <section id="floraisons" class="band" aria-labelledby="titre-floraisons">
+      <div class="wrap section">
+        <div class="section-head">
+          <h2 id="titre-floraisons">Floraisons</h2>
+          <p>Quand fleurissent les $floweringCount essences dessinées</p>
+          <p class="hint">Les mois sont indicatifs : selon l’espèce et la météo de l’année, une floraison peut avancer ou reculer de deux à trois semaines. <span class="needs-script">La colonne dorée marque le mois en cours.</span></p>
+        </div>
+        $calendar
+        <ul class="legend">
+          <li><span class="swatch showy" aria-hidden="true"></span>Fleurs voyantes</li>
+          <li><span class="swatch discreet" aria-hidden="true"></span>Fleurs discrètes</li>
+        </ul>
+        <p class="source">Source : les fiches espèces du <a href="https://opendata.paris.fr/explore/dataset/fiches-essences-du-guide-des-essences-de-paris/information/">Guide des Essences de Paris</a> (Ville de Paris, Cerema, 2023).</p>
+      </div>
+    </section>
+
+    <section id="remarquables" class="wrap section" aria-labelledby="titre-remarquables">
+      <div class="section-head">
+        <h2 id="titre-remarquables">Remarquables</h2>
+      </div>
+      $remarkable
+    </section>
+
+    <section id="age-quartiers" class="wrap section" aria-labelledby="titre-age">
+      <div class="section-head">
+        <h2 id="titre-age">Âge et quartiers</h2>
+        <p>Le stade de développement des arbres, et les arrondissements qui en comptent le plus.</p>
+      </div>
+      $ages
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <span>© 2026 Arbres de Paris</span>
+      <span>Données : Ville de Paris (ODbL)</span>
+      <span>Application indépendante, non affiliée à la Ville de Paris</span>
+      <a href="../confidentialite/">Confidentialité</a>
+      <a href="mailto:arbresdeparis@gmail.com">arbresdeparis@gmail.com</a>
+    </div>
+  </footer>
+
+  <script src="herbier.js" defer></script>
+</body>
+</html>
