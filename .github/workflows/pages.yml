@@ -1,7 +1,8 @@
 name: Website
 
-# Publishes website/ (arbresdeparis.fr) to GitHub Pages. Static files, plus the web map's tree files, cut from the
-# app's trees.db by data/scripts/build_web_map.py at each deployment (they are not in git).
+# Publishes website/ (arbresdeparis.fr) to GitHub Pages. Static files, plus the web map's tree files and the Herbier
+# page, written from the app's trees.db by data/scripts/build_web_map.py and build_herbier.py at each deployment
+# (they are not in git).
 on:
   push:
     branches: [main]
@@ -10,6 +11,12 @@ on:
       - "android/core/data/src/main/assets/trees.db"
       - "android/core/data/trees-db-meta.json"
       - "data/scripts/build_web_map.py"
+      - "data/scripts/build_herbier.py"
+      - "data/templates/**"
+      # What the Herbier page reads from the app: leaf drawings and names, flowering months.
+      - "android/core/designsystem/src/main/kotlin/fr/arbresdeparis/core/designsystem/leaf/**"
+      - "android/core/designsystem/src/main/res/values/strings.xml"
+      - "android/core/data/src/main/kotlin/fr/arbresdeparis/core/data/repository/GuideFloweringRepository.kt"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -37,6 +44,9 @@ jobs:
 
       - name: Build the web map's tree files
         run: python3 data/scripts/build_web_map.py
+
+      - name: Build the Herbier page
+        run: python3 data/scripts/build_herbier.py
 
       - uses: actions/upload-pages-artifact@v5
         with:

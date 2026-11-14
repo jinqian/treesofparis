@@ -1,0 +1,657 @@
+/* The Herbier page, on top of ../styles.css: the app's Herbier tab, laid out as one page. */
+
+/* Colours of the flowering calendar: TreesColors in :core:designsystem (bloomShowy, bloomDiscreet, bloomNone,
+   currentMonth), light then night. */
+:root {
+  --stone: #ecebe2;
+  --bloom-showy: #4f7556;
+  --bloom-discreet: #a9bba5;
+  --gold-wash: #f3e7cc;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --stone: #34312b;
+    --bloom-showy: #93ae84;
+    --bloom-discreet: #565e45;
+    --gold-wash: #4d3a12;
+  }
+}
+
+.sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+html:not(.js) .needs-script {
+  display: none;
+}
+
+.leaf {
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+  color: var(--moss);
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--moss);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--ink-muted);
+}
+
+.card {
+  position: relative;
+  overflow: hidden;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+}
+
+.card h3 {
+  margin: 0 0 1rem;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.375rem;
+  line-height: 1.2;
+}
+
+.bar {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--stone);
+}
+
+.bar::before {
+  content: "";
+  display: block;
+  height: 100%;
+  width: calc(var(--fraction) * 100%);
+  border-radius: inherit;
+  background: var(--moss);
+}
+
+/* Hero: the totals, « Le saviez-vous ? », what flowers this month, the four rubrics */
+
+.herbier-hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: 2rem 3rem;
+  align-items: center;
+  padding-block: 3rem 1rem;
+}
+
+.herbier-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.herbier-intro h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(2.5rem, 6vw, 3.75rem);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+}
+
+.totals {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.lead {
+  margin: 0;
+  max-width: 34rem;
+  font-size: 1.0625rem;
+  color: var(--ink-soft);
+}
+
+.herbier-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.headline {
+  background: var(--sage);
+  border-color: transparent;
+  padding: 1.5rem;
+}
+
+.headline .watermark {
+  position: absolute;
+  right: -1.25rem;
+  bottom: -1.5rem;
+  width: 10rem;
+  height: 10rem;
+  opacity: 0.4;
+}
+
+.headline-text {
+  position: relative;
+  margin: 0.5rem 0;
+  max-width: 75%;
+  font-family: var(--serif);
+  font-size: clamp(1.625rem, 3.5vw, 2rem);
+  line-height: 1.15;
+  color: var(--moss-deep);
+}
+
+.headline-detail {
+  position: relative;
+  margin: 0;
+  max-width: 75%;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.season {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.season-top {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.season-top .eyebrow {
+  color: var(--ink-muted);
+}
+
+.season-top .eyebrow + .eyebrow {
+  white-space: nowrap;
+}
+
+.season-text {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.375rem;
+  line-height: 1.2;
+}
+
+.season-leaves {
+  margin: 0;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.season-leaves:empty {
+  display: none;
+}
+
+.season-names {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+}
+
+.season a {
+  align-self: flex-start;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.herbier-toc {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 0.75rem;
+}
+
+.herbier-toc a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid var(--hairline);
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.herbier-toc a:hover {
+  border-color: var(--outline);
+}
+
+.herbier-toc strong {
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.herbier-toc span {
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+}
+
+.herbier-hero + .section {
+  padding-top: 3.5rem;
+}
+
+.section-lead {
+  margin: 0 0 1.25rem;
+  font-size: 1.0625rem;
+  color: var(--ink-soft);
+}
+
+/* Les essences */
+
+.genera {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
+  gap: 0.5rem 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.genus {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.5rem 0.6rem 0;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.genus:hover .genus-name {
+  text-decoration: underline;
+}
+
+.leaf-disc {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+}
+
+.genus-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.genus-top {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.genus-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.genus-share {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.genus-count {
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}
+
+.chevron {
+  flex: none;
+  color: var(--ink-muted);
+}
+
+/* Floraisons */
+
+.band {
+  background: var(--sage);
+}
+
+.band .section-head .hint {
+  color: var(--ink-soft);
+}
+
+.calendar-scroll {
+  overflow-x: auto;
+  padding: 1rem;
+  border-radius: 1.25rem;
+  background: var(--surface);
+}
+
+.calendar {
+  width: 100%;
+  min-width: 16rem;
+  border-collapse: separate;
+  border-spacing: 2px 3px;
+}
+
+.calendar thead th {
+  padding: 0.25rem 0;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.calendar abbr {
+  text-decoration: none;
+}
+
+.calendar tbody th {
+  padding-right: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.row-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.calendar tbody th .leaf {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.calendar td {
+  width: 7%;
+  height: 1.125rem;
+  border-radius: 4px;
+  background: var(--stone);
+}
+
+.calendar thead td {
+  background: none;
+}
+
+.calendar .showy td.bloom {
+  background: var(--bloom-showy);
+}
+
+.calendar .discreet td.bloom {
+  background: var(--bloom-discreet);
+}
+
+.calendar thead th.now {
+  background: var(--gold-wash);
+  color: var(--gold-ink);
+}
+
+.calendar td.now:not(.bloom) {
+  background: var(--gold-wash);
+}
+
+.calendar td.now.bloom {
+  box-shadow: 0 0 0 2px var(--gold-wash);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.swatch {
+  width: 0.875rem;
+  height: 0.625rem;
+  border-radius: 3px;
+}
+
+.swatch.showy {
+  background: var(--bloom-showy);
+}
+
+.swatch.discreet {
+  background: var(--bloom-discreet);
+}
+
+.source {
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+/* Remarquables */
+
+.records {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.record {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.record:hover {
+  border-color: var(--outline);
+}
+
+.record .eyebrow {
+  color: var(--gold-ink);
+}
+
+.record-value {
+  font-family: var(--serif);
+  font-size: 2.25rem;
+  line-height: 1.1;
+  color: var(--gold-ink);
+}
+
+.record-name {
+  font-weight: 600;
+}
+
+.record-place {
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+}
+
+.areas {
+  margin-top: 1.25rem;
+  columns: 3 19rem;
+  column-gap: 2rem;
+}
+
+.area {
+  break-inside: avoid;
+  margin-bottom: 1.75rem;
+}
+
+.area h3 {
+  margin: 0 0 0.25rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--outline);
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.25rem;
+}
+
+.area ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.area a {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.area a:hover .tree-name {
+  text-decoration: underline;
+}
+
+.tree-name {
+  font-weight: 500;
+}
+
+.tree-name::before {
+  content: "";
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.45rem;
+  border-radius: 50%;
+  background: var(--gold-ink);
+  vertical-align: 0.1em;
+}
+
+.tree-detail {
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}
+
+.tree-teaser {
+  margin-top: 0.2rem;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+/* Âge et quartiers */
+
+.ages {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.stages,
+.wooded {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stages + .hint {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+}
+
+.stage-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.3rem;
+  font-size: 0.9375rem;
+}
+
+.stage-top span + span {
+  font-weight: 600;
+}
+
+.wooded li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rank {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--sage);
+  color: var(--moss-deep);
+  font-family: var(--serif);
+  font-size: 1.125rem;
+}
+
+.area-name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.area-count {
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+@media (max-width: 30rem) {
+  .wrap {
+    padding-inline: 1rem;
+  }
+
+  .calendar-scroll {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .calendar tbody th {
+    width: 6.5rem;
+    font-size: 0.8125rem;
+    white-space: normal;
+    line-height: 1.2;
+  }
+
+  .calendar tbody th .leaf {
+    display: none;
+  }
+}

@@ -13,7 +13,8 @@ published with the site too; it holds nothing private.
 | `index.html`, `styles.css` | The page. Colours are CSS variables from `HerbierPalette`, with the night palette for dark mode. |
 | `confidentialite/index.html` | Privacy policy, linked from the footer and from the Play Console (`https://arbresdeparis.fr/confidentialite/`). Update its date when it changes. |
 | `maps/` | The web map (`/maps/`): `index.html`, `maps.js` (cells, taps, tree sheet with a remarkable tree's « Son histoire » and its photo in full screen, location), `style.js` (the Herbier map style, a copy of the app's `HerbierMapStyle.kt` and pin colours: keep them in step), `maps.css`. MapLibre GL JS 5.24.0 is self-hosted in `vendor/` with its BSD licence. |
-| `maps/data/` | Git-ignored. The trees, cut from the app's `trees.db` by `data/scripts/build_web_map.py`: one JSON file per ~1 km cell (loaded from street level), `clusters.json` (tree counts on 2 km, 1 km, 500 m and 250 m grids, drawn as discs below street level), `remarkable.json` (shown at every zoom), `stories.json` (the remarkable trees' stories, « Les arbres remarquables », loaded when one is opened; photos and signs stay on the City's server), `taxa.json` (Wikipedia titles) and `index.json`. The Pages workflow builds it before each deployment. |
+| `maps/data/` | Git-ignored. The trees, cut from the app's `trees.db` by `data/scripts/build_web_map.py`: one JSON file per ~1 km cell (loaded from street level), `clusters.json` (tree counts on 2 km, 1 km, 500 m and 250 m grids, drawn as discs below street level), `remarkable.json` (shown at every zoom), `stories.json` (the remarkable trees' stories, « Les arbres remarquables », loaded when one is opened; photos and signs stay on the City's server), `taxa.json` (Wikipedia titles), `genera/` (the groups of each genus alone, for `?genre=`) and `index.json`. The Pages workflow builds it before each deployment. The map also opens on one genus (`/maps/?genre=Tilia`) or one remarkable tree (`/maps/?arbre=<id>`): the Herbier page links there. |
+| `herbier/` | The Herbier page (`/herbier/`): the app's Herbier tab on one page (totals, « 1 arbre sur 5 », the drawn genera, the flowering calendar, the remarkable trees by area, ages and most wooded arrondissements; Paris only, as in the app). `index.html` is git-ignored: `data/scripts/build_herbier.py` writes it from `trees.db` and `data/templates/herbier.html` (edit the template). `herbier.css`, and `herbier.js`, which marks the month in progress and fills « En fleur en … ». |
 | `robots.txt`, `sitemap.xml` | For search engines: every page may be indexed except the map's data files; the sitemap lists the pages (add a new page there). The home page also describes the site as structured data (`WebSite`, JSON-LD). |
 | `404.html` | Shown by GitHub Pages for unknown paths (absolute links, as it can be served from any path). |
 | `fonts/` | Inter and Newsreader from `:core:designsystem`, subset to Latin + French punctuation and weights 400–600, WOFF2, with their OFL licences. Self-hosted: no request to Google Fonts. |
@@ -25,6 +26,7 @@ published with the site too; it holds nothing private.
 
 ```bash
 python3 data/scripts/build_web_map.py              # once, and after trees.db changes: the map's tree files
+python3 data/scripts/build_herbier.py              # the Herbier page (/herbier/)
 python3 -m http.server --directory website 8000   # then open http://localhost:8000 (the map: /maps/)
 ```
 
