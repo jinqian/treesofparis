@@ -37,8 +37,11 @@
     <string name="map_wikipedia_open">Ouvrir l’article Wikipédia</string>
     <string name="map_detail_source">Source : « Les arbres », Paris Data</string>
     <string name="map_detail_source_gpso">Source : « Arbres », Grand Paris Seine Ouest</string>
+    <string name="map_detail_source_gpso_hds">Sources : « Arbres », Grand Paris Seine Ouest, et « Arbres remarquables », Département des Hauts-de-Seine</string>
+    <string name="map_detail_source_hds">Source : « Arbres remarquables », Département des Hauts-de-Seine</string>
     <string name="map_detail_source_remarkable">Sources : « Les arbres » et « Les arbres remarquables », Paris Data</string>
     <string name="map_story_open">Son histoire</string>
+    <string name="map_story_open_details">Sa fiche</string>
     <string name="map_story_why">Pourquoi il est remarquable</string>
     <string name="map_story_title">Son histoire</string>
     <string name="map_story_planted">Plantation</string>
