@@ -51,6 +51,8 @@ jobs:
       - uses: actions/upload-pages-artifact@v5
         with:
           path: website
+          # website/.well-known/assetlinks.json lets the Android app open shared tree links (issue #88).
+          include-hidden-files: true
 
       - id: deployment
         uses: actions/deploy-pages@v5
