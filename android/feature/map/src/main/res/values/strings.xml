@@ -12,6 +12,8 @@
     <string name="map_detail_remarkable">Arbre remarquable</string>
     <string name="map_favorite_add">Ajouter aux favoris</string>
     <string name="map_favorite_remove">Retirer des favoris</string>
+    <string name="map_share">Partager cet arbre</string>
+    <string name="map_shared_tree_missing">Cet arbre n’est plus dans les données.</string>
     <string name="map_locating">Localisation…</string>
     <string name="map_location_outside">Vous êtes en dehors de la zone couverte par la carte.</string>
     <string name="map_location_unavailable">Position indisponible. Vérifiez que la localisation est activée.</string>

@@ -4,8 +4,11 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.retain.RetainObserver
 import androidx.compose.runtime.retain.retain
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.StateRestorationTester
@@ -14,6 +17,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import fr.arbresdeparis.TreesApp
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
+import fr.arbresdeparis.domain.model.GeoPoint
+import fr.arbresdeparis.domain.model.TreeLink
 import fr.arbresdeparis.feature.herbier.HerbierSection
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -27,14 +32,20 @@ class TreesAppTest {
     @get:Rule
     val compose = createAndroidComposeRule<ComponentActivity>()
 
+    /** A shared link (issue #88), as MainActivity hands it over; null once opened. */
+    private var sharedTree: TreeLink? by mutableStateOf(null)
+
     private val app = @androidx.compose.runtime.Composable {
         TreesTheme {
             TreesApp(
+                sharedTree = sharedTree,
+                onSharedTreeOpen = { sharedTree = null },
                 mapContent = { key, inFront, onOpenStory ->
                     val map = retain { StubMap(created = mapsCreated++) }
                     Column {
                         Text("map tree=${key.treeId} genus=${key.genus}" + if (inFront) "" else " behind")
                         Text("map instance ${map.created}")
+                        key.fallback?.let { Text("fallback ${it.lat},${it.lon}") }
                         Button(onClick = { onOpenStory(124914) }) { Text("story 124914") }
                     }
                 },
@@ -96,6 +107,18 @@ class TreesAppTest {
         compose.onNodeWithText("back").performClick()
         compose.onNodeWithText("map instance 0").assertIsDisplayed()
         assertEquals(0, mapsRetired)
+    }
+
+    @Test
+    fun aSharedTree_opensOnTheMap_fromAnyTab_withItsPlace() {
+        compose.setContent(app)
+        compose.onNodeWithText("Favoris").performClick()
+        sharedTree = TreeLink(2002389, GeoPoint(48.86125, 2.25321))
+        compose.waitForIdle()
+        compose.onNodeWithText("Carte").assertIsSelected()
+        compose.onNodeWithText("map tree=2002389 genus=null").assertIsDisplayed()
+        compose.onNodeWithText("fallback 48.86125,2.25321").assertIsDisplayed()
+        assertEquals(null, sharedTree)
     }
 
     @Test

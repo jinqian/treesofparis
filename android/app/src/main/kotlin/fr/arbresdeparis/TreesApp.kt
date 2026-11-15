@@ -17,7 +17,10 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -30,6 +33,7 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.defaultPopTransitionSpec
 import androidx.navigation3.ui.defaultPredictivePopTransitionSpec
 import androidx.navigation3.ui.defaultTransitionSpec
+import fr.arbresdeparis.domain.model.TreeLink
 import fr.arbresdeparis.feature.herbier.HerbierSection
 import fr.arbresdeparis.navigation.AboutKey
 import fr.arbresdeparis.navigation.FavoritesKey
@@ -64,9 +68,19 @@ fun TreesApp(
     librariesContent: @Composable (onBack: () -> Unit) -> Unit,
     floweringSourcesContent: @Composable (onBack: () -> Unit) -> Unit,
     modifier: Modifier = Modifier,
+    sharedTree: TreeLink? = null,
+    onSharedTreeOpen: () -> Unit = {},
 ) {
     val state = rememberTreesNavigationState()
     val navigator = remember(state) { TreesNavigator(state) }
+    val onOpened by rememberUpdatedState(onSharedTreeOpen)
+    // A tree link opened from another app (issue #88): shown once, over whatever tab is open.
+    LaunchedEffect(sharedTree) {
+        sharedTree?.let {
+            navigator.openSharedTree(it)
+            onOpened()
+        }
+    }
     Scaffold(
         modifier = modifier,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),

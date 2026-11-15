@@ -22,10 +22,23 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Shared trees (issue #88): arbresdeparis.fr/arbre/?id=…&ll=… opens the tree's sheet. Verified by
+                 website/.well-known/assetlinks.json; only /arbre/, so the web map stays in the browser. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
+                <data android:host="arbresdeparis.fr" />
+                <data android:host="www.arbresdeparis.fr" />
+                <data android:path="/arbre" />
+                <data android:path="/arbre/" />
             </intent-filter>
         </activity>
     </application>
