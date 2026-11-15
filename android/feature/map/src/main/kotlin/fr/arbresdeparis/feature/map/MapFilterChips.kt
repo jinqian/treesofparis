@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -106,22 +107,22 @@ internal fun GenusFilterButton(
 ) {
     val colors = MaterialTheme.colorScheme
     Surface(
-        modifier =
-            modifier
-                .testTag(GENUS_PILL_TAG)
-                .height(GENUS_PILL_HEIGHT)
-                .clickable(
-                    onClickLabel = stringResource(R.string.map_genus_choose),
-                    role = Role.Button,
-                    onClick = onClick,
-                ),
+        modifier = modifier.testTag(GENUS_PILL_TAG).height(GENUS_PILL_HEIGHT),
         shape = CircleShape,
         color = colors.surfaceContainerLow,
         border = BorderStroke(1.dp, colors.outlineVariant),
         shadowElevation = 2.dp,
     ) {
+        // Clickable inside the Surface, which clips it: the ripple follows the pill, not its bounding box (#81).
         Row(
-            modifier = Modifier.padding(start = 12.dp, end = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxHeight()
+                    .clickable(
+                        onClickLabel = stringResource(R.string.map_genus_choose),
+                        role = Role.Button,
+                        onClick = onClick,
+                    ).padding(start = 12.dp, end = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -197,17 +198,19 @@ private fun RemarkableChip(
 ) {
     val colors = MaterialTheme.colorScheme
     Surface(
-        modifier =
-            Modifier
-                .height(GENUS_PILL_HEIGHT)
-                .toggleable(value = checked, role = Role.Checkbox, onValueChange = onCheckedChange),
+        modifier = Modifier.height(GENUS_PILL_HEIGHT),
         shape = CircleShape,
         color = if (checked) colors.primaryContainer else colors.surfaceContainerLow,
         border = BorderStroke(1.dp, if (checked) colors.primary else colors.outlineVariant),
         shadowElevation = 2.dp,
     ) {
+        // Toggleable inside the Surface, which clips it: the ripple follows the pill (#81).
         Row(
-            modifier = Modifier.padding(start = 12.dp, end = if (checked) 12.dp else 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxHeight()
+                    .toggleable(value = checked, role = Role.Checkbox, onValueChange = onCheckedChange)
+                    .padding(start = 12.dp, end = if (checked) 12.dp else 16.dp),
             horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s),
             verticalAlignment = Alignment.CenterVertically,
         ) {
