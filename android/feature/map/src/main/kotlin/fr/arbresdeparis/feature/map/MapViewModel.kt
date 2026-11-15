@@ -325,12 +325,28 @@ class MapViewModel
             state.update { it.copy(message = null) }
         }
 
-        /** Opens a tree coming from another screen (Favoris): centre on it and show its details, once per id. */
-        fun onOpenTree(id: Long) {
+        /**
+         * Opens a tree coming from another screen (Favoris, Herbier) or a shared link: centre on it and show its
+         * details, once per id. A shared tree may have left the data since: then the map goes to [fallback], the place
+         * the link gave, and says so.
+         */
+        fun onOpenTree(
+            id: Long,
+            fallback: GeoPoint? = null,
+        ) {
             if (savedState.get<Long>(KEY_OPENED) == id) return
             savedState[KEY_OPENED] = id
             viewModelScope.launch {
-                val tree = getTree(id) ?: return@launch
+                val tree = getTree(id)
+                if (tree == null) {
+                    state.update { current ->
+                        current.copy(
+                            cameraRequest = fallback?.let { request(it, TREE_ZOOM) } ?: current.cameraRequest,
+                            message = MapMessage.TREE_NOT_FOUND,
+                        )
+                    }
+                    return@launch
+                }
                 state.update { it.copy(cameraRequest = request(tree.location, TREE_ZOOM)) }
                 select(id)
             }

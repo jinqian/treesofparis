@@ -1,11 +1,15 @@
 package fr.arbresdeparis
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -15,6 +19,7 @@ import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.core.map.LocalMapProvider
 import fr.arbresdeparis.core.map.MapProvider
 import fr.arbresdeparis.domain.model.ThemeMode
+import fr.arbresdeparis.domain.model.TreeLink
 import fr.arbresdeparis.feature.about.AboutRoute
 import fr.arbresdeparis.feature.about.CrashReportingQuestionRoute
 import fr.arbresdeparis.feature.about.FloweringSourcesRoute
@@ -42,6 +47,9 @@ class MainActivity : ComponentActivity() {
     /** The theme this activity was created with; below Android 12, another choice recreates it. */
     private var appliedTheme = ThemeMode.SYSTEM
 
+    /** A tree link (`arbresdeparis.fr/arbre/…`, issue #88) the app was opened with, until the map shows it. */
+    private var sharedTree by mutableStateOf<TreeLink?>(null)
+
     override fun attachBaseContext(newBase: Context) {
         super.attachBaseContext(newBase)
         appliedTheme = savedThemeMode(newBase)
@@ -61,6 +69,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         if (!systemAppliesTheme) recreateOnThemeChange()
+        // A recreated activity has already shown its link.
+        if (savedInstanceState == null) sharedTree = intent.treeLink()
         setContent {
             TreesTheme {
                 CompositionLocalProvider(LocalMapProvider provides mapProvider) {
@@ -68,6 +78,7 @@ class MainActivity : ComponentActivity() {
                         mapContent = { key, inFront, onOpenStory ->
                             MapRoute(
                                 treeId = key.treeId,
+                                fallback = key.fallback,
                                 genus = key.genus,
                                 inFront = inFront,
                                 onOpenStory = onOpenStory,
@@ -96,6 +107,8 @@ class MainActivity : ComponentActivity() {
                             LibrariesRoute(librariesResId = R.raw.aboutlibraries, onBack = onBack)
                         },
                         floweringSourcesContent = { onBack -> FloweringSourcesRoute(onBack = onBack) },
+                        sharedTree = sharedTree,
+                        onSharedTreeOpen = { sharedTree = null },
                     )
                     // Asked once, over whatever screen opens first (ADR 0007).
                     CrashReportingQuestionRoute()
@@ -103,6 +116,19 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    /** A link opened while the app is running (`singleTop`): the same activity shows it. */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        intent.treeLink()?.let { sharedTree = it }
+    }
+
+    private fun Intent.treeLink(): TreeLink? =
+        data
+            ?.takeIf {
+                action == Intent.ACTION_VIEW
+            }?.toString()
+            ?.let(TreeLink::parse)
 
     private fun recreateOnThemeChange() {
         lifecycleScope.launch {

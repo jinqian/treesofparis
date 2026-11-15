@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "fr.arbresdeparis.debug",
+      "sha256_cert_fingerprints": [
+        "0C:2E:BB:5D:81:43:B4:50:F3:76:93:A4:6B:A5:D6:3D:10:93:AF:AA:DF:24:54:8D:01:E8:1E:CB:32:AF:C5:2D"
+      ]
+    }
+  }
+]

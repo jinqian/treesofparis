@@ -52,6 +52,7 @@ import fr.arbresdeparis.core.map.MapPalette
 import fr.arbresdeparis.core.map.TreeMapView
 import fr.arbresdeparis.domain.model.GeoBounds
 import fr.arbresdeparis.domain.model.GeoPoint
+import fr.arbresdeparis.feature.map.mapper.toShareText
 
 /**
  * The Carte tab. [treeId] opens a tree coming from another screen (Favoris); [genus] shows only that genus (from
@@ -66,6 +67,7 @@ import fr.arbresdeparis.domain.model.GeoPoint
 fun MapRoute(
     treeId: Long?,
     modifier: Modifier = Modifier,
+    fallback: GeoPoint? = null,
     genus: String? = null,
     inFront: Boolean = true,
     onOpenStory: (Long) -> Unit = {},
@@ -86,7 +88,7 @@ fun MapRoute(
         preciseLocation = context.hasPreciseLocationPermission()
         onPauseOrDispose {}
     }
-    LaunchedEffect(treeId) { treeId?.let(viewModel::onOpenTree) }
+    LaunchedEffect(treeId) { treeId?.let { viewModel.onOpenTree(it, fallback) } }
     LaunchedEffect(genus) { genus?.let(viewModel::onGenusFilterRequest) }
 
     MapScreen(
@@ -106,6 +108,7 @@ fun MapRoute(
         onRemarkableInfoDismiss = viewModel::onRemarkableInfoDismiss,
         onOpenWikipedia = { url -> context.openInCustomTab(url) },
         onOpenDirections = { location -> context.openInMapsApp(location) },
+        onShareTree = { detail -> context.shareTree(detail.toShareText(), title = detail.name) },
         onOpenStory = { id ->
             viewModel.onStoryOpen()
             onOpenStory(id)
@@ -155,6 +158,7 @@ fun MapScreen(
     onZoomHintClick: () -> Unit = {},
     onOpenDirections: (GeoPoint) -> Unit = {},
     onOpenStory: (Long) -> Unit = {},
+    onShareTree: (TreeDetailUi) -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     MessageEffect(state.message, snackbarHostState, onMessageDismiss, onOpenSettings)
@@ -199,16 +203,28 @@ fun MapScreen(
         // Each sheet is a window of its own, above every screen: it waits until the map is settled in front, or it
         // would cover the screen the map is leaving or coming back from and catch the predictive back gesture.
         if (!inFront) return@Box
-        TreeSheet(state.selectedTree, onDetailDismiss, onFavoriteToggle, onOpenWikipedia, onOpenDirections, onOpenStory)
+        TreeSheet(
+            state.selectedTree,
+            onDetailDismiss,
+            onFavoriteToggle,
+            onOpenWikipedia,
+            onOpenDirections,
+            onOpenStory,
+            onShareTree,
+        )
         state.genusPicker?.let { GenusPickerSheet(it, onGenusPick, onGenusFilterClear, onGenusPickerDismiss) }
-        if (state.showRemarkableInfo) {
-            TreesBottomSheet(onDismiss = onRemarkableInfoDismiss) {
-                FilterHelpContent(
-                    onShowRemarkableOnly = { onRemarkableFilterChange(true) },
-                    onClose = onRemarkableInfoDismiss,
-                )
-            }
-        }
+        if (state.showRemarkableInfo) FilterHelpSheet(onRemarkableFilterChange, onRemarkableInfoDismiss)
+    }
+}
+
+/** « ? »: how the filters work, with a shortcut to the remarkable trees. */
+@Composable
+private fun FilterHelpSheet(
+    onRemarkableFilterChange: (Boolean) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    TreesBottomSheet(onDismiss = onDismiss) {
+        FilterHelpContent(onShowRemarkableOnly = { onRemarkableFilterChange(true) }, onClose = onDismiss)
     }
 }
 
@@ -221,6 +237,7 @@ private fun TreeSheet(
     onOpenWikipedia: (String) -> Unit,
     onOpenDirections: (GeoPoint) -> Unit,
     onOpenStory: (Long) -> Unit,
+    onShare: (TreeDetailUi) -> Unit,
 ) {
     if (detail == null) return
     TreesBottomSheet(onDismiss = onDismiss) {
@@ -230,6 +247,7 @@ private fun TreeSheet(
             onOpenWikipedia = onOpenWikipedia,
             onOpenDirections = onOpenDirections,
             onOpenStory = { onOpenStory(detail.id) },
+            onShare = onShare,
         )
     }
 }
@@ -455,6 +473,7 @@ private val MapMessage.textRes: Int
             MapMessage.LOCATION_UNAVAILABLE -> R.string.map_location_unavailable
             MapMessage.PERMISSION_DENIED -> R.string.map_location_denied
             MapMessage.NO_TREE_NEARBY -> R.string.map_nearest_none
+            MapMessage.TREE_NOT_FOUND -> R.string.map_shared_tree_missing
         }
 
 /** « Zoomez pour voir les arbres » with a magnifier: a tap zooms in until the trees show (issue #42). */

@@ -13,6 +13,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import fr.arbresdeparis.domain.model.TreeLink
 import fr.arbresdeparis.feature.herbier.HerbierSection
 
 /**
@@ -73,6 +74,22 @@ class TreesNavigator(
         state.backStacks.getValue(TopLevelDestination.MAP).apply {
             clear()
             add(MapKey(treeId = treeId, request = System.currentTimeMillis()))
+        }
+        state.selected = TopLevelDestination.MAP
+    }
+
+    /** Opens a shared tree (issue #88) on the map, like [openTreeOnMap], with the place its link gives. */
+    fun openSharedTree(link: TreeLink) {
+        state.backStacks.getValue(TopLevelDestination.MAP).apply {
+            clear()
+            add(
+                MapKey(
+                    treeId = link.treeId,
+                    request = System.currentTimeMillis(),
+                    fallbackLat = link.location?.lat,
+                    fallbackLon = link.location?.lon,
+                ),
+            )
         }
         state.selected = TopLevelDestination.MAP
     }

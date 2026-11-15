@@ -211,4 +211,16 @@ class TreeDetailContentTest {
         compose.setContent { TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}) } }
         compose.onNodeWithText("Son histoire").assertDoesNotExist()
     }
+
+    @Test
+    fun share_sitsNextToTheHeartAndSendsTheTree() {
+        val detail = tree(1).toDetailUi(isFavorite = false)
+        var shared: TreeDetailUi? = null
+        compose.setContent {
+            TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}, onShare = { shared = it }) }
+        }
+        compose.onNodeWithContentDescription("Ajouter aux favoris").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Partager cet arbre").assertIsDisplayed().performClick()
+        assertEquals(detail, shared)
+    }
 }

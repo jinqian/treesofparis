@@ -3,7 +3,8 @@
 // fetched from street level, plus the remarkable trees, shown at every zoom, and their stories (« Les arbres
 // remarquables »), loaded the first time one is opened.
 // The Herbier page links here: `?genre=Tilia` shows only that genus at every zoom (its own groups, data/genera/), and
-// `?arbre=<id>` opens a remarkable tree's sheet.
+// `?arbre=<id>` opens a remarkable tree's sheet. A shared tree (issue #88) comes through /arbre/ as
+// `?arbre=<id>&ll=<lat>,<lon>`: the place finds the tree's cell, and is shown if the tree has left the data.
 
 import {
   CLUSTER_LAYERS,
@@ -22,6 +23,7 @@ import {
 const TREE_MIN_ZOOM = 14.5;
 const PARIS = [2.3522, 48.8566];
 const WIKIPEDIA = "https://fr.wikipedia.org/wiki/";
+const SITE = "https://arbresdeparis.fr";
 
 const F = { id: 0, lat: 1, lon: 2, name: 3, genus: 4, species: 5, cultivar: 6, circ: 7, height: 8, stage: 9, remarkable: 10, address: 11, area: 12, heightClass: 13, source: 14 };
 const SOURCES = {
@@ -469,12 +471,67 @@ async function setGenus(genus) {
   refresh();
 }
 
-/** `?arbre=<id>`: a remarkable tree, centred at street level with its sheet open. */
-function openRequestedTree(id) {
-  const row = state.byId.get(Number(id));
-  if (!row) return showToast("Cet arbre n’est pas sur la carte.");
-  map.jumpTo({ center: [row[F.lon], row[F.lat]], zoom: Math.max(map.getZoom(), 17) });
-  openSheet(row);
+/** « 48.86125,2.25321 » → [lon, lat], or null. */
+function parsePlace(ll) {
+  const [lat, lon] = String(ll ?? "").split(",").map(Number);
+  return Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180 ? [lon, lat] : null;
+}
+
+/** The key of the cell holding [lon, lat], as build_web_map.py's cell_of. */
+function cellOf([lon, lat]) {
+  const [south, west] = state.index.coverage;
+  return `${Math.floor((lat - south) / state.index.cell[0])}_${Math.floor((lon - west) / state.index.cell[1])}`;
+}
+
+/**
+ * `?arbre=<id>[&ll=<lat>,<lon>]`: the tree centred at street level with its sheet open. Remarkable trees are always
+ * loaded; any other is found in the cell of its place. A tree that has left the data: its place, and a word.
+ */
+async function openRequestedTree(id, ll) {
+  const place = parsePlace(ll);
+  let row = state.byId.get(Number(id));
+  if (!row && place && state.index.cells.includes(cellOf(place))) {
+    try {
+      await loadCell(cellOf(place));
+    } catch (error) {
+      console.error(error);
+    }
+    row = state.byId.get(Number(id));
+  }
+  if (row) {
+    map.jumpTo({ center: [row[F.lon], row[F.lat]], zoom: Math.max(map.getZoom(), 17) });
+    return openSheet(row);
+  }
+  if (place) map.jumpTo({ center: place, zoom: 17 });
+  showToast(place ? "Cet arbre n’est plus dans les données." : "Cet arbre n’est pas sur la carte.");
+}
+
+/** The tree's link (issue #88): the same as the app's TreeLink, opened in the app when it is installed. */
+const treeLink = (row) => `${SITE}/arbre/?id=${row[F.id]}&ll=${row[F.lat].toFixed(5)},${row[F.lon].toFixed(5)}`;
+
+/** « Platane commun · Quai de la Seine, Paris 19e », as the app's toShareText. */
+const shareTitle = (row) => `${row[F.name]} · ${[row[F.address], row[F.area]].filter(Boolean).join(", ")}`;
+
+/** On a phone, the system's share menu; elsewhere, the link copied to the clipboard. */
+async function shareTree() {
+  const row = state.selected;
+  if (!row) return;
+  const url = treeLink(row);
+  const text = shareTitle(row);
+  if (navigator.share && window.matchMedia("(pointer: coarse)").matches) {
+    try {
+      await navigator.share({ title: row[F.name], text, url });
+      return;
+    } catch (error) {
+      if (error.name === "AbortError") return; // closed by the user
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(`${text}\n${url}`);
+    showToast("Lien de l’arbre copié.");
+  } catch {
+    window.prompt("Copiez le lien de l’arbre :", url);
+  }
 }
 
 // --- wiring -----------------------------------------------------------------------------------------------------------
@@ -525,6 +582,7 @@ $("#hint").addEventListener("click", () => map.easeTo({ zoom: TREE_MIN_ZOOM + 0.
 $("#only-remarkable").addEventListener("click", toggleRemarkable);
 $("#genus-filter").addEventListener("click", () => setGenus(null));
 $("#sheet-close").addEventListener("click", closeSheet);
+$("#sheet-share").addEventListener("click", shareTree);
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape" || $("#photo-viewer").open || $("#sheet").hidden) return; // the viewer closes itself
   if ($("#sheet-body").dataset.view === "story") $("#story-back").click();
@@ -569,7 +627,7 @@ async function start() {
     drawClusters();
     if (params.has("genre")) await setGenus(params.get("genre"));
     else refresh();
-    if (params.has("arbre")) openRequestedTree(params.get("arbre"));
+    if (params.has("arbre")) await openRequestedTree(params.get("arbre"), params.get("ll"));
   };
   if (map.isStyleLoaded()) draw();
   else map.once("load", draw);

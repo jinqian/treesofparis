@@ -5,19 +5,26 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
 import fr.arbresdeparis.R
 import fr.arbresdeparis.core.designsystem.icon.TreesIcons
+import fr.arbresdeparis.domain.model.GeoPoint
 import fr.arbresdeparis.feature.herbier.HerbierSection
 import kotlinx.serialization.Serializable
 
 /**
- * The map. [treeId] opens a tree (coming from Favoris); [request] makes every "open" a new entry with its own
- * ViewModel, so opening the same tree twice still recentres the map.
+ * The map. [treeId] opens a tree (coming from Favoris, the Herbier or a shared link); [request] makes every "open" a
+ * new entry with its own ViewModel, so opening the same tree twice still recentres the map. A shared link also gives
+ * the tree's place ([fallback]), shown if the tree has left the data.
  */
 @Serializable
 data class MapKey(
     val treeId: Long? = null,
     val genus: String? = null,
     val request: Long = 0,
-) : NavKey
+    val fallbackLat: Double? = null,
+    val fallbackLon: Double? = null,
+) : NavKey {
+    val fallback: GeoPoint?
+        get() = if (fallbackLat != null && fallbackLon != null) GeoPoint(fallbackLat, fallbackLon) else null
+}
 
 /** « Son histoire » of a remarkable tree, pushed on the Carte back stack over the map (issue #74). */
 @Serializable

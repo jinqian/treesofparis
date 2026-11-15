@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- A shared tree (issue #88): arbresdeparis.fr/arbre/?id=…&ll=…. With the Android app installed, Android opens
+       the app on the tree (an App Link, verified by /.well-known/assetlinks.json); anyone else lands here and goes on
+       to the web map, on the same tree. Not a page of its own: kept out of search engines and the sitemap. -->
+  <meta name="robots" content="noindex">
+  <title>Un arbre de Paris — Arbres de Paris</title>
+  <meta name="description" content="Un arbre partagé depuis Arbres de Paris, sur la carte des arbres de Paris et des villes voisines.">
+  <meta name="theme-color" content="#f4f3ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#26241F" media="(prefers-color-scheme: dark)">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:site_name" content="Arbres de Paris">
+  <meta property="og:title" content="Un arbre de Paris, sur la carte">
+  <meta property="og:description" content="Son essence, sa taille, son adresse, et les 252 975 arbres de Paris et de huit villes voisines autour de lui.">
+  <meta property="og:image" content="https://arbresdeparis.fr/images/app-fiche-arbre.jpg">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <script>
+    // Only a numeric id and two numbers go on to the map: nothing else from the link is used.
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var id = params.get("id") || "";
+      var ll = params.get("ll") || "";
+      var target = "/maps/";
+      if (/^[0-9]{1,15}$/.test(id)) {
+        target += "?arbre=" + id;
+        if (/^-?[0-9]{1,3}(\.[0-9]+)?,-?[0-9]{1,3}(\.[0-9]+)?$/.test(ll)) target += "&ll=" + ll;
+      }
+      window.location.replace(target);
+    })();
+  </script>
+</head>
+<body>
+  <main class="not-found">
+    <h1>Un arbre de Paris</h1>
+    <p><a href="/maps/">Ouvrir la carte des arbres</a></p>
+  </main>
+</body>
+</html>

@@ -27,6 +27,14 @@ object TreesIcons {
     val Leaf: ImageVector = line("Leaf", "M5 19c0-8 6-14 15-14 0 9-6 15-14 15", "M5 19 13 11")
     val Place: ImageVector = line("Place", "M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z", circle(12f, 10f, 2f))
     val ChevronRight: ImageVector = line("ChevronRight", "M9 6l6 6-6 6")
+    val Share: ImageVector =
+        line(
+            "Share",
+            circle(18f, 5f, 2.5f),
+            circle(6f, 12f, 2.5f),
+            circle(18f, 19f, 2.5f),
+            "M8.2 10.8 15.8 6.2M8.2 13.2l7.6 4.6",
+        )
     val ChevronDown: ImageVector = line("ChevronDown", "M6 9l6 6 6-6")
     val Search: ImageVector = line("Search", circle(11f, 11f, 6.5f), "M20 20l-4.2-4.2")
     val Close: ImageVector = line("Close", "M6 6l12 12M18 6 6 18")

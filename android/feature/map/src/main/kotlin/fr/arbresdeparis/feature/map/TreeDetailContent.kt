@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -29,6 +30,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +40,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -63,6 +66,7 @@ fun TreeDetailContent(
     onOpenWikipedia: (String) -> Unit = {},
     onOpenDirections: (GeoPoint) -> Unit = {},
     onOpenStory: () -> Unit = {},
+    onShare: (TreeDetailUi) -> Unit = {},
 ) {
     Box(modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
         LeafDrawing(
@@ -82,7 +86,7 @@ fun TreeDetailContent(
         ) {
             // The address line is a 48 dp touch target: the gaps around it shrink so the sheet keeps its height.
             Column(verticalArrangement = Arrangement.spacedBy(LOCATION_GAP)) {
-                Header(detail, onFavoriteToggle)
+                Header(detail, onFavoriteToggle, onShare = { onShare(detail) })
                 Location(detail, onOpenDirections = { onOpenDirections(detail.location) })
                 Stats(detail)
             }
@@ -109,22 +113,75 @@ fun TreeDetailContent(
 private fun Header(
     detail: TreeDetailUi,
     onFavoriteToggle: () -> Unit,
+    onShare: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier.testTag(DETAIL_HEADER_TAG),
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(TreesSpacing.m),
+    Column(modifier = Modifier.testTag(DETAIL_HEADER_TAG), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        // Across the whole sheet, above the buttons: « ★ ARBRE REMARQUABLE · PAYSAGER » stays on one line.
+        if (detail.remarkable) RemarkableEyebrow(detail.story?.qualification)
+        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(TreesSpacing.m)) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                TreeName(detail.name)
+                Text(
+                    text = detail.scientificName ?: stringResource(R.string.map_detail_unknown_species),
+                    style = ScientificNameStyle,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            // Share next to the heart (design A, issue #88): a long name wraps rather than losing either button.
+            Row(horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s)) {
+                ShareButton(onClick = onShare)
+                FavoriteButton(isFavorite = detail.isFavorite, onClick = onFavoriteToggle)
+            }
+        }
+    }
+}
+
+/**
+ * The tree's name in the screen-title serif. With the share and favourite buttons beside it (issue #88), a long word
+ * (« Micocoulier » on a 320 dp phone, or at large text sizes) may not fit its line: the size steps down until the
+ * longest word fits, so a word is never split across two lines.
+ */
+@Composable
+private fun TreeName(name: String) {
+    val base = MaterialTheme.typography.displaySmall
+    val measurer = rememberTextMeasurer()
+    BoxWithConstraints {
+        val maxWidth = constraints.maxWidth
+        val style =
+            remember(name, base, maxWidth, measurer) {
+                val words = name.split(' ').filter { it.isNotEmpty() }
+                var size = base.fontSize.value
+
+                fun widest(at: Float) =
+                    words.maxOfOrNull { measurer.measure(it, base.copy(fontSize = at.sp)).size.width } ?: 0
+                while (size > NAME_MIN_FONT_SIZE && widest(size) > maxWidth) size -= NAME_FONT_STEP
+                val scale = size / base.fontSize.value
+                base.copy(fontSize = size.sp, lineHeight = (base.lineHeight.value * scale).sp)
+            }
+        Text(name, style = style)
+    }
+}
+
+private const val NAME_MIN_FONT_SIZE = 26f
+private const val NAME_FONT_STEP = 2f
+
+/** « Partager »: sends the tree's name, place and link (issue #88). */
+@Composable
+private fun ShareButton(onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Surface(
+        shape = CircleShape,
+        color = colors.surfaceContainerLow,
+        border = BorderStroke(1.dp, colors.outlineVariant),
+        modifier = Modifier.padding(top = TreesSpacing.xs).size(48.dp),
     ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            if (detail.remarkable) RemarkableEyebrow(detail.story?.qualification)
-            Text(detail.name, style = MaterialTheme.typography.displaySmall)
-            Text(
-                text = detail.scientificName ?: stringResource(R.string.map_detail_unknown_species),
-                style = ScientificNameStyle,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+        IconButton(onClick = onClick, colors = IconButtonDefaults.iconButtonColors(contentColor = colors.primary)) {
+            Icon(
+                imageVector = TreesIcons.Share,
+                contentDescription = stringResource(R.string.map_share),
+                modifier = Modifier.size(22.dp),
             )
         }
-        FavoriteButton(isFavorite = detail.isFavorite, onClick = onFavoriteToggle)
     }
 }
 

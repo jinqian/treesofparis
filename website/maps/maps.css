@@ -342,8 +342,23 @@ a:focus-visible {
   color: var(--ink);
 }
 
+/* Share, left of the close button (issue #88). */
+.sheet-share {
+  position: absolute;
+  top: 12px;
+  right: 60px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--hairline);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--moss);
+}
+
 .sheet h2 {
-  margin: 0 48px 2px 0;
+  margin: 0 96px 2px 0;
   font: 600 28px/1.15 var(--serif);
 }
 
