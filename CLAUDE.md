@@ -1,7 +1,7 @@
 # Trees of Paris — agent guide
 
 « Arbres de Paris »: the trees of Paris and its neighbouring towns (Paris Open Data `les-arbres` and « Les arbres
-remarquables », Grand Paris Seine Ouest; ADR 0008, 0009) on an OpenStreetMap map. Two products share one dataset:
+remarquables », Grand Paris Seine Ouest, the Hauts-de-Seine's remarkable trees; ADR 0008–0010) on an OpenStreetMap map. Two products share one dataset:
 - **The Android app** (`fr.arbresdeparis`, closed test on Google Play), four tabs: **Carte** (tree pins and groups,
   genus and remarkable filters, tree sheet with flowering and Wikipedia, remarkable trees' stories and photos, nearest
   tree, location), **Herbier** (statistics, the 21 drawn genera, flowering calendar, remarkable trees, ages and

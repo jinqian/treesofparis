@@ -43,6 +43,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import communes as communes_module  # noqa: E402
 import gpso  # noqa: E402
+import hauts_de_seine  # noqa: E402
 import remarkable  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
@@ -56,7 +57,7 @@ WIKIDATA_BATCH = 80
 USER_AGENT = "treesofparis-data-update (+https://github.com/jinqian/treesofparis)"
 
 # Must match GeoBounds.COVERAGE in :core:domain (checked by the tests): south, west, north, east.
-COVERAGE = (48.735, 2.150, 48.920, 2.480)
+COVERAGE = (48.735, 2.150, 48.950, 2.480)
 
 EXPECTED_FIELDS = (
     "idbase",
@@ -554,6 +555,12 @@ def main(argv: list[str] | None = None) -> int:
         default=REPO / "data/raw/arbres-remarquables.json",
         help="« Les arbres remarquables » JSON",
     )
+    parser.add_argument(
+        "--hds-raw",
+        type=Path,
+        default=REPO / "data/raw/hauts-de-seine-remarquables.json",
+        help="Hauts-de-Seine « Arbres remarquables » JSON",
+    )
     parser.add_argument("--communes", type=Path, default=REPO / "data/communes.geojson", help="town boundaries")
     parser.add_argument(
         "--refresh-communes", action="store_true", help="download the town boundaries again (geo.api.gouv.fr)"
@@ -583,13 +590,19 @@ def main(argv: list[str] | None = None) -> int:
         download(args.gpso_raw, gpso.EXPORT_URL)
         print(f"Downloading {remarkable.EXPORT_URL}")
         download(args.remarkable_raw, remarkable.EXPORT_URL)
+        print(f"Downloading {hauts_de_seine.EXPORT_URL}")
+        download(args.hds_raw, hauts_de_seine.EXPORT_URL)
     paris_rows, report = clean(read_rows(args.raw), towns)
     print(report)
     gpso_rows, gpso_report = gpso.clean(gpso.read_rows(args.gpso_raw), towns, common_names(paris_rows), _in_coverage)
     gpso_rows, gpso_duplicates = drop_near_duplicates(gpso_rows, paris_rows)
     gpso_report.kept = len(gpso_rows)
     print(f"{gpso_report}; {gpso_duplicates} already in the Paris data")
-    rows = sorted(paris_rows + gpso_rows, key=lambda r: r["id"])
+    hds_records = json.loads(args.hds_raw.read_text())
+    hds_rows, hds_details, hds_report = hauts_de_seine.clean(hds_records, towns, _in_coverage)
+    hds_rows, hds_details, hds_merged = hauts_de_seine.merge(hds_rows, hds_details, gpso_rows)
+    print(f"{hds_report}; {hds_merged} of them are GPSO trees, which become remarkable and take their details")
+    rows = sorted(paris_rows + gpso_rows + hds_rows, key=lambda r: r["id"])
 
     cache = load_wikipedia_cache(args.wikipedia_cache)
     if not args.no_wikipedia_lookup:
@@ -598,10 +611,10 @@ def main(argv: list[str] | None = None) -> int:
     links = taxon_links(rows, cache)
     remarkable_records = json.loads(args.remarkable_raw.read_text())
     paris_remarkable = {row["id"] for row in paris_rows if row["remarkable"]}
-    stories = remarkable.clean(remarkable_records, paris_remarkable)
+    stories = sorted(remarkable.clean(remarkable_records, paris_remarkable) + hds_details, key=lambda r: r["tree_id"])
     print(
-        f"Remarkable trees: {len(remarkable_records)} records read, {len(stories)} stories kept "
-        f"for the {len(paris_remarkable)} remarkable trees of Paris"
+        f"Remarkable trees: {len(remarkable_records)} records read, {len(stories) - len(hds_details)} stories kept "
+        f"for the {len(paris_remarkable)} remarkable trees of Paris; {len(hds_details)} Hauts-de-Seine details"
     )
     linked_pairs = {(link["genus"], link["species"]) for link in links}
     linked = sum(1 for r in rows if (r["genus"], r["species"] or "") in linked_pairs)
@@ -660,6 +673,30 @@ def main(argv: list[str] | None = None) -> int:
             "recordsRead": len(remarkable_records),
             "source": remarkable.DATASET_PAGE,
             "sourceExport": remarkable.EXPORT_URL,
+        },
+        {
+            "id": hauts_de_seine.SOURCE,
+            "datasetModifiedAt": (
+                next(
+                    (s.get("datasetModifiedAt") for s in previous.get("otherSources", []) if s.get("id") == hauts_de_seine.SOURCE),
+                    None,
+                )
+                if args.skip_download
+                else None
+            )
+            or dataset_modified_at(fetch_metadata(hauts_de_seine.METADATA_URL)),
+            "dropped": {
+                "groupsOfTrees": hds_report.groups,
+                "outsideCoverage": hds_report.outside_coverage,
+                "invalid": hds_report.invalid,
+                "mergedIntoGpsoTrees": hds_merged,
+            },
+            "extractedAt": extracted_at(args.hds_raw),
+            "license": hauts_de_seine.LICENSE,
+            "recordsKept": len(hds_rows),
+            "recordsRead": hds_report.total,
+            "source": hauts_de_seine.DATASET_PAGE,
+            "sourceExport": hauts_de_seine.EXPORT_URL,
         },
     ]
     meta["treesKept"] = len(rows)

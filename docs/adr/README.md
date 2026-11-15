@@ -12,3 +12,4 @@ accepted one; mark superseded records as such.
 - [0007 — Crash reports with Firebase Crashlytics](0007-crashlytics.md)
 - [0008 — Trees from several open datasets, each with its town](0008-trees-from-several-sources.md)
 - [0009 — The stories of the remarkable trees, in the tree database](0009-remarkable-tree-stories.md)
+- [0010 — The remarkable trees of the Hauts-de-Seine](0010-hauts-de-seine-remarkable-trees.md)
