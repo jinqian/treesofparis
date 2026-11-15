@@ -37,7 +37,7 @@ META = ANDROID_DATA / "trees-db-meta.json"
 OUT = REPO / "website" / "maps" / "data"
 
 # Must match GeoBounds.COVERAGE in :core:domain and COVERAGE in update_trees.py: south, west, north, east.
-COVERAGE = (48.735, 2.150, 48.920, 2.480)
+COVERAGE = (48.735, 2.150, 48.950, 2.480)
 # A cell: 0.01° of latitude × 0.015° of longitude, about 1.1 km × 1.1 km in Paris.
 CELL_LAT = 0.01
 CELL_LON = 0.015

@@ -29,8 +29,20 @@ const F = { id: 0, lat: 1, lon: 2, name: 3, genus: 4, species: 5, cultivar: 6, c
 const SOURCES = {
   paris: "« Les arbres », Paris Data",
   gpso: "« Arbres », Grand Paris Seine Ouest",
+  hds: "« Arbres remarquables », Département des Hauts-de-Seine",
 };
 const STORY_SOURCE = "« Les arbres » et « Les arbres remarquables », Paris Data";
+
+/** The datasets behind a sheet, as the app's TreeDetailUi.sourceCredit (ADR 0010). */
+function sourceCredit(row, story) {
+  const source = row[F.source] ?? "paris";
+  if (source === "hds") return `Source : ${SOURCES.hds}`;
+  if (source === "gpso") return story ? `Sources : ${SOURCES.gpso}, et ${SOURCES.hds}` : `Source : ${SOURCES.gpso}`;
+  return story ? `Sources : ${STORY_SOURCE}` : `Source : ${SOURCES.paris}`;
+}
+
+/** « Son histoire » when the City tells one; « Sa fiche » for the Hauts-de-Seine trees, which have none. */
+const storyTitle = (story) => (story.story ? "Son histoire" : "Sa fiche");
 
 const $ = (selector) => document.querySelector(selector);
 const nf = new Intl.NumberFormat("fr-FR");
@@ -267,7 +279,8 @@ function openSheet(row) {
   }
 }
 
-/** The tree's sheet; a remarkable tree with its [story] gets its site, its reason and the gold « Son histoire » row. */
+/** The tree's sheet; a remarkable tree with its [story] gets its site, its reason and the gold « Son histoire » (or
+ « Sa fiche ») row. */
 function showTree(row, story) {
   const latin = scientificName(row);
   const body = $("#sheet-body");
@@ -282,13 +295,13 @@ function showTree(row, story) {
       story
         ? `<button id="story-open" class="story-row" type="button">
              ${photo(story, "story-thumb")}
-             <span class="story-text"><strong>Son histoire</strong>${story.teaser ? `<small>${escapeHtml(story.teaser)}</small>` : ""}</span>
+             <span class="story-text"><strong>${storyTitle(story)}</strong>${(story.teaser ?? story.summary) ? `<small>${escapeHtml(story.teaser ?? story.summary)}</small>` : ""}</span>
              ${CHEVRON}
            </button>`
         : ""
     }
     ${wikiLink(row)}
-    <p class="source">Arbre n° ${row[F.id]} · Source${story ? "s" : ""} : ${story ? STORY_SOURCE : (SOURCES[row[F.source]] ?? SOURCES.paris)}</p>`;
+    <p class="source">Arbre n° ${row[F.id]} · ${sourceCredit(row, story)}</p>`;
   $("#story-open")?.addEventListener("click", () => showStory(row, story));
   $("#sheet").scrollTop = 0;
 }
@@ -343,7 +356,7 @@ function showStory(row, story) {
         : ""
     }
     ${wikiLink(row)}
-    <p class="source">Arbre n° ${row[F.id]} · Sources : ${STORY_SOURCE}</p>`;
+    <p class="source">Arbre n° ${row[F.id]} · ${sourceCredit(row, story)}</p>`;
   $("#story-back").addEventListener("click", () => showTree(row, story));
   if (hasPhoto) {
     const open = () => openPhoto(row, story);

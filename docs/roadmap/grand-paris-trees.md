@@ -104,7 +104,7 @@ downloads them all.
 
 Still to do for phase 2:
 
-1. **Coverage east and north.** `COVERAGE` stops at 48.920 N and 2.480 E. Seine-Saint-Denis reaches 48.98 N
+1. **Coverage east and north.** `COVERAGE` stops at 48.950 N (since the Hauts-de-Seine remarkable trees, #91) and 2.480 E. Seine-Saint-Denis reaches 48.98 N
    (Tremblay) and 2.60 E (Noisy-le-Grand): widen `COVERAGE` and `GeoBounds.COVERAGE` to the data's extent, and the
    town boundaries file already covers the four départements.
 2. **Duplicates between managers.** GPSO republishes the Hauts-de-Seine road trees of its towns; the 1 m check must

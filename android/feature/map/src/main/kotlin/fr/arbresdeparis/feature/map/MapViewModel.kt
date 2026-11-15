@@ -366,7 +366,7 @@ class MapViewModel
 
         /**
          * Below [MIN_TREE_ZOOM] there are too many trees to show: the map shows groups of trees with their count
-         * instead, except with a filter: there are only a few hundred remarkable trees, and a genus is shown at every
+         * instead, except with a filter: there are about 1,400 remarkable trees, and a genus is shown at every
          * zoom too, capped at the [MAX_MARKERS] trees closest to the centre, so its spread across the city stays
          * visible.
          */

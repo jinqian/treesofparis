@@ -95,7 +95,17 @@ internal fun StoryCard(
         StoryPhoto(story, MaterialTheme.shapes.small, showCredit = false, modifier = Modifier.size(52.dp))
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = stringResource(R.string.map_story_open),
+                // No story (the Hauts-de-Seine trees): the card opens the tree's details and photo.
+                text =
+                    stringResource(
+                        if (story.story !=
+                            null
+                        ) {
+                            R.string.map_story_open
+                        } else {
+                            R.string.map_story_open_details
+                        },
+                    ),
                 style = MaterialTheme.typography.titleMedium,
                 color = colors.onTertiaryContainer,
             )

@@ -64,7 +64,8 @@ fun RemarkableStory.toUi() =
         signUrl = signUrl,
         photoUrl = photoUrl,
         photoCredit = photoCredit?.let { "© $it" },
-        teaser = storyTeaser(story),
+        // Without a story (the Hauts-de-Seine trees), why the tree is remarkable.
+        teaser = storyTeaser(story) ?: summary,
     )
 
 fun FloweringSeason.toFloweringUi(now: Month) =

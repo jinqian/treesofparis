@@ -53,7 +53,7 @@ class PrepackagedDatabaseTest {
         }
 
     @Test
-    fun prepackagedAsset_has181RemarkableParisTrees_andTheGpsoOnes() =
+    fun prepackagedAsset_has181RemarkableParisTrees_andTheGpsoAndHautsDeSeineOnes() =
         runTest {
             val db = buildTreeDatabase(context, name = "remarkable.db").also(opened::add)
             val c = fr.arbresdeparis.domain.model.GeoBounds.COVERAGE
@@ -65,10 +65,12 @@ class PrepackagedDatabaseTest {
                     c.east,
                     remarkableOnly = true,
                     genus = null,
-                    limit = 1_000,
+                    limit = 3_000,
                 )
             assertEquals(181, remarkable.count { it.source == "paris" })
             assertEquals(true, remarkable.any { it.source == "gpso" })
+            // The Département's remarkable trees (ADR 0010), a thousand or so.
+            assertEquals(true, remarkable.count { it.source == "hds" } > 900)
             assertEquals(true, remarkable.all { it.remarkable })
         }
 
@@ -119,7 +121,7 @@ class PrepackagedDatabaseTest {
     }
 
     @Test
-    fun everyRemarkableTreeOfParis_hasItsStory() =
+    fun everyRemarkableTreeOfParis_hasItsStory_andEveryDetailARemarkableTree() =
         runTest {
             val db = buildTreeDatabase(context, name = "stories.db").also(opened::add)
             val remarkable =
@@ -134,7 +136,11 @@ class PrepackagedDatabaseTest {
                     .all()
                     .map { it.treeId }
                     .toSet()
-            assertEquals(remarkable, stories)
+            // Paris's stories, and the Hauts-de-Seine details: the Département's trees and the GPSO trees it lists.
+            assertEquals(true, stories.containsAll(remarkable))
+            val detailed = db.treeDao().byIds(stories.toList())
+            assertEquals(stories.size, detailed.size)
+            assertEquals(true, detailed.all { it.remarkable })
             // The Noisetier de Byzance of square Maurice Gardette, the oldest hazel of Paris.
             val noisetier = db.remarkableStoryDao().byTreeId(124914)
             assertEquals("Square Maurice Gardette", noisetier?.site)

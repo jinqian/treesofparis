@@ -1,5 +1,5 @@
 {
-  "dataVersion": 4,
+  "dataVersion": 5,
   "datasetModifiedAt": "2026-11-06T09:34:19+00:00",
   "dropped": {
     "duplicateIds": 0,
@@ -30,16 +30,32 @@
       "extractedAt": "2026-11-13T20:39:43Z",
       "id": "remarquables",
       "license": "ODbL",
-      "recordsKept": 181,
+      "recordsKept": 1241,
       "recordsRead": 183,
       "source": "https://opendata.paris.fr/explore/dataset/arbresremarquablesparis/information/",
       "sourceExport": "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/arbresremarquablesparis/exports/json"
+    },
+    {
+      "datasetModifiedAt": "2026-09-28T22:00:00+00:00",
+      "dropped": {
+        "groupsOfTrees": 67,
+        "invalid": 0,
+        "mergedIntoGpsoTrees": 41,
+        "outsideCoverage": 0
+      },
+      "extractedAt": "2026-11-15T20:03:53Z",
+      "id": "hds",
+      "license": "Licence Ouverte",
+      "recordsKept": 1019,
+      "recordsRead": 1127,
+      "source": "https://opendata.hauts-de-seine.fr/explore/dataset/fr-229200506-arbres-remarquables/information/",
+      "sourceExport": "https://opendata.hauts-de-seine.fr/api/explore/v2.1/catalog/datasets/fr-229200506-arbres-remarquables/exports/json"
     }
   ],
   "recordsKept": 220339,
   "recordsRead": 220339,
   "source": "https://opendata.paris.fr/explore/dataset/les-arbres/information/",
   "sourceExport": "https://opendata.paris.fr/api/explore/v2.1/catalog/datasets/les-arbres/exports/csv?delimiter=%3B",
-  "treesKept": 252975,
-  "wikipediaLinks": 1059
+  "treesKept": 253994,
+  "wikipediaLinks": 1065
 }

@@ -35,6 +35,6 @@ data class GeoBounds(
          * Seine Ouest (Boulogne-Billancourt to Marnes-la-Coquette). Extent of all trees in 2026-11 plus a small
          * margin; the data script reports trees that fall outside it.
          */
-        val COVERAGE = GeoBounds(south = 48.735, west = 2.150, north = 48.920, east = 2.480)
+        val COVERAGE = GeoBounds(south = 48.735, west = 2.150, north = 48.950, east = 2.480)
     }
 }

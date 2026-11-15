@@ -50,7 +50,7 @@ jobs:
           commit-message: "chore(data): update packaged tree database"
           title: "chore(data): update packaged tree database"
           body: |
-            Monthly refresh of the open tree datasets (Paris Open Data « Les arbres », Grand Paris Seine Ouest).
+            Monthly refresh of the open tree datasets (Paris Open Data « Les arbres » and « Les arbres remarquables », Grand Paris Seine Ouest, the Hauts-de-Seine remarkable trees).
 
             ```
             ${{ steps.build.outputs.report }}

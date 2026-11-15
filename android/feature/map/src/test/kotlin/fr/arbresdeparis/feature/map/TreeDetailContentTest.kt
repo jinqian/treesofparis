@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import fr.arbresdeparis.core.designsystem.theme.TreesTheme
 import fr.arbresdeparis.domain.model.FloweringSeason
 import fr.arbresdeparis.domain.model.GeoPoint
+import fr.arbresdeparis.domain.model.TreeSource
 import fr.arbresdeparis.domain.model.WikipediaArticle
 import fr.arbresdeparis.feature.map.mapper.toDetailUi
 import fr.arbresdeparis.feature.map.mapper.toFloweringUi
@@ -222,5 +223,52 @@ class TreeDetailContentTest {
         compose.onNodeWithContentDescription("Ajouter aux favoris").assertIsDisplayed()
         compose.onNodeWithContentDescription("Partager cet arbre").assertIsDisplayed().performClick()
         assertEquals(detail, shared)
+    }
+
+    private fun hdsDetails(id: Long) =
+        story(id).copy(
+            site = null,
+            qualification = "Dimensions",
+            summary = "Remarquable pour ses dimensions. Écorce remarquable.",
+            story = null,
+            label = null,
+            councilDecision = null,
+            signUrl = null,
+        )
+
+    @Test
+    fun aHautsDeSeineTree_showsItsTown_itsFiche_andTheDepartement() {
+        val tree =
+            tree(300_000_000_001).copy(
+                remarkable = true,
+                address = "",
+                arrondissement = "Issy-les-Moulineaux",
+                city = "Issy-les-Moulineaux",
+                source = TreeSource.HDS,
+            )
+        val detail = tree.toDetailUi(isFavorite = false, story = hdsDetails(tree.id))
+        compose.setContent { TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}) } }
+        compose.onNodeWithText("Issy-les-Moulineaux").assertIsDisplayed()
+        compose.onNodeWithText("Sa fiche").assertIsDisplayed()
+        compose.onNodeWithText("Remarquable pour ses dimensions. Écorce remarquable.").assertIsDisplayed()
+        compose.onNodeWithText("Son histoire").assertDoesNotExist()
+        compose
+            .onNodeWithText("Source : « Arbres remarquables », Département des Hauts-de-Seine")
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun aGpsoTreeWithHautsDeSeineDetails_creditsBoth() {
+        val tree =
+            tree(192_012_000_777).copy(remarkable = true, city = "Boulogne-Billancourt", source = TreeSource.GPSO)
+        val detail = tree.toDetailUi(isFavorite = false, story = hdsDetails(tree.id))
+        compose.setContent { TreesTheme { TreeDetailContent(detail = detail, onFavoriteToggle = {}) } }
+        compose
+            .onNodeWithText(
+                "Sources : « Arbres », Grand Paris Seine Ouest, et « Arbres remarquables », " +
+                    "Département des Hauts-de-Seine",
+            ).performScrollTo()
+            .assertIsDisplayed()
     }
 }

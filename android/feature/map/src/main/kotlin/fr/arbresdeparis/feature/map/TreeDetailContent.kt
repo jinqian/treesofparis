@@ -94,14 +94,7 @@ fun TreeDetailContent(
             detail.flowering?.let { FloweringSection(it) }
             detail.wikipedia?.let { WikipediaRow(it, onOpenWikipedia) }
             Text(
-                text =
-                    stringResource(
-                        when {
-                            detail.story != null -> R.string.map_detail_source_remarkable
-                            detail.source == TreeSource.GPSO -> R.string.map_detail_source_gpso
-                            else -> R.string.map_detail_source
-                        },
-                    ),
+                text = stringResource(detail.sourceCredit()),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -164,6 +157,17 @@ private fun TreeName(name: String) {
 
 private const val NAME_MIN_FONT_SIZE = 26f
 private const val NAME_FONT_STEP = 2f
+
+/**
+ * The datasets the sheet shows. A remarkable tree's details come from « Les arbres remarquables » in Paris and from
+ * the Département in the Hauts-de-Seine, also for a GPSO tree it lists (ADR 0010).
+ */
+private fun TreeDetailUi.sourceCredit(): Int =
+    when (source) {
+        TreeSource.PARIS -> if (story != null) R.string.map_detail_source_remarkable else R.string.map_detail_source
+        TreeSource.GPSO -> if (story != null) R.string.map_detail_source_gpso_hds else R.string.map_detail_source_gpso
+        TreeSource.HDS -> R.string.map_detail_source_hds
+    }
 
 /** « Partager »: sends the tree's name, place and link (issue #88). */
 @Composable
@@ -261,8 +265,11 @@ private fun Location(
         Text(
             text =
                 buildAnnotatedString {
-                    append(detail.address)
-                    append(" · ")
+                    // The Hauts-de-Seine remarkable trees have a town but no address.
+                    if (detail.address.isNotBlank()) {
+                        append(detail.address)
+                        append(" · ")
+                    }
                     withStyle(area) { append(detail.area) }
                 },
             style = MaterialTheme.typography.bodyMedium,

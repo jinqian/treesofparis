@@ -41,6 +41,9 @@ enum class TreeSource(
 
     /** « Arbres », Grand Paris Seine Ouest (data.seineouest.fr), Licence Ouverte. */
     GPSO("gpso"),
+
+    /** « Arbres remarquables », Département des Hauts-de-Seine, Licence Ouverte: remarkable trees only (ADR 0010). */
+    HDS("hds"),
     ;
 
     companion object {

@@ -2,7 +2,7 @@
 <resources>
     <string name="about_title">À propos</string>
     <string name="about_app_name">Arbres de Paris</string>
-    <string name="about_description">Explorez sur une carte les arbres de Paris et de huit villes voisines, de Boulogne-Billancourt à Meudon, ainsi que ceux des cimetières et parcs que la Ville de Paris gère alentour.</string>
+    <string name="about_description">Explorez sur une carte les arbres de Paris et de huit villes voisines, de Boulogne-Billancourt à Meudon, ainsi que ceux des cimetières et parcs que la Ville de Paris gère alentour, et les arbres remarquables des Hauts-de-Seine.</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_section_contact">Contact</string>
     <string name="about_contact_write">Nous écrire</string>
@@ -19,6 +19,8 @@
     <string name="about_data_gpso_detail">Boulogne-Billancourt, Issy-les-Moulineaux, Meudon et cinq autres villes · Licence Ouverte 2.0</string>
     <string name="about_data_remarkable_credit">« Les arbres remarquables », Paris Data — Ville de Paris</string>
     <string name="about_data_remarkable_detail">Histoires, panneaux et photos des arbres remarquables de Paris · Licence ODbL</string>
+    <string name="about_data_hds_credit">« Arbres remarquables », Département des Hauts-de-Seine</string>
+    <string name="about_data_hds_detail">Les arbres remarquables des 36 villes, leurs mesures et leurs photos · Licence Ouverte</string>
     <string name="about_section_flowering">Floraisons</string>
     <string name="about_flowering_credit">« Guide des Essences de Paris » — Ville de Paris, Cerema</string>
     <string name="about_flowering_license">Calendriers de floraison, 2023 · Licence ODbL</string>
