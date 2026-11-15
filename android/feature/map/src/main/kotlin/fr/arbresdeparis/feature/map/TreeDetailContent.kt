@@ -115,24 +115,23 @@ private fun Header(
     onFavoriteToggle: () -> Unit,
     onShare: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier.testTag(DETAIL_HEADER_TAG),
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(TreesSpacing.m),
-    ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            if (detail.remarkable) RemarkableEyebrow(detail.story?.qualification)
-            TreeName(detail.name)
-            Text(
-                text = detail.scientificName ?: stringResource(R.string.map_detail_unknown_species),
-                style = ScientificNameStyle,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        // Share next to the heart (design A, issue #88): a long name wraps rather than losing either button.
-        Row(horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s)) {
-            ShareButton(onClick = onShare)
-            FavoriteButton(isFavorite = detail.isFavorite, onClick = onFavoriteToggle)
+    Column(modifier = Modifier.testTag(DETAIL_HEADER_TAG), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        // Across the whole sheet, above the buttons: « ★ ARBRE REMARQUABLE · PAYSAGER » stays on one line.
+        if (detail.remarkable) RemarkableEyebrow(detail.story?.qualification)
+        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(TreesSpacing.m)) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                TreeName(detail.name)
+                Text(
+                    text = detail.scientificName ?: stringResource(R.string.map_detail_unknown_species),
+                    style = ScientificNameStyle,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            // Share next to the heart (design A, issue #88): a long name wraps rather than losing either button.
+            Row(horizontalArrangement = Arrangement.spacedBy(TreesSpacing.s)) {
+                ShareButton(onClick = onShare)
+                FavoriteButton(isFavorite = detail.isFavorite, onClick = onFavoriteToggle)
+            }
         }
     }
 }
