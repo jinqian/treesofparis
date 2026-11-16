@@ -3,6 +3,29 @@
 All notable changes to Arbres de Paris. Generated from the commit history with [git-cliff](https://git-cliff.org);
 see `android/RELEASING.md`. User-facing release notes, in French, are in `android/fastlane/metadata/android/fr-FR/changelogs/`.
 
+## [0.4.0] - 2026-11-16
+
+### Added
+
+- **website**: Help search engines find the site
+- **website**: Add the Herbier page
+- **website**: Link the home page's herbier section to /herbier/
+- **map**: Share a tree by a link that opens it in the app
+- **website**: Share a tree, and open shared tree links
+- **data**: Add the remarkable trees of the Hauts-de-Seine
+- **map**: Show the Hauts-de-Seine remarkable trees and credit the Département
+- **website**: The Hauts-de-Seine remarkable trees on the web map
+
+### Fixed
+
+- **map**: Keep the filter chips' ripple inside their rounded shape
+- **map**: Keep the remarkable eyebrow on one line beside the share button
+
+### Documentation
+
+- CLAUDE.md says how the website stays indexed
+- Update CLAUDE.md with the products, the design system and what to keep in step
+
 ## [0.3.0] - 2026-11-13
 
 ### Added
